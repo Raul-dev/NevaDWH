@@ -3,7 +3,7 @@ version: '3.4'
 x-common:
   &common
   build:
-    context: ./../../../
+    context: ./../
     dockerfile: images/airflow/Dockerfile
   user: "${AIRFLOW_UID}:0"
   env_file: 
@@ -41,8 +41,7 @@ services:
 
   rabbit:
     build:
-      context: ./../../../images/Rabbit  
-#    image: rabbitmq:3.7-management
+      context: ./../images/Rabbit  
     healthcheck:
       test: rabbitmq-diagnostics -q ping
       start_period: 5s
@@ -90,10 +89,10 @@ services:
         exec /entrypoint airflow version
 
   mq.webservice:
-    image: ${DOCKER_REGISTRY-}mqwebservice
-    build:
-      context: ./../../../services/mq
-      dockerfile: MQ.WebService/Dockerfile
+    image: raulamailru/nevadwh-mq:0.0.1
+#    build:
+#      context: ./../../../services/mq
+#      dockerfile: MQ.WebService/Dockerfile
     environment:
       - ASPNETCORE_ENVIRONMENT=Development
       #- ASPNETCORE_URLS=https://+:443;http://+:80
@@ -118,10 +117,10 @@ services:
         condition: service_healthy
 
   landing.webservice:
-    image: ${DOCKER_REGISTRY-}landinwebservice
-    build:
-      context: ./../../../services/dwhmanager
-      dockerfile: Landing.WebService/Dockerfile
+    image: raulamailru/nevadwh-landing:0.0.1
+#    build:
+#      context: ./../../../services/dwhmanager
+#      dockerfile: Landing.WebService/Dockerfile
     environment:
       - ASPNETCORE_ENVIRONMENT=Development
 #     - ASPNETCORE_URLS=https://+:443;http://+:80
@@ -146,10 +145,10 @@ services:
         condition: service_healthy
 
   nevadwh:
-    image: ${DOCKER_REGISTRY-}nevadwh
-    build:
-      context: ./../../../services/dwhmanager
-      dockerfile: NevaDWH/Dockerfile
+    image: raulamailru/nevadwh-admin:0.0.1
+#    build:
+#      context: ./../../../services/dwhmanager
+#      dockerfile: NevaDWH/Dockerfile
     environment:
       - ASPNETCORE_ENVIRONMENT=Development
       #- ASPNETCORE_URLS=https://+:443;http://+:80
