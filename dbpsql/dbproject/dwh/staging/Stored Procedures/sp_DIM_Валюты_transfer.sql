@@ -105,7 +105,7 @@ BEGIN
 		par_session_id AS "session_id",
 		val_source_name AS "source_name",
 		"nkey",
-		 AS "vkey",
+		nkey AS "vkey",
 		val_start_date AS "start_date",
 		fn_GetMaxDate() AS "end_date",
 		"DIM_ВалютыRefID",
