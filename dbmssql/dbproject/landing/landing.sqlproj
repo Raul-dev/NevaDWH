@@ -1,0 +1,135 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Project DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003" ToolsVersion="4.0">
+  <PropertyGroup>
+    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
+    <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
+    <Name>landing</Name>
+    <SchemaVersion>2.0</SchemaVersion>
+    <ProjectVersion>4.1</ProjectVersion>
+    <ProjectGuid>{c2ebe3c4-9129-4aff-b058-f9a5f7cd5273}</ProjectGuid>
+    <DSP>Microsoft.Data.Tools.Schema.Sql.Sql150DatabaseSchemaProvider</DSP>
+    <OutputType>Database</OutputType>
+    <RootPath />
+    <RootNamespace>landing</RootNamespace>
+    <AssemblyName>landing</AssemblyName>
+    <ModelCollation>1049,CI</ModelCollation>
+    <DefaultFileStructure>BySchemaAndSchemaType</DefaultFileStructure>
+    <DeployToDatabase>True</DeployToDatabase>
+    <TargetFrameworkVersion>v4.8</TargetFrameworkVersion>
+    <TargetLanguage>CS</TargetLanguage>
+    <AppDesignerFolder>Properties</AppDesignerFolder>
+    <SqlServerVerification>False</SqlServerVerification>
+    <IncludeCompositeObjects>True</IncludeCompositeObjects>
+    <TargetDatabaseSet>True</TargetDatabaseSet>
+    <TargetFrameworkProfile />
+    <DefaultCollation>Cyrillic_General_CI_AS</DefaultCollation>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
+    <OutputPath>bin\Release\</OutputPath>
+    <BuildScriptName>$(MSBuildProjectName).sql</BuildScriptName>
+    <TreatWarningsAsErrors>False</TreatWarningsAsErrors>
+    <DebugType>pdbonly</DebugType>
+    <Optimize>true</Optimize>
+    <DefineDebug>false</DefineDebug>
+    <DefineTrace>true</DefineTrace>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
+    <OutputPath>bin\Debug\</OutputPath>
+    <BuildScriptName>$(MSBuildProjectName).sql</BuildScriptName>
+    <TreatWarningsAsErrors>false</TreatWarningsAsErrors>
+    <DebugSymbols>true</DebugSymbols>
+    <DebugType>full</DebugType>
+    <Optimize>false</Optimize>
+    <DefineDebug>true</DefineDebug>
+    <DefineTrace>true</DefineTrace>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+  </PropertyGroup>
+  <PropertyGroup>
+    <VisualStudioVersion Condition="'$(VisualStudioVersion)' == ''">11.0</VisualStudioVersion>
+    <SSDTExists Condition="Exists('$(MSBuildExtensionsPath)\Microsoft\VisualStudio\v$(VisualStudioVersion)\SSDT\Microsoft.Data.Tools.Schema.SqlTasks.targets')">True</SSDTExists>
+    <VisualStudioVersion Condition="'$(SSDTExists)' == ''">11.0</VisualStudioVersion>
+  </PropertyGroup>
+  <Import Condition="'$(SQLDBExtensionsRefPath)' != ''" Project="$(SQLDBExtensionsRefPath)\Microsoft.Data.Tools.Schema.SqlTasks.targets" />
+  <Import Condition="'$(SQLDBExtensionsRefPath)' == ''" Project="$(MSBuildExtensionsPath)\Microsoft\VisualStudio\v$(VisualStudioVersion)\SSDT\Microsoft.Data.Tools.Schema.SqlTasks.targets" />
+  <ItemGroup>
+    <Folder Include="Properties" />
+    <Folder Include="audit" />
+    <Folder Include="audit\Stored Procedures" />
+    <Folder Include="dbo" />
+    <Folder Include="dbo\Functions" />
+    <Folder Include="dbo\Stored Procedures" />
+    <Folder Include="dbo\Tables" />
+    <Folder Include="Storage" />
+    <Folder Include="Security" />
+    <Folder Include="Dictionaries" />
+  </ItemGroup>
+  <ItemGroup>
+    <Build Include="audit\Stored Procedures\sp_Print.sql" />
+    <Build Include="dbo\Functions\fn_GetRef.sql" />
+    <Build Include="dbo\Functions\fn_GetSettingInt.sql" />
+    <Build Include="dbo\Functions\fn_GetSettingValue.sql" />
+    <Build Include="dbo\Stored Procedures\dwh_ArchiveTables.sql" />
+    <Build Include="dbo\Stored Procedures\dwh_AssignSessionID.sql" />
+    <Build Include="dbo\Stored Procedures\dwh_SaveSessionState.sql" />
+    <Build Include="dbo\Stored Procedures\load_metadata.sql" />
+    <Build Include="dbo\Stored Procedures\rb_GetMappingSetup.sql" />
+    <Build Include="dbo\Stored Procedures\rb_SaveSessionState.sql" />
+    <Build Include="dbo\Tables\codegen.sql" />
+    <Build Include="dbo\Tables\codegen_dwh_column.sql" />
+    <Build Include="dbo\Tables\codegen_dwh_table.sql" />
+    <Build Include="dbo\Tables\codegen_enable_type.sql" />
+    <Build Include="dbo\Tables\data_source.sql" />
+    <Build Include="dbo\Tables\dwh_processing_details.sql" />
+    <Build Include="dbo\Tables\dwh_session.sql" />
+    <Build Include="dbo\Tables\dwh_session_log.sql" />
+    <Build Include="dbo\Tables\dwh_session_state.sql" />
+    <Build Include="dbo\Tables\filequeue.sql" />
+    <Build Include="dbo\Tables\metaadapter.sql" />
+    <Build Include="dbo\Tables\metadata.sql" />
+    <Build Include="dbo\Tables\metadata_buffer.sql" />
+    <Build Include="dbo\Tables\metamap.sql" />
+    <Build Include="dbo\Tables\msgqueue.sql" />
+    <Build Include="dbo\Tables\msgtype.sql" />
+    <Build Include="dbo\Tables\session.sql" />
+    <Build Include="dbo\Tables\session_log.sql" />
+    <Build Include="dbo\Tables\session_state.sql" />
+    <Build Include="dbo\Tables\Setting.sql" />
+    <Build Include="dbo\Tables\metadata_sql.sql" />
+    <Build Include="Storage\InMemory.sql" />
+    <Build Include="Security\audit.sql" />
+        <Build Include="Security\odins.sql" />
+    <None Include="Dictionaries\codegen.sql">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
+    <None Include="Dictionaries\codegen_enable_type.sql">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
+    <None Include="Dictionaries\dwh_session_state.sql">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
+    <None Include="Dictionaries\metamap.sql">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
+    <None Include="Dictionaries\session_state.sql">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
+  </ItemGroup>
+  <ItemGroup>
+    <ArtifactReference Include="$(DacPacRootPath)\Extensions\Microsoft\SQLDB\Extensions\SqlServer\130\SqlSchemas\master.dacpac">
+      <HintPath>$(DacPacRootPath)\Extensions\Microsoft\SQLDB\Extensions\SqlServer\130\SqlSchemas\master.dacpac</HintPath>
+      <SuppressMissingDependenciesErrors>True</SuppressMissingDependenciesErrors>
+      <DatabaseVariableLiteralValue>master</DatabaseVariableLiteralValue>
+    </ArtifactReference>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Dictionaries\.editorconfig" />
+  </ItemGroup>
+  <ItemGroup>
+    <PostDeploy Include="Dictionaries\Script.PostDeployment.sql">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </PostDeploy>
+  </ItemGroup>
+</Project>

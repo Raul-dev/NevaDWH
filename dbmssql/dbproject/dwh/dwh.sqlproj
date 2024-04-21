@@ -1,0 +1,120 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Project DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003" ToolsVersion="4.0">
+  <PropertyGroup>
+    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
+    <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
+    <Name>dwh</Name>
+    <SchemaVersion>2.0</SchemaVersion>
+    <ProjectVersion>4.1</ProjectVersion>
+    <ProjectGuid>{21bfa11e-9b3c-4cb8-bca8-ebb7558d4cc5}</ProjectGuid>
+    <DSP>Microsoft.Data.Tools.Schema.Sql.Sql150DatabaseSchemaProvider</DSP>
+    <OutputType>Database</OutputType>
+    <RootPath>
+    </RootPath>
+    <RootNamespace>dwh</RootNamespace>
+    <AssemblyName>dwh</AssemblyName>
+    <ModelCollation>1033, CI</ModelCollation>
+    <DefaultFileStructure>BySchemaAndSchemaType</DefaultFileStructure>
+    <DeployToDatabase>True</DeployToDatabase>
+    <TargetFrameworkVersion>v4.8</TargetFrameworkVersion>
+    <TargetLanguage>CS</TargetLanguage>
+    <AppDesignerFolder>Properties</AppDesignerFolder>
+    <SqlServerVerification>False</SqlServerVerification>
+    <IncludeCompositeObjects>True</IncludeCompositeObjects>
+    <TargetDatabaseSet>True</TargetDatabaseSet>
+    <DefaultCollation>Cyrillic_General_CI_AS</DefaultCollation>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
+    <OutputPath>bin\Release\</OutputPath>
+    <BuildScriptName>$(MSBuildProjectName).sql</BuildScriptName>
+    <TreatWarningsAsErrors>False</TreatWarningsAsErrors>
+    <DebugType>pdbonly</DebugType>
+    <Optimize>true</Optimize>
+    <DefineDebug>false</DefineDebug>
+    <DefineTrace>true</DefineTrace>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
+    <OutputPath>bin\Debug\</OutputPath>
+    <BuildScriptName>$(MSBuildProjectName).sql</BuildScriptName>
+    <TreatWarningsAsErrors>false</TreatWarningsAsErrors>
+    <DebugSymbols>true</DebugSymbols>
+    <DebugType>full</DebugType>
+    <Optimize>false</Optimize>
+    <DefineDebug>true</DefineDebug>
+    <DefineTrace>true</DefineTrace>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+  </PropertyGroup>
+  <PropertyGroup>
+    <VisualStudioVersion Condition="'$(VisualStudioVersion)' == ''">11.0</VisualStudioVersion>
+    <!-- Default to the v11.0 targets path if the targets file for the current VS version is not found -->
+    <SSDTExists Condition="Exists('$(MSBuildExtensionsPath)\Microsoft\VisualStudio\v$(VisualStudioVersion)\SSDT\Microsoft.Data.Tools.Schema.SqlTasks.targets')">True</SSDTExists>
+    <VisualStudioVersion Condition="'$(SSDTExists)' == ''">11.0</VisualStudioVersion>
+  </PropertyGroup>
+  <Import Condition="'$(SQLDBExtensionsRefPath)' != ''" Project="$(SQLDBExtensionsRefPath)\Microsoft.Data.Tools.Schema.SqlTasks.targets" />
+  <Import Condition="'$(SQLDBExtensionsRefPath)' == ''" Project="$(MSBuildExtensionsPath)\Microsoft\VisualStudio\v$(VisualStudioVersion)\SSDT\Microsoft.Data.Tools.Schema.SqlTasks.targets" />
+  <ItemGroup>
+    <Folder Include="Properties" />
+    <Folder Include="dbo\" />
+    <Folder Include="dbo\Tables\" />
+    <Folder Include="dbo\Stored Procedures\" />
+    <Folder Include="Security\" />
+    <Folder Include="bulk\" />
+    <Folder Include="bulk\Stored Procedures\" />
+    <Folder Include="bulk\Tables\" />
+    <Folder Include="staging\" />
+    <Folder Include="staging\Stored Procedures\" />
+    <Folder Include="staging\Tables\" />
+    <Folder Include="target\" />
+    <Folder Include="target\Stored Procedures\" />
+    <Folder Include="target\Tables\" />
+    <Folder Include="Dictionaries" />
+  </ItemGroup>
+<ItemGroup>
+    <Build Include="dbo\Tables\session_state.sql" />
+    <Build Include="dbo\Tables\session_log.sql" />
+    <Build Include="dbo\Tables\session.sql" />
+    <Build Include="dbo\Tables\data_source.sql" />
+    <Build Include="Security\bulk.sql" />
+    <Build Include="Security\staging.sql" />
+    <Build Include="Security\target.sql" />
+    <Build Include="dbo\Tables\dim_date.sql" />
+    <Build Include="dbo\Stored Procedures\sp_FillDimDate.sql" />
+    <None Include="Dictionaries\dbo.session_state.sql" />
+    <Build Include="dbo\Stored Procedures\sp_SaveSessionState.sql" />    <Build Include="dbo\Stored Procedures\fn_GetMaxDate.sql" />
+    <Build Include="dbo\Stored Procedures\fn_GetMinDate.sql" />
+    <Build Include="staging\Stored Procedures\sp_DIM_Валюты_rekey.sql" />
+    <Build Include="staging\Stored Procedures\sp_DIM_Валюты_transfer.sql" />
+    <Build Include="staging\Stored Procedures\sp_DIM_Валюты_publish.sql" />
+    <Build Include="staging\Tables\staging.DIM_Валюты.sql" />
+    <Build Include="target\Tables\target.DIM_Валюты.sql" />
+    <Build Include="staging\Tables\staging.DIM_Валюты.Представления.sql" />
+    <Build Include="target\Tables\target.DIM_Валюты.Представления.sql" />
+    <Build Include="staging\Stored Procedures\sp_DIM_Клиенты_rekey.sql" />
+    <Build Include="staging\Stored Procedures\sp_DIM_Клиенты_transfer.sql" />
+    <Build Include="staging\Stored Procedures\sp_DIM_Клиенты_publish.sql" />
+    <Build Include="staging\Tables\staging.DIM_Клиенты.sql" />
+    <Build Include="target\Tables\target.DIM_Клиенты.sql" />
+    <Build Include="staging\Stored Procedures\sp_DIM_Товары_rekey.sql" />
+    <Build Include="staging\Stored Procedures\sp_DIM_Товары_transfer.sql" />
+    <Build Include="staging\Stored Procedures\sp_DIM_Товары_publish.sql" />
+    <Build Include="staging\Tables\staging.DIM_Товары.sql" />
+    <Build Include="target\Tables\target.DIM_Товары.sql" />
+    <Build Include="staging\Stored Procedures\sp_FACT_Продажи_rekey.sql" />
+    <Build Include="staging\Stored Procedures\sp_FACT_Продажи_transfer.sql" />
+    <Build Include="staging\Stored Procedures\sp_FACT_Продажи_publish.sql" />
+    <Build Include="staging\Tables\staging.FACT_Продажи.sql" />
+    <Build Include="target\Tables\target.FACT_Продажи.sql" />
+    <Build Include="staging\Tables\staging.FACT_Продажи.Товары.sql" />
+    <Build Include="target\Tables\target.FACT_Продажи.Товары.sql" />
+  </ItemGroup>
+  <ItemGroup>    <PostDeploy Include="Dictionaries\Script.PostDeployment.sql" />  </ItemGroup>  <ItemGroup>    <ProjectReference Include="..\ods\ods.sqlproj">      <Name>ods</Name>      <Project>{622e77ef-2e99-4fb8-aa03-f84361b27f07}</Project>      <Private>True</Private>      <SuppressMissingDependenciesErrors>False</SuppressMissingDependenciesErrors>      <DatabaseSqlCmdVariable>ods</DatabaseSqlCmdVariable>    </ProjectReference>  </ItemGroup>  <ItemGroup>    <SqlCmdVariable Include="ods">      <DefaultValue>ods</DefaultValue>      <Value>$(SqlCmdVar__1)</Value>    </SqlCmdVariable>  </ItemGroup>  <ItemGroup>
+    <ArtifactReference Include="$(DacPacRootPath)\Extensions\Microsoft\SQLDB\Extensions\SqlServer\150\SqlSchemas\master.dacpac">
+      <HintPath>$(DacPacRootPath)\Extensions\Microsoft\SQLDB\Extensions\SqlServer\150\SqlSchemas\master.dacpac</HintPath>
+      <SuppressMissingDependenciesErrors>False</SuppressMissingDependenciesErrors>
+      <DatabaseVariableLiteralValue>master</DatabaseVariableLiteralValue>
+    </ArtifactReference>
+  </ItemGroup>
+</Project>
