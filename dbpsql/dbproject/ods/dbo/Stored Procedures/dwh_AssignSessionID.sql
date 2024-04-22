@@ -54,15 +54,15 @@ BEGIN
     END IF;
 --DIM_Валюты
     LOCK TABLE odins."DIM_Валюты" IN ROW EXCLUSIVE MODE;
-    DROP TABLE IF EXISTS tmp_DIM_Валюты;
-    CREATE TEMPORARY TABLE tmp_DIM_Валюты(
+    DROP TABLE IF EXISTS "tmp_DIM_Валюты";
+    CREATE TEMPORARY TABLE "tmp_DIM_Валюты"(
         ods_id bigint Primary Key,
-        Идентификатор uuid
+        "RefID" uuid
     );
-    INSERT INTO tmp_DIM_Валюты (
-        ods_id, Идентификатор
+    INSERT INTO "tmp_DIM_Валюты" (
+        ods_id, "RefID"
     )
-    SELECT ods_id, Идентификатор FROM odins."DIM_Валюты" FOR UPDATE;
+    SELECT ods_id, "RefID" FROM odins."DIM_Валюты" FOR UPDATE;
 
     GET DIAGNOSTICS var_rowcount = ROW_COUNT;
 	par_rowcount := par_rowcount + var_rowcount;
@@ -106,7 +106,7 @@ BEGIN
         b."СпособУстановкиКурса",
         now() AS dt_create
     FROM odins."DIM_Валюты" b
-        INNER JOIN tmp_DIM_Валюты ll ON b.ods_id = ll.ods_id;
+        INNER JOIN "tmp_DIM_Валюты" ll ON b.ods_id = ll.ods_id;
 
 
     DELETE FROM odins."DIM_Валюты_Представления_history" WHERE dwh_session_id = par_dwh_session_id;
@@ -127,7 +127,7 @@ BEGIN
         b."ПараметрыПрописи",
         now() AS dt_create
     FROM odins."DIM_Валюты_Представления" b
-        INNER JOIN tmp_DIM_Валюты ll ON b."DIM_ВалютыRefID" = ll."RefID";
+        INNER JOIN "tmp_DIM_Валюты" ll ON b."DIM_ВалютыRefID" = ll."RefID";
 
 
     GET DIAGNOSTICS var_rowcount = ROW_COUNT;
@@ -141,15 +141,15 @@ BEGIN
     COMMIT;
 --DIM_Клиенты
     LOCK TABLE odins."DIM_Клиенты" IN ROW EXCLUSIVE MODE;
-    DROP TABLE IF EXISTS tmp_DIM_Клиенты;
-    CREATE TEMPORARY TABLE tmp_DIM_Клиенты(
+    DROP TABLE IF EXISTS "tmp_DIM_Клиенты";
+    CREATE TEMPORARY TABLE "tmp_DIM_Клиенты"(
         ods_id bigint Primary Key,
-        Идентификатор uuid
+        "RefID" uuid
     );
-    INSERT INTO tmp_DIM_Клиенты (
-        ods_id, Идентификатор
+    INSERT INTO "tmp_DIM_Клиенты" (
+        ods_id, "RefID"
     )
-    SELECT ods_id, Идентификатор FROM odins."DIM_Клиенты" FOR UPDATE;
+    SELECT ods_id, "RefID" FROM odins."DIM_Клиенты" FOR UPDATE;
 
     GET DIAGNOSTICS var_rowcount = ROW_COUNT;
 	par_rowcount := par_rowcount + var_rowcount;
@@ -181,20 +181,20 @@ BEGIN
         b."Контакт",
         now() AS dt_create
     FROM odins."DIM_Клиенты" b
-        INNER JOIN tmp_DIM_Клиенты ll ON b.ods_id = ll.ods_id;
+        INNER JOIN "tmp_DIM_Клиенты" ll ON b.ods_id = ll.ods_id;
 
     COMMIT;
 --DIM_Товары
     LOCK TABLE odins."DIM_Товары" IN ROW EXCLUSIVE MODE;
-    DROP TABLE IF EXISTS tmp_DIM_Товары;
-    CREATE TEMPORARY TABLE tmp_DIM_Товары(
+    DROP TABLE IF EXISTS "tmp_DIM_Товары";
+    CREATE TEMPORARY TABLE "tmp_DIM_Товары"(
         ods_id bigint Primary Key,
-        Идентификатор uuid
+        "RefID" uuid
     );
-    INSERT INTO tmp_DIM_Товары (
-        ods_id, Идентификатор
+    INSERT INTO "tmp_DIM_Товары" (
+        ods_id, "RefID"
     )
-    SELECT ods_id, Идентификатор FROM odins."DIM_Товары" FOR UPDATE;
+    SELECT ods_id, "RefID" FROM odins."DIM_Товары" FOR UPDATE;
 
     GET DIAGNOSTICS var_rowcount = ROW_COUNT;
 	par_rowcount := par_rowcount + var_rowcount;
@@ -226,20 +226,20 @@ BEGIN
         b."Описание",
         now() AS dt_create
     FROM odins."DIM_Товары" b
-        INNER JOIN tmp_DIM_Товары ll ON b.ods_id = ll.ods_id;
+        INNER JOIN "tmp_DIM_Товары" ll ON b.ods_id = ll.ods_id;
 
     COMMIT;
 --FACT_Продажи
     LOCK TABLE odins."FACT_Продажи" IN ROW EXCLUSIVE MODE;
-    DROP TABLE IF EXISTS tmp_FACT_Продажи;
-    CREATE TEMPORARY TABLE tmp_FACT_Продажи(
+    DROP TABLE IF EXISTS "tmp_FACT_Продажи";
+    CREATE TEMPORARY TABLE "tmp_FACT_Продажи"(
         ods_id bigint Primary Key,
-        Идентификатор uuid
+        "RefID" uuid
     );
-    INSERT INTO tmp_FACT_Продажи (
-        ods_id, Идентификатор
+    INSERT INTO "tmp_FACT_Продажи" (
+        ods_id, "RefID"
     )
-    SELECT ods_id, Идентификатор FROM odins."FACT_Продажи" FOR UPDATE;
+    SELECT ods_id, "RefID" FROM odins."FACT_Продажи" FOR UPDATE;
 
     GET DIAGNOSTICS var_rowcount = ROW_COUNT;
 	par_rowcount := par_rowcount + var_rowcount;
@@ -281,7 +281,7 @@ BEGIN
         b."ПримерСоставногоТипа_ТипЗначения",
         now() AS dt_create
     FROM odins."FACT_Продажи" b
-        INNER JOIN tmp_FACT_Продажи ll ON b.ods_id = ll.ods_id;
+        INNER JOIN "tmp_FACT_Продажи" ll ON b.ods_id = ll.ods_id;
 
 
     DELETE FROM odins."FACT_Продажи_Товары_history" WHERE dwh_session_id = par_dwh_session_id;
@@ -306,7 +306,7 @@ BEGIN
         b."Цена",
         now() AS dt_create
     FROM odins."FACT_Продажи_Товары" b
-        INNER JOIN tmp_FACT_Продажи ll ON b."FACT_ПродажиRefID" = ll."RefID";
+        INNER JOIN "tmp_FACT_Продажи" ll ON b."FACT_ПродажиRefID" = ll."RefID";
 
 
     GET DIAGNOSTICS var_rowcount = ROW_COUNT;
@@ -323,27 +323,27 @@ BEGIN
     IF par_rowcount > 0 THEN
         -- Delete star: odins.DIM_Валюты
         DELETE FROM odins."DIM_Валюты" AS b
-        USING tmp_DIM_Валюты AS ll
+        USING "tmp_DIM_Валюты" AS ll
         WHERE b.ods_id = ll.ods_id;
             -- Delete child: odins.DIM_Валюты.Представления
             DELETE FROM odins."DIM_Валюты_Представления" AS b
-            USING tmp_DIM_Валюты AS ll
+            USING "tmp_DIM_Валюты" AS ll
             WHERE b."DIM_ВалютыRefID" = ll."RefID";
         -- Delete star: odins.DIM_Клиенты
         DELETE FROM odins."DIM_Клиенты" AS b
-        USING tmp_DIM_Клиенты AS ll
+        USING "tmp_DIM_Клиенты" AS ll
         WHERE b.ods_id = ll.ods_id;
         -- Delete star: odins.DIM_Товары
         DELETE FROM odins."DIM_Товары" AS b
-        USING tmp_DIM_Товары AS ll
+        USING "tmp_DIM_Товары" AS ll
         WHERE b.ods_id = ll.ods_id;
         -- Delete star: odins.FACT_Продажи
         DELETE FROM odins."FACT_Продажи" AS b
-        USING tmp_FACT_Продажи AS ll
+        USING "tmp_FACT_Продажи" AS ll
         WHERE b.ods_id = ll.ods_id;
             -- Delete child: odins.FACT_Продажи.Товары
             DELETE FROM odins."FACT_Продажи_Товары" AS b
-            USING tmp_FACT_Продажи AS ll
+            USING "tmp_FACT_Продажи" AS ll
             WHERE b."FACT_ПродажиRefID" = ll."RefID";
         CALL public."dwh_SaveSessionState" (par_dwh_session_id::bigint, 1::smallint, 2::smallint, null) ;
     END IF;

@@ -17,13 +17,13 @@ DECLARE
 BEGIN
 
 	SELECT create_session INTO val_start_date FROM session WHERE session_id = par_session_id;
-    DROP TABLE IF EXISTS tmp_DIM_Клиенты;
-    CREATE TEMPORARY TABLE tmp_DIM_Клиенты(
+    DROP TABLE IF EXISTS "tmp_DIM_Клиенты";
+    CREATE TEMPORARY TABLE "tmp_DIM_Клиенты"(
 		identificator uuid
 	);
 
-	INSERT INTO tmp_DIM_Клиенты(identificator)
-	SELECT "Идентификатор" FROM staging."DIM_Клиенты" as staging;
+	INSERT INTO "tmp_DIM_Клиенты"(identificator)
+	SELECT "RefID" FROM staging."DIM_Клиенты" as staging;
 
 	UPDATE staging."DIM_Клиенты" as staging
 		SET id = COALESCE(trget.id, staging.staging_id),

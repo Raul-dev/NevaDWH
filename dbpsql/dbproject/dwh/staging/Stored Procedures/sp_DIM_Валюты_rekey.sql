@@ -17,13 +17,13 @@ DECLARE
 BEGIN
 
 	SELECT create_session INTO val_start_date FROM session WHERE session_id = par_session_id;
-    DROP TABLE IF EXISTS tmp_DIM_Валюты;
-    CREATE TEMPORARY TABLE tmp_DIM_Валюты(
+    DROP TABLE IF EXISTS "tmp_DIM_Валюты";
+    CREATE TEMPORARY TABLE "tmp_DIM_Валюты"(
 		identificator uuid
 	);
 
-	INSERT INTO tmp_DIM_Валюты(identificator)
-	SELECT "Идентификатор" FROM staging."DIM_Валюты" as staging;
+	INSERT INTO "tmp_DIM_Валюты"(identificator)
+	SELECT "RefID" FROM staging."DIM_Валюты" as staging;
 
 	UPDATE staging."DIM_Валюты" as staging
 		SET id = COALESCE(trget.id, staging.staging_id),
@@ -85,8 +85,8 @@ BEGIN
 	par_rowcount := par_rowcount + var_rowcount;
 	-- Child 
 	DELETE FROM target."DIM_Валюты_Представления" AS b
-	USING tmp_DIM_Валюты ll
-	WHERE b.DIM_ВалютыRefID = ll.identificator;
+	USING "tmp_DIM_Валюты" ll
+	WHERE b."DIM_ВалютыRefID" = ll.identificator;
 	UPDATE staging."DIM_Валюты_Представления" AS staging
 		SET id = staging_id;
 

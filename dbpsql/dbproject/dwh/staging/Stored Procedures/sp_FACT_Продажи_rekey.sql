@@ -17,13 +17,13 @@ DECLARE
 BEGIN
 
 	SELECT create_session INTO val_start_date FROM session WHERE session_id = par_session_id;
-    DROP TABLE IF EXISTS tmp_FACT_Продажи;
-    CREATE TEMPORARY TABLE tmp_FACT_Продажи(
+    DROP TABLE IF EXISTS "tmp_FACT_Продажи";
+    CREATE TEMPORARY TABLE "tmp_FACT_Продажи"(
 		identificator uuid
 	);
 
-	INSERT INTO tmp_FACT_Продажи(identificator)
-	SELECT "Идентификатор" FROM staging."FACT_Продажи" as staging;
+	INSERT INTO "tmp_FACT_Продажи"(identificator)
+	SELECT "RefID" FROM staging."FACT_Продажи" as staging;
 
 	UPDATE staging."FACT_Продажи" as staging
 		SET id = COALESCE(trget.id, staging.staging_id),
@@ -83,8 +83,8 @@ BEGIN
 	par_rowcount := par_rowcount + var_rowcount;
 	-- Child 
 	DELETE FROM target."FACT_Продажи_Товары" AS b
-	USING tmp_FACT_Продажи ll
-	WHERE b.FACT_ПродажиRefID = ll.identificator;
+	USING "tmp_FACT_Продажи" ll
+	WHERE b."FACT_ПродажиRefID" = ll.identificator;
 	UPDATE staging."FACT_Продажи_Товары" AS staging
 		SET id = staging_id;
 

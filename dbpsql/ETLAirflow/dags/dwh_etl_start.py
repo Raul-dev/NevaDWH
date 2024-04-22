@@ -1,8 +1,7 @@
 import datetime as dt
 from airflow import DAG , models
-#from airflow.models import models
-from airflow.providers.microsoft.mssql.hooks.mssql import MsSqlHook
-from airflow.providers.microsoft.mssql.operators.mssql import MsSqlOperator
+
+from airflow.hooks.postgres_hook import PostgresHook
 from airflow.operators.trigger_dagrun import TriggerDagRunOperator
 from airflow.operators.python import ShortCircuitOperator
 import logging
@@ -34,6 +33,7 @@ with DAG(
 #    dagrun_timeout=dt.timedelta(seconds=10),
     schedule_interval=None,
     catchup=False,
+    max_active_runs=1,
     start_date= dt.datetime(2020, 1, 1),
     tags=["ods"],
 
@@ -41,12 +41,14 @@ with DAG(
         
     @dag.task(task_id="start_dwh_session")
     def start_dwh_session():
+        logging.info("Start main task")
         session = Session()
-        src = MsSqlHook(mssql_conn_id='mssql_ods',)
+        src = PostgresHook(postgres_conn_id='postgres_ods',)
         src_conn = src.get_conn()
         src.set_autocommit(src_conn, True)
         cursor = src_conn.cursor()
-        cursor.execute("EXEC [dbo].[dwh_AssignSessionID];")
+        #params = (v_dwh_session_id, v_count, v_session_date) 
+        cursor.execute("""CALL public."dwh_AssignSessionID"(null::bigint, null::bigint, null::timestamp)""")
         v_dwh_session_id  = models.Variable.get('dwh_session_id', default_var=-1)
         new_var = models.Variable()
         new_var.type = int
@@ -68,21 +70,12 @@ with DAG(
             session.add(new_var2)
             session.commit()
             logging.info(f"Added variable v_dwh_session_count")
-        v_session_id  = models.Variable.get('session_id', default_var=-1)        
-        new_var = models.Variable()
-        new_var.type = int
-        new_var.key = "session_id"
-        logging.info(f"v_session id = {v_session_id}")
-        if v_session_id == -1:
-            new_var.set_val(str(0))
-            session.add(new_var)
-            session.commit()
-            logging.info(f"Added variable session_id")
+        
         for row in cursor:
-            logging.info(f"dwh session id = {row[0]} Count ={row[1]}")
+            logging.info(f"dwh session id = {row[0]} Count ={row[1]}, date ={row[2]}")
             id = row[0]
             v_count = row[1]
-            v_session_date  =row[3]
+            v_session_date  = row[2]
         
         if v_count > 0:
             v_dwh_session_id = str(id) 
@@ -93,7 +86,7 @@ with DAG(
         else:
             v_dwh_session_id = str(0) 
             v_dwh_session_count= str(0) 
-            logging.info("dwh id variable %d" % (id))
+            logging.info("Empty dwh id variable %d" % (id))
             new_var.update(key="dwh_session_id", value=v_dwh_session_id, session=session)
             new_var2.update(key="dwh_session_count", value=v_dwh_session_count, session=session)
 
@@ -102,14 +95,29 @@ with DAG(
         session.commit()
         session = Session()
         logging.info("Start session v_count= %d" % (v_count))
-        src = MsSqlHook(mssql_conn_id='mssql_dwh')
+        src = PostgresHook(postgres_conn_id='postgres_dwh')
+        v_session_id  = models.Variable.get('session_id', default_var=-1)        
+        new_var = models.Variable()
+        new_var.type = int
+        new_var.key = "session_id"
+        logging.info(f"v_session id = {v_session_id}")        
+        if v_session_id == -1:
+            new_var.set_val(str(0))
+            session.add(new_var)
+            session.commit()
+            logging.info(f"Added variable session_id")
+
         if v_count > 0:
             src_conn = src.get_conn()
             src.set_autocommit(src_conn, True)
             cursor = src_conn.cursor()
             v_dwh_session_id  = models.Variable.get('dwh_session_id', default_var=-1) 
-            params = (v_dwh_session_id, v_count, v_session_date) 
-            cursor.execute("EXEC [dbo].[sp_SaveSessionState] @session_id=NULL, @dwh_session_id=%d, @rows_count=%d, @create_session=%s;",params)
+            #params = (v_dwh_session_id, v_count, v_session_date) 
+            logging.info("Type %s Date %s",type(v_session_date),v_session_date)
+            params = (v_session_date) 
+            #call public."sp_SaveSessionState"(NULL::bigint, 7::bigint, 2123::bigint, 1::smallint, null::smallint, '2023-08-27 21:06:57.878293'::timestamp without time zone, null::varchar(4000))
+            cursor.execute(f"""CALL public."sp_SaveSessionState"(NULL::bigint, {v_dwh_session_id}::bigint, {v_count}::bigint, 1::smallint, null::smallint, '{v_session_date}'::timestamp without time zone, null::varchar(4000))""")
+       
             id=0
             for row in cursor:
                 logging.info(f"session id = {row[0]}")
@@ -125,7 +133,8 @@ with DAG(
             v_session_id = str(0) 
             new_var.update(key="session_id", value=v_session_id, session=session)
         session.commit()
-    
+        logging.info("Finish main task")
+
     IsNotEmpty = ShortCircuitOperator(
         task_id='IsNotEmpty',
         python_callable=IsNotEmpty,
@@ -138,22 +147,23 @@ with DAG(
 
     @dag.task(task_id="finish_dwh_session")
     def finish_dwh_session():
-        src = MsSqlHook(mssql_conn_id='mssql_dwh')
+        src = PostgresHook(postgres_conn_id='postgres_dwh')
         src_conn = src.get_conn()
         src.set_autocommit(src_conn, True)
         cursor = src_conn.cursor()
         v_session_id  = models.Variable.get('session_id', default_var=-1)      
-        params = (v_session_id) 
-        cursor.execute("EXEC [dbo].[sp_SaveSessionState] @session_id=%d, @session_state_id=2;",params)
+        #params = (v_session_id) 
+        #cursor.execute("""CALL "sp_SaveSessionState" @session_id=%d, @session_state_id=2;""",params)
+        cursor.execute(f"""CALL public."sp_SaveSessionState"({v_session_id}::bigint, NULL::bigint, NULL::bigint, 1::smallint, 2::smallint, NULL::timestamp without time zone, null::varchar(4000))""")
         cursor.close()
         src_conn.close()
-        src = MsSqlHook(mssql_conn_id='mssql_ods')
+        src = PostgresHook(postgres_conn_id='postgres_ods')
         src_conn = src.get_conn()
         src.set_autocommit(src_conn, True)
         cursor = src_conn.cursor()
         v_dwh_session_id  = models.Variable.get('dwh_session_id', default_var=-1)      
         params = (v_dwh_session_id) 
-        cursor.execute("EXEC [dbo].[dwh_SaveSessionState] @dwh_session_id=%d, @dwh_session_state_id=4;",params)
+        cursor.execute("""CALL public."dwh_SaveSessionState"(%s::bigint, null::smallint, 4::smallint);""",params)
         cursor.close()
         src_conn.close()
 

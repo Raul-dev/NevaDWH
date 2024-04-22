@@ -28,7 +28,7 @@ with DAG(
         #TODO get var
         v_session_id = models.Variable.get('session_id', default_var=-1)
         logging.info("Startint insert.")
-        src = PostgresHook(postgres_conn_id='postgres_client1_dwh')
+        src = PostgresHook(postgres_conn_id='postgres_dwh')
         src_conn = src.get_conn()
         src.set_autocommit(src_conn, True)
         cursor = src_conn.cursor()
