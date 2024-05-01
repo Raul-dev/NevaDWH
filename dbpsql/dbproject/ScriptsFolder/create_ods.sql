@@ -1151,7 +1151,7 @@ DECLARE
     var_rowcount INTEGER;
     var_xmlns text ARRAY;BEGIN
 
-    SELECT ARRAY[ARRAY['nva', 'http://v8.1c.ru/8.1/data/enterprise/current-config']] into var_xmlns;
+       SELECT ARRAY[ARRAY['nva', 'http://v8.1c.ru/8.1/data/enterprise/current-config'], ARRAY['xsi', 'http://www.w3.org/2001/XMLSchema-instance'], ARRAY['xs', 'http://www.w3.org/2001/XMLSchema']] into var_xmlns;
     DROP TABLE IF EXISTS "DIM_Валюты_tmp1";
 	CREATE TEMPORARY TABLE "DIM_Валюты_tmp1" (
 		buffer_id int,
@@ -1341,7 +1341,7 @@ DECLARE
     var_rowcount INTEGER;
     var_xmlns text ARRAY;BEGIN
 
-    SELECT ARRAY[ARRAY['nva', 'http://v8.1c.ru/8.1/data/enterprise/current-config']] into var_xmlns;
+       SELECT ARRAY[ARRAY['nva', 'http://v8.1c.ru/8.1/data/enterprise/current-config'], ARRAY['xsi', 'http://www.w3.org/2001/XMLSchema-instance'], ARRAY['xs', 'http://www.w3.org/2001/XMLSchema']] into var_xmlns;
     DROP TABLE IF EXISTS "DIM_Клиенты_tmp1";
 	CREATE TEMPORARY TABLE "DIM_Клиенты_tmp1" (
 		buffer_id int,
@@ -1499,7 +1499,7 @@ DECLARE
     var_rowcount INTEGER;
     var_xmlns text ARRAY;BEGIN
 
-    SELECT ARRAY[ARRAY['nva', 'http://v8.1c.ru/8.1/data/enterprise/current-config']] into var_xmlns;
+       SELECT ARRAY[ARRAY['nva', 'http://v8.1c.ru/8.1/data/enterprise/current-config'], ARRAY['xsi', 'http://www.w3.org/2001/XMLSchema-instance'], ARRAY['xs', 'http://www.w3.org/2001/XMLSchema']] into var_xmlns;
     DROP TABLE IF EXISTS "DIM_Товары_tmp1";
 	CREATE TEMPORARY TABLE "DIM_Товары_tmp1" (
 		buffer_id int,
@@ -1657,7 +1657,7 @@ DECLARE
     var_rowcount INTEGER;
     var_xmlns text ARRAY;BEGIN
 
-    SELECT ARRAY[ARRAY['nva', 'http://v8.1c.ru/8.1/data/enterprise/current-config']] into var_xmlns;
+       SELECT ARRAY[ARRAY['nva', 'http://v8.1c.ru/8.1/data/enterprise/current-config'], ARRAY['xsi', 'http://www.w3.org/2001/XMLSchema-instance'], ARRAY['xs', 'http://www.w3.org/2001/XMLSchema']] into var_xmlns;
     DROP TABLE IF EXISTS "FACT_Продажи_tmp1";
 	CREATE TEMPORARY TABLE "FACT_Продажи_tmp1" (
 		buffer_id int,
@@ -1717,7 +1717,7 @@ SELECT  xpath('//nva:ПолноеИмя/text()', msg::xml, my) AS status INTO pa
         CAST((xpath('/nva:Data/nva:Реквизиты/nva:DocumentObject.Продажи/nva:Клиент/text()', msg::xml, var_xmlns ))[1]::text as varchar(36))  AS "Клиент",
         CAST((xpath('/nva:Data/nva:Реквизиты/nva:DocumentObject.Продажи/nva:ТипДоставки/text()', msg::xml, var_xmlns ))[1]::text as varchar(500))  AS "ТипДоставки",
         CAST((xpath('/nva:Data/nva:Реквизиты/nva:DocumentObject.Продажи/nva:ПримерСоставногоТипа/text()', msg::xml, var_xmlns ))[1]::text as varchar(36))  AS "ПримерСоставногоТипа",
-        CAST((xpath('/nva:Data/nva:Реквизиты/nva:DocumentObject.Продажи/nva:(ПримерСоставногоТипа/@xsi:type)[1]/text()', msg::xml, var_xmlns ))[1]::text as varchar(128))  AS "ПримерСоставногоТипа_ТипЗначения",
+        CAST((xpath('/nva:Data/nva:Реквизиты/nva:DocumentObject.Продажи/nva:ПримерСоставногоТипа/@xsi:type', msg::xml, var_xmlns ))[1]::text as varchar(128))  AS "ПримерСоставногоТипа_ТипЗначения",
         CAST(now() as timestamp without time zone) 
     FROM "odins"."FACT_Продажи_buffer" AS b
     WHERE b."is_error" = false AND EXISTS (SELECT 1 FROM "FACT_Продажи_tmp1" AS t WHERE CAST((xpath('/nva:Data/nva:Реквизиты/nva:DocumentObject.Продажи/nva:Ref/text()', msg::xml, var_xmlns ))[1]::text as uuid) = t."RefID" AND b.buffer_id = t.buffer_id )

@@ -23,12 +23,11 @@ BEGIN
 
 	TRUNCATE TABLE "staging"."FACT_Продажи";
 	SELECT MAX(id) into val_LastTargetID FROM "target"."FACT_Продажи";
-	IF NOT val_LastTargetID is NULL AND val_LastTargetID >= 1 THEN
-		SELECT pg_get_serial_sequence('staging."FACT_Продажи"', 'staging_id') INTO val_tmp ;
-		val_LastTargetID := val_LastTargetID + 1;
-		SELECT setval(val_tmp, val_LastTargetID );
-	END IF;
 
+	SELECT pg_get_serial_sequence('staging."FACT_Продажи"', 'staging_id') INTO val_tmp;
+	val_LastTargetID := COALESCE(val_LastTargetID, 0) + 1;
+	PERFORM setval(val_tmp, val_LastTargetID );
+	
 	SELECT name INTO val_source_name FROM data_source d WHERE d.data_source_id =  1;
 	SELECT dwh_session_id INTO val_dwh_session_id FROM session s WHERE session_id = par_session_id;
 	SELECT create_session INTO val_start_date FROM session s WHERE session_id = par_session_id;
@@ -59,7 +58,7 @@ BEGIN
 		"nkey",
 		nkey AS "vkey",
 		val_start_date AS "start_date",
-		fn_GetMaxDate() AS "end_date",
+		"fn_GetMaxDate"() AS "end_date",
 		"RefID",
 		"DeletionMark",
 		"Number",
@@ -107,7 +106,7 @@ BEGIN
 		"nkey",
 		nkey AS "vkey",
 		val_start_date AS "start_date",
-		fn_GetMaxDate() AS "end_date",
+		"fn_GetMaxDate"() AS "end_date",
 		"FACT_ПродажиRefID",
 		"Доставка",
 		"Товар",

@@ -29,8 +29,9 @@ BEGIN
 		SET id = COALESCE(trget.id, staging.staging_id),
 		session_id = COALESCE(trget.session_id, staging.session_id),
 		start_date = COALESCE(trget.start_date, staging.start_date)
-	FROM target."FACT_Продажи" as trget
-	WHERE trget.end_date = public.fn_GetMaxDate() AND trget.nkey = staging.nkey AND trget.vkey = staging.vkey;
+	FROM staging."FACT_Продажи" as src
+		LEFT JOIN target."FACT_Продажи" as trget ON trget.end_date = public."fn_GetMaxDate"() AND trget.nkey = src.nkey AND trget.vkey = src.vkey
+	WHERE staging.staging_id = src.staging_id;
 
 	INSERT INTO staging."FACT_Продажи" (
 		id,
@@ -76,7 +77,7 @@ BEGIN
 	FROM (
 		SELECT source.*
 			FROM target."FACT_Продажи" source
-			WHERE source.end_date = public.fn_GetMaxDate() AND
+			WHERE source.end_date = public."fn_GetMaxDate"() AND
 			EXISTS( SELECT 1 FROM staging."FACT_Продажи" as stg WHERE source.nkey = stg.nkey AND source.id <> stg.id )
 		) a;
 	GET DIAGNOSTICS var_rowcount = ROW_COUNT;

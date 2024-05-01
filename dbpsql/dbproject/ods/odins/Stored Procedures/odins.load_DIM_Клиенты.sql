@@ -14,7 +14,7 @@ DECLARE
     var_rowcount INTEGER;
     var_xmlns text ARRAY;BEGIN
 
-    SELECT ARRAY[ARRAY['nva', 'http://v8.1c.ru/8.1/data/enterprise/current-config']] into var_xmlns;
+       SELECT ARRAY[ARRAY['nva', 'http://v8.1c.ru/8.1/data/enterprise/current-config'], ARRAY['xsi', 'http://www.w3.org/2001/XMLSchema-instance'], ARRAY['xs', 'http://www.w3.org/2001/XMLSchema']] into var_xmlns;
     DROP TABLE IF EXISTS "DIM_Клиенты_tmp1";
 	CREATE TEMPORARY TABLE "DIM_Клиенты_tmp1" (
 		buffer_id int,

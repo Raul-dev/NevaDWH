@@ -1,5 +1,5 @@
 
-do
+DO
 $$
 BEGIN
 RAISE NOTICE 'CREATE PROCEDURE "sp_SaveSessionState"';

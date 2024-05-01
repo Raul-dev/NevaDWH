@@ -90,8 +90,6 @@ function CreateDB ($DBServer, $DBPort, $Database, $Uid, $Pwd, $SqlScript) {
 	Write-Host $res
 	$DBConn.Close()
 	#Write-Host $SqlScript
-	
-	
 }
 
 function ExecutePsqlCmd ($DBServer, $DBPort, $Database, $Uid, $Pwd, $SqlScript) {
@@ -116,28 +114,10 @@ function ExecutePsqlCmd ($DBServer, $DBPort, $Database, $Uid, $Pwd, $SqlScript) 
 try{
 
 	#https://github.com/npgsql/npgsql/releases/download/v4.1.8/Npgsql.msi
-	
-	#Add-Type -Path "C:\Windows\Microsoft.NET\assembly\GAC_MSIL\Npgsql\v4.0_4.1.8.0__5d8b90d52f46fda7\Npgsql.dll"
-	#Add-Type -Path "Npgsql.dll"
-	#Add-Type Npgsql: Unable to load one or more of the requested types.
-	#[System.Reflection.Assembly]::LoadWithPartialName("Npgsql")
-	#$bin = "C:\folder\with\DLLs"
-	$bin="F:\Work\GitLab\gitlab.neva.loc\FirstTestGroup\generatordwh\src\services\PostgresNotify\ConsoleApp1\bin\Debug"
-	Add-Type -Path "$bin\Npgsql.dll" -ReferencedAssemblies "$bin\System.*.dll"
-	#Add-Type -Path "F:\Work\GitLab\gitlab.neva.loc\FirstTestGroup\generatordwh\src\services\PostgresNotify\ConsoleApp1\bin\Debug\Npgsql.dll" -ReferencedAssemblies "F:\Work\GitLab\gitlab.neva.loc\FirstTestGroup\generatordwh\src\services\PostgresNotify\ConsoleApp1\bin\Debug\System.*.dll"
-	#Register-PackageSource -provider NuGet -name nugetRepository -location https://www.nuget.org/api/v2
-	#Cant Install-Package Npgsql
-	#Install-Package -force -verbose Npgsql
-	#$pkg = find-package -name Microsoft.Data.Sqlite
-	#$pkg = find-package -name Npgsql -RequiredVersion 4.1.8
-	#install-package -force -scope currentUser -verbose $pkg
-	
-	#Npgsql.dll Unable to load one or more of the requested types.
+	[System.Reflection.Assembly]::LoadWithPartialName("Npgsql")
 
-	#find-package -name Npgsql -RequiredVersion 4.1.12
-	#exit
 	$ExitCode = 0
-	#Install-Module PostgreSQLCmdlets
+	
 	#Create dump script
 	$DBName = "ods"
 	$SourceFolder = Convert-Path ..
@@ -158,8 +138,7 @@ try{
 	$SourceDBFolder = $SourceFolder + "\${DBName}\dbo\Stored Procedures"
 	ConcatenateScriptFolder $SourceDBFolder $OutputDumpFile
 	$SourceDBFolder = $SourceFolder + "\${DBName}"
-	#$SchemaFolders = Get-ChildItem ..\${DBName} -Attributes Directory | Where-Object -FilterScript {($_.Name -ne 'dbo') -and ($_.Name -ne 'Dictionaries') -and ($_.Name -ne 'Security')}
-
+	
 	$SchemaFolders = Get-ChildItem $SourceDBFolder -Attributes Directory | Where-Object -FilterScript {($_.Name -ne 'dbo') -and ($_.Name -ne 'Dictionaries') -and ($_.Name -ne 'Security')}
 	Write-Host $SchemaFolders
 	for ($i=0; $i -lt $SchemaFolders.count; $i++){
@@ -196,7 +175,6 @@ try{
 	$SourceDBFolder = $SourceFolder + "\${DBName}\dbo\Stored Procedures"
 	ConcatenateScriptFolder $SourceDBFolder $OutputDumpFile
 	$SourceDBFolder = $SourceFolder + "\${DBName}"
-	#$SchemaFolders = Get-ChildItem ..\${DBName} -Attributes Directory | Where-Object -FilterScript {($_.Name -ne 'dbo') -and ($_.Name -ne 'Dictionaries') -and ($_.Name -ne 'Security')}
 
 	$SchemaFolders = Get-ChildItem $SourceDBFolder -Attributes Directory | Where-Object -FilterScript {($_.Name -ne 'dbo') -and ($_.Name -ne 'Dictionaries') -and ($_.Name -ne 'Security')}
 	Write-Host $SchemaFolders
@@ -235,7 +213,6 @@ try{
 	$SourceDBFolder = $SourceFolder + "\${DBName}\dbo\Stored Procedures"
 	ConcatenateScriptFolder $SourceDBFolder $OutputDumpFile
 	$SourceDBFolder = $SourceFolder + "\${DBName}"
-	#$SchemaFolders = Get-ChildItem ..\${DBName} -Attributes Directory | Where-Object -FilterScript {($_.Name -ne 'dbo') -and ($_.Name -ne 'Dictionaries') -and ($_.Name -ne 'Security')}
 
 	$SchemaFolders = Get-ChildItem $SourceDBFolder -Attributes Directory | Where-Object -FilterScript {($_.Name -ne 'dbo') -and ($_.Name -ne 'Dictionaries') -and ($_.Name -ne 'Security')}
 	Write-Host $SchemaFolders
@@ -263,8 +240,7 @@ try{
 	Write-Host "Use script"
 	Write-Host $OutputDumpFile
 	$SqlScript = Get-Content -Delimiter "\n" -Encoding "UTF8" $OutputDumpFile 
-	#	$SqlScript = Get-Content -Encoding "UTF8"  "E:\\Work\\GitLab\\gitlab.neva.loc\\generatordwh\\src\\dwhclients\\client1\\dbpsql\\ScriptsFolder\\create_objects.sql"	
-	
+
 	ExecutePsqlCmd $TargetServerName $Port $TargetODSDBname "postgres" "postgres" $SqlScript
 	
 	Write-Host "Apply dictionaries"

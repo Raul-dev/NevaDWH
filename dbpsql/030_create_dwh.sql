@@ -50,7 +50,7 @@ CREATE TABLE IF NOT EXISTS public.session (
 
 
 
-CREATE OR REPLACE FUNCTION  fn_GetMaxDate()
+CREATE OR REPLACE FUNCTION  "fn_GetMaxDate"()
 RETURNS timestamp
 AS $BODY$
 BEGIN
@@ -58,7 +58,7 @@ RETURN make_date(2100, 1 , 1);
 END;
 $BODY$
 LANGUAGE plpgsql;
-CREATE OR REPLACE FUNCTION  fn_GetMaxDate()
+CREATE OR REPLACE FUNCTION  "fn_GetMinDate"()
 RETURNS timestamp
 AS $BODY$
 BEGIN
@@ -67,7 +67,7 @@ END;
 $BODY$
 LANGUAGE plpgsql;
 
-do
+DO
 $$
 BEGIN
 RAISE NOTICE 'CREATE PROCEDURE "sp_SaveSessionState"';
@@ -560,8 +560,9 @@ BEGIN
 		SET id = COALESCE(trget.id, staging.staging_id),
 		session_id = COALESCE(trget.session_id, staging.session_id),
 		start_date = COALESCE(trget.start_date, staging.start_date)
-	FROM target."DIM_Валюты" as trget
-	WHERE trget.end_date = public.fn_GetMaxDate() AND trget.nkey = staging.nkey AND trget.vkey = staging.vkey;
+	FROM staging."DIM_Валюты" as src
+		LEFT JOIN target."DIM_Валюты" as trget ON trget.end_date = public."fn_GetMaxDate"() AND trget.nkey = src.nkey AND trget.vkey = src.vkey
+	WHERE staging.staging_id = src.staging_id;
 
 	INSERT INTO staging."DIM_Валюты" (
 		id,
@@ -609,7 +610,7 @@ BEGIN
 	FROM (
 		SELECT source.*
 			FROM target."DIM_Валюты" source
-			WHERE source.end_date = public.fn_GetMaxDate() AND
+			WHERE source.end_date = public."fn_GetMaxDate"() AND
 			EXISTS( SELECT 1 FROM staging."DIM_Валюты" as stg WHERE source.nkey = stg.nkey AND source.id <> stg.id )
 		) a;
 	GET DIAGNOSTICS var_rowcount = ROW_COUNT;
@@ -650,12 +651,11 @@ BEGIN
 
 	TRUNCATE TABLE "staging"."DIM_Валюты";
 	SELECT MAX(id) into val_LastTargetID FROM "target"."DIM_Валюты";
-	IF NOT val_LastTargetID is NULL AND val_LastTargetID >= 1 THEN
-		SELECT pg_get_serial_sequence('staging."DIM_Валюты"', 'staging_id') INTO val_tmp ;
-		val_LastTargetID := val_LastTargetID + 1;
-		SELECT setval(val_tmp, val_LastTargetID );
-	END IF;
 
+	SELECT pg_get_serial_sequence('staging."DIM_Валюты"', 'staging_id') INTO val_tmp;
+	val_LastTargetID := COALESCE(val_LastTargetID, 0) + 1;
+	PERFORM setval(val_tmp, val_LastTargetID );
+	
 	SELECT name INTO val_source_name FROM data_source d WHERE d.data_source_id =  1;
 	SELECT dwh_session_id INTO val_dwh_session_id FROM session s WHERE session_id = par_session_id;
 	SELECT create_session INTO val_start_date FROM session s WHERE session_id = par_session_id;
@@ -687,7 +687,7 @@ BEGIN
 		"nkey",
 		nkey AS "vkey",
 		val_start_date AS "start_date",
-		fn_GetMaxDate() AS "end_date",
+		"fn_GetMaxDate"() AS "end_date",
 		"RefID",
 		"DeletionMark",
 		"Code",
@@ -734,7 +734,7 @@ BEGIN
 		"nkey",
 		nkey AS "vkey",
 		val_start_date AS "start_date",
-		fn_GetMaxDate() AS "end_date",
+		"fn_GetMaxDate"() AS "end_date",
 		"DIM_ВалютыRefID",
 		"КодЯзыка",
 		"ПараметрыПрописи",
@@ -850,8 +850,9 @@ BEGIN
 		SET id = COALESCE(trget.id, staging.staging_id),
 		session_id = COALESCE(trget.session_id, staging.session_id),
 		start_date = COALESCE(trget.start_date, staging.start_date)
-	FROM target."DIM_Клиенты" as trget
-	WHERE trget.end_date = public.fn_GetMaxDate() AND trget.nkey = staging.nkey AND trget.vkey = staging.vkey;
+	FROM staging."DIM_Клиенты" as src
+		LEFT JOIN target."DIM_Клиенты" as trget ON trget.end_date = public."fn_GetMaxDate"() AND trget.nkey = src.nkey AND trget.vkey = src.vkey
+	WHERE staging.staging_id = src.staging_id;
 
 	INSERT INTO staging."DIM_Клиенты" (
 		id,
@@ -887,7 +888,7 @@ BEGIN
 	FROM (
 		SELECT source.*
 			FROM target."DIM_Клиенты" source
-			WHERE source.end_date = public.fn_GetMaxDate() AND
+			WHERE source.end_date = public."fn_GetMaxDate"() AND
 			EXISTS( SELECT 1 FROM staging."DIM_Клиенты" as stg WHERE source.nkey = stg.nkey AND source.id <> stg.id )
 		) a;
 	GET DIAGNOSTICS var_rowcount = ROW_COUNT;
@@ -922,12 +923,11 @@ BEGIN
 
 	TRUNCATE TABLE "staging"."DIM_Клиенты";
 	SELECT MAX(id) into val_LastTargetID FROM "target"."DIM_Клиенты";
-	IF NOT val_LastTargetID is NULL AND val_LastTargetID >= 1 THEN
-		SELECT pg_get_serial_sequence('staging."DIM_Клиенты"', 'staging_id') INTO val_tmp ;
-		val_LastTargetID := val_LastTargetID + 1;
-		SELECT setval(val_tmp, val_LastTargetID );
-	END IF;
 
+	SELECT pg_get_serial_sequence('staging."DIM_Клиенты"', 'staging_id') INTO val_tmp;
+	val_LastTargetID := COALESCE(val_LastTargetID, 0) + 1;
+	PERFORM setval(val_tmp, val_LastTargetID );
+	
 	SELECT name INTO val_source_name FROM data_source d WHERE d.data_source_id =  1;
 	SELECT dwh_session_id INTO val_dwh_session_id FROM session s WHERE session_id = par_session_id;
 	SELECT create_session INTO val_start_date FROM session s WHERE session_id = par_session_id;
@@ -953,7 +953,7 @@ BEGIN
 		"nkey",
 		nkey AS "vkey",
 		val_start_date AS "start_date",
-		fn_GetMaxDate() AS "end_date",
+		"fn_GetMaxDate"() AS "end_date",
 		"RefID",
 		"DeletionMark",
 		"Code",
@@ -1072,8 +1072,9 @@ BEGIN
 		SET id = COALESCE(trget.id, staging.staging_id),
 		session_id = COALESCE(trget.session_id, staging.session_id),
 		start_date = COALESCE(trget.start_date, staging.start_date)
-	FROM target."DIM_Товары" as trget
-	WHERE trget.end_date = public.fn_GetMaxDate() AND trget.nkey = staging.nkey AND trget.vkey = staging.vkey;
+	FROM staging."DIM_Товары" as src
+		LEFT JOIN target."DIM_Товары" as trget ON trget.end_date = public."fn_GetMaxDate"() AND trget.nkey = src.nkey AND trget.vkey = src.vkey
+	WHERE staging.staging_id = src.staging_id;
 
 	INSERT INTO staging."DIM_Товары" (
 		id,
@@ -1109,7 +1110,7 @@ BEGIN
 	FROM (
 		SELECT source.*
 			FROM target."DIM_Товары" source
-			WHERE source.end_date = public.fn_GetMaxDate() AND
+			WHERE source.end_date = public."fn_GetMaxDate"() AND
 			EXISTS( SELECT 1 FROM staging."DIM_Товары" as stg WHERE source.nkey = stg.nkey AND source.id <> stg.id )
 		) a;
 	GET DIAGNOSTICS var_rowcount = ROW_COUNT;
@@ -1144,12 +1145,11 @@ BEGIN
 
 	TRUNCATE TABLE "staging"."DIM_Товары";
 	SELECT MAX(id) into val_LastTargetID FROM "target"."DIM_Товары";
-	IF NOT val_LastTargetID is NULL AND val_LastTargetID >= 1 THEN
-		SELECT pg_get_serial_sequence('staging."DIM_Товары"', 'staging_id') INTO val_tmp ;
-		val_LastTargetID := val_LastTargetID + 1;
-		SELECT setval(val_tmp, val_LastTargetID );
-	END IF;
 
+	SELECT pg_get_serial_sequence('staging."DIM_Товары"', 'staging_id') INTO val_tmp;
+	val_LastTargetID := COALESCE(val_LastTargetID, 0) + 1;
+	PERFORM setval(val_tmp, val_LastTargetID );
+	
 	SELECT name INTO val_source_name FROM data_source d WHERE d.data_source_id =  1;
 	SELECT dwh_session_id INTO val_dwh_session_id FROM session s WHERE session_id = par_session_id;
 	SELECT create_session INTO val_start_date FROM session s WHERE session_id = par_session_id;
@@ -1175,7 +1175,7 @@ BEGIN
 		"nkey",
 		nkey AS "vkey",
 		val_start_date AS "start_date",
-		fn_GetMaxDate() AS "end_date",
+		"fn_GetMaxDate"() AS "end_date",
 		"RefID",
 		"DeletionMark",
 		"Code",
@@ -1358,8 +1358,9 @@ BEGIN
 		SET id = COALESCE(trget.id, staging.staging_id),
 		session_id = COALESCE(trget.session_id, staging.session_id),
 		start_date = COALESCE(trget.start_date, staging.start_date)
-	FROM target."FACT_Продажи" as trget
-	WHERE trget.end_date = public.fn_GetMaxDate() AND trget.nkey = staging.nkey AND trget.vkey = staging.vkey;
+	FROM staging."FACT_Продажи" as src
+		LEFT JOIN target."FACT_Продажи" as trget ON trget.end_date = public."fn_GetMaxDate"() AND trget.nkey = src.nkey AND trget.vkey = src.vkey
+	WHERE staging.staging_id = src.staging_id;
 
 	INSERT INTO staging."FACT_Продажи" (
 		id,
@@ -1405,7 +1406,7 @@ BEGIN
 	FROM (
 		SELECT source.*
 			FROM target."FACT_Продажи" source
-			WHERE source.end_date = public.fn_GetMaxDate() AND
+			WHERE source.end_date = public."fn_GetMaxDate"() AND
 			EXISTS( SELECT 1 FROM staging."FACT_Продажи" as stg WHERE source.nkey = stg.nkey AND source.id <> stg.id )
 		) a;
 	GET DIAGNOSTICS var_rowcount = ROW_COUNT;
@@ -1446,12 +1447,11 @@ BEGIN
 
 	TRUNCATE TABLE "staging"."FACT_Продажи";
 	SELECT MAX(id) into val_LastTargetID FROM "target"."FACT_Продажи";
-	IF NOT val_LastTargetID is NULL AND val_LastTargetID >= 1 THEN
-		SELECT pg_get_serial_sequence('staging."FACT_Продажи"', 'staging_id') INTO val_tmp ;
-		val_LastTargetID := val_LastTargetID + 1;
-		SELECT setval(val_tmp, val_LastTargetID );
-	END IF;
 
+	SELECT pg_get_serial_sequence('staging."FACT_Продажи"', 'staging_id') INTO val_tmp;
+	val_LastTargetID := COALESCE(val_LastTargetID, 0) + 1;
+	PERFORM setval(val_tmp, val_LastTargetID );
+	
 	SELECT name INTO val_source_name FROM data_source d WHERE d.data_source_id =  1;
 	SELECT dwh_session_id INTO val_dwh_session_id FROM session s WHERE session_id = par_session_id;
 	SELECT create_session INTO val_start_date FROM session s WHERE session_id = par_session_id;
@@ -1482,7 +1482,7 @@ BEGIN
 		"nkey",
 		nkey AS "vkey",
 		val_start_date AS "start_date",
-		fn_GetMaxDate() AS "end_date",
+		"fn_GetMaxDate"() AS "end_date",
 		"RefID",
 		"DeletionMark",
 		"Number",
@@ -1530,7 +1530,7 @@ BEGIN
 		"nkey",
 		nkey AS "vkey",
 		val_start_date AS "start_date",
-		fn_GetMaxDate() AS "end_date",
+		"fn_GetMaxDate"() AS "end_date",
 		"FACT_ПродажиRefID",
 		"Доставка",
 		"Товар",
