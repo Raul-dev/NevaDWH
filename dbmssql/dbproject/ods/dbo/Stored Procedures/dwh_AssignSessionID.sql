@@ -1,7 +1,7 @@
 CREATE PROCEDURE dwh_AssignSessionID
-	@dwh_session_id bigint = NULL OUTPUT, -- @dwh_session_id = -1 create new package
-    @RowCount INT = NULL OUTPUT,
-    @ErrMessage VARCHAR(MAX) = NULL OUTPUT
+    @dwh_session_id bigint = NULL OUTPUT, -- @dwh_session_id = -1 create new package
+    @RowCount       int = NULL OUTPUT,
+    @ErrMessage     varchar(MAX) = NULL OUTPUT
 AS
 BEGIN
 SET XACT_ABORT OFF
@@ -17,7 +17,8 @@ BEGIN TRY
 
     IF NOT @dwh_session_id IS NULL AND @dwh_session_id != -1
     BEGIN
-               SELECT s.dwh_session_id, sum(row_count) as row_count, @ErrMessage AS ErrMessage,         MAX(s.create_session) AS create_session
+
+        SELECT s.dwh_session_id, sum(row_count) as row_count, @ErrMessage AS ErrMessage,         MAX(s.create_session) AS create_session
         FROM dwh_session s
             INNER JOIN [dbo].[dwh_processing_details] p ON p.dwh_session_id = s.dwh_session_id
         WHERE dwh_session_state_id = 2 AND s.dwh_session_id = @dwh_session_id
@@ -40,22 +41,23 @@ BEGIN TRY
     DECLARE @LocalRowCount INT
 BEGIN TRANSACTION
     CREATE TABLE #DIM_Валюты(
-        ods_id bigint Primary Key,
+        [ods_id] bigint Primary Key,
         [RefID] uniqueidentifier
     )
     INSERT INTO #DIM_Валюты (
-        ods_id, [RefID]
+        [ods_id],
+        [RefID]
     )
-    SELECT ods_id, [RefID] FROM [odins].[DIM_Валюты] WITH(XLOCK)
+    SELECT [ods_id], [RefID] FROM [odins].[DIM_Валюты] WITH(XLOCK)
     SET @LocalRowCount = @@ROWCOUNT
     SELECT @RowCount = @RowCount + @LocalRowCount
     IF @LocalRowCount > 0
-        INSERT [dbo].[dwh_processing_details]( dwh_session_id, [schema_name], [table_name], [row_count])
+        INSERT [dbo].[dwh_processing_details]([dwh_session_id], [schema_name], [table_name], [row_count])
         SELECT @dwh_session_id, 'odins', 'DIM_Валюты',@LocalRowCount
 
     INSERT INTO [odins].[DIM_Валюты_history](
-        nkey,
-        dwh_session_id,
+        [nkey],
+        [dwh_session_id],
         [RefID],
         [DeletionMark],
         [Code],
@@ -70,7 +72,7 @@ BEGIN TRANSACTION
         [dt_create]
     )
     SELECT
-        b.nkey,
+        b.[nkey],
         @dwh_session_id AS dwh_session_id,
         b.[RefID],
         b.[DeletionMark],
@@ -88,15 +90,15 @@ BEGIN TRANSACTION
         INNER JOIN #DIM_Валюты ll ON b.ods_id = ll.ods_id
 
     INSERT INTO [odins].[DIM_Валюты.Представления_history](
-        nkey,
-        dwh_session_id,
+        [nkey],
+        [dwh_session_id],
         [DIM_ВалютыRefID],
         [КодЯзыка],
         [ПараметрыПрописи],
         [dt_create]
     )
     SELECT
-        b.nkey,
+        b.[nkey],
         @dwh_session_id AS dwh_session_id,
         b.[DIM_ВалютыRefID],
         b.[КодЯзыка],
@@ -107,29 +109,30 @@ BEGIN TRANSACTION
     SET @LocalRowCount = @@ROWCOUNT
     SELECT @RowCount = @RowCount + @LocalRowCount
     IF @LocalRowCount > 0
-        INSERT [dbo].[dwh_processing_details]( dwh_session_id, [schema_name], [table_name], [row_count])
+        INSERT [dbo].[dwh_processing_details]([dwh_session_id], [schema_name], [table_name], [row_count])
         SELECT @dwh_session_id, 'odins', 'DIM_Валюты.Представления', @LocalRowCount
 
 
 COMMIT TRANSACTION
 BEGIN TRANSACTION
     CREATE TABLE #DIM_Клиенты(
-        ods_id bigint Primary Key,
+        [ods_id] bigint Primary Key,
         [RefID] uniqueidentifier
     )
     INSERT INTO #DIM_Клиенты (
-        ods_id, [RefID]
+        [ods_id],
+        [RefID]
     )
-    SELECT ods_id, [RefID] FROM [odins].[DIM_Клиенты] WITH(XLOCK)
+    SELECT [ods_id], [RefID] FROM [odins].[DIM_Клиенты] WITH(XLOCK)
     SET @LocalRowCount = @@ROWCOUNT
     SELECT @RowCount = @RowCount + @LocalRowCount
     IF @LocalRowCount > 0
-        INSERT [dbo].[dwh_processing_details]( dwh_session_id, [schema_name], [table_name], [row_count])
+        INSERT [dbo].[dwh_processing_details]([dwh_session_id], [schema_name], [table_name], [row_count])
         SELECT @dwh_session_id, 'odins', 'DIM_Клиенты',@LocalRowCount
 
     INSERT INTO [odins].[DIM_Клиенты_history](
-        nkey,
-        dwh_session_id,
+        [nkey],
+        [dwh_session_id],
         [RefID],
         [DeletionMark],
         [Code],
@@ -138,7 +141,7 @@ BEGIN TRANSACTION
         [dt_create]
     )
     SELECT
-        b.nkey,
+        b.[nkey],
         @dwh_session_id AS dwh_session_id,
         b.[RefID],
         b.[DeletionMark],
@@ -153,22 +156,23 @@ BEGIN TRANSACTION
 COMMIT TRANSACTION
 BEGIN TRANSACTION
     CREATE TABLE #DIM_Товары(
-        ods_id bigint Primary Key,
+        [ods_id] bigint Primary Key,
         [RefID] uniqueidentifier
     )
     INSERT INTO #DIM_Товары (
-        ods_id, [RefID]
+        [ods_id],
+        [RefID]
     )
-    SELECT ods_id, [RefID] FROM [odins].[DIM_Товары] WITH(XLOCK)
+    SELECT [ods_id], [RefID] FROM [odins].[DIM_Товары] WITH(XLOCK)
     SET @LocalRowCount = @@ROWCOUNT
     SELECT @RowCount = @RowCount + @LocalRowCount
     IF @LocalRowCount > 0
-        INSERT [dbo].[dwh_processing_details]( dwh_session_id, [schema_name], [table_name], [row_count])
+        INSERT [dbo].[dwh_processing_details]([dwh_session_id], [schema_name], [table_name], [row_count])
         SELECT @dwh_session_id, 'odins', 'DIM_Товары',@LocalRowCount
 
     INSERT INTO [odins].[DIM_Товары_history](
-        nkey,
-        dwh_session_id,
+        [nkey],
+        [dwh_session_id],
         [RefID],
         [DeletionMark],
         [Code],
@@ -177,7 +181,7 @@ BEGIN TRANSACTION
         [dt_create]
     )
     SELECT
-        b.nkey,
+        b.[nkey],
         @dwh_session_id AS dwh_session_id,
         b.[RefID],
         b.[DeletionMark],
@@ -192,22 +196,23 @@ BEGIN TRANSACTION
 COMMIT TRANSACTION
 BEGIN TRANSACTION
     CREATE TABLE #FACT_Продажи(
-        ods_id bigint Primary Key,
+        [ods_id] bigint Primary Key,
         [RefID] uniqueidentifier
     )
     INSERT INTO #FACT_Продажи (
-        ods_id, [RefID]
+        [ods_id],
+        [RefID]
     )
-    SELECT ods_id, [RefID] FROM [odins].[FACT_Продажи] WITH(XLOCK)
+    SELECT [ods_id], [RefID] FROM [odins].[FACT_Продажи] WITH(XLOCK)
     SET @LocalRowCount = @@ROWCOUNT
     SELECT @RowCount = @RowCount + @LocalRowCount
     IF @LocalRowCount > 0
-        INSERT [dbo].[dwh_processing_details]( dwh_session_id, [schema_name], [table_name], [row_count])
+        INSERT [dbo].[dwh_processing_details]([dwh_session_id], [schema_name], [table_name], [row_count])
         SELECT @dwh_session_id, 'odins', 'FACT_Продажи',@LocalRowCount
 
     INSERT INTO [odins].[FACT_Продажи_history](
-        nkey,
-        dwh_session_id,
+        [nkey],
+        [dwh_session_id],
         [RefID],
         [DeletionMark],
         [Number],
@@ -221,7 +226,7 @@ BEGIN TRANSACTION
         [dt_create]
     )
     SELECT
-        b.nkey,
+        b.[nkey],
         @dwh_session_id AS dwh_session_id,
         b.[RefID],
         b.[DeletionMark],
@@ -238,8 +243,8 @@ BEGIN TRANSACTION
         INNER JOIN #FACT_Продажи ll ON b.ods_id = ll.ods_id
 
     INSERT INTO [odins].[FACT_Продажи.Товары_history](
-        nkey,
-        dwh_session_id,
+        [nkey],
+        [dwh_session_id],
         [FACT_ПродажиRefID],
         [Доставка],
         [Товар],
@@ -248,7 +253,7 @@ BEGIN TRANSACTION
         [dt_create]
     )
     SELECT
-        b.nkey,
+        b.[nkey],
         @dwh_session_id AS dwh_session_id,
         b.[FACT_ПродажиRefID],
         b.[Доставка],
@@ -261,7 +266,7 @@ BEGIN TRANSACTION
     SET @LocalRowCount = @@ROWCOUNT
     SELECT @RowCount = @RowCount + @LocalRowCount
     IF @LocalRowCount > 0
-        INSERT [dbo].[dwh_processing_details]( dwh_session_id, [schema_name], [table_name], [row_count])
+        INSERT [dbo].[dwh_processing_details]([dwh_session_id], [schema_name], [table_name], [row_count])
         SELECT @dwh_session_id, 'odins', 'FACT_Продажи.Товары', @LocalRowCount
 
 
@@ -298,22 +303,22 @@ COMMIT TRANSACTION
 RETURN 0
 END TRY
 BEGIN CATCH
-	SELECT @ErrMessage = ERROR_MESSAGE()
-	IF XACT_STATE() <> 0 AND @@TRANCOUNT > 0 
-	BEGIN
-		 ROLLBACK TRANSACTION
-	END
+    SELECT @ErrMessage = ERROR_MESSAGE()
+    IF XACT_STATE() <> 0 AND @@TRANCOUNT > 0 
+    BEGIN
+        ROLLBACK TRANSACTION
+    END
 
     UPDATE dwh_session SET [dwh_session_state_id] = 3
-    WHERE dwh_session_id = @dwh_session_id
-	INSERT [dwh_session_log] ( dwh_session_id, [dwh_session_state_id], [error_message])
-	SELECT dwh_session_id = @dwh_session_id,
-		[dwh_session_state_id] = 3,
-		[dwh_error_message] = 'AssignSessionID Error: ' +@ErrMessage
+    WHERE [dwh_session_id] = @dwh_session_id
+    INSERT [dwh_session_log] ([dwh_session_id], [dwh_session_state_id], [error_message])
+    SELECT [dwh_session_id]    = @dwh_session_id,
+        [dwh_session_state_id] = 3,
+        [dwh_error_message]    = 'AssignSessionID Error: ' + @ErrMessage
 
-	--RAISERROR( N'Error: [%s].', 16, 1, @ErrMessage)
+    --RAISERROR( N'Error: [%s].', 16, 1, @ErrMessage)
     SELECT @dwh_session_id, -1 as row_count, @ErrMessage AS ErrMessage
-	RETURN -1
+    RETURN -1
 END CATCH
 
 END

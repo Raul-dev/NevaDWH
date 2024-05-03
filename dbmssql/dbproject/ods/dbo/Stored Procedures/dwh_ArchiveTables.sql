@@ -1,12 +1,12 @@
  CREATE PROCEDURE dwh_ArchiveTables( 
-	@dwh_session_id bigint = NULL,
+    @dwh_session_id bigint = NULL,
     @ErrMessage	NVARCHAR(4000) = NULL OUTPUT
 )
 AS
 BEGIN
 BEGIN TRY
 
-BEGIN TRANSACTION
+    BEGIN TRANSACTION
 
     DELETE [odins].[DIM_Валюты_history] WHERE dwh_session_id = @dwh_session_id
 
@@ -21,10 +21,10 @@ BEGIN TRANSACTION
     DELETE [odins].[FACT_Продажи.Товары_history] WHERE dwh_session_id = @dwh_session_id
 
 
-	UPDATE [dwh_session] SET dwh_session_state_id = 6
-	WHERE dwh_session_id = @dwh_session_id
-	COMMIT TRANSACTION
-	IF @ErrMessage IS NULL SET @ErrMessage = ''
+    UPDATE [dwh_session] SET dwh_session_state_id = 6
+    WHERE dwh_session_id = @dwh_session_id
+    COMMIT TRANSACTION
+    IF @ErrMessage IS NULL SET @ErrMessage = ''
 END TRY
 BEGIN CATCH
 	SELECT @ErrMessage = ERROR_MESSAGE()

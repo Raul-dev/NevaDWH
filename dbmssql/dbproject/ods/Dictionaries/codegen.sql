@@ -2,25 +2,25 @@ DELETE [dbo].[codegen_dwh_column]
 DELETE [dbo].[codegen_dwh_table]
 DECLARE @codegen TABLE
 (
-	[codegen_id] [int] NOT NULL,
-	[namespace] [nvarchar](256) COLLATE Cyrillic_General_CI_AS NOT NULL,
-	[schema] [nvarchar](128) COLLATE Cyrillic_General_CI_AS NOT NULL,
-	[table_name] [nvarchar](128) COLLATE Cyrillic_General_CI_AS NOT NULL,
-    [ods_enable_type] [smallint] NULL,
-	[dwh_enable_type] [smallint] NULL
+	[codegen_id]       [int] NOT NULL,
+	[namespace]        [nvarchar](256) COLLATE Cyrillic_General_CI_AS NOT NULL,
+	[schema]           [nvarchar](128) COLLATE Cyrillic_General_CI_AS NOT NULL,
+	[table_name]       [nvarchar](128) COLLATE Cyrillic_General_CI_AS NOT NULL,
+    [ods_enable_type]  [smallint] NULL,
+	[dwh_enable_type]  [smallint] NULL
 )
 
-INSERT @codegen (codegen_id,[namespace], [schema], [table_name], [ods_enable_type], [dwh_enable_type])
-SELECT TOP 0 codegen_id = CAST(NULL AS int), [namespace] = CAST(NULL AS [nvarchar](256)), [schema] = CAST(NULL AS [nvarchar](128)), [table_name] = CAST(NULL AS [nvarchar](256)), [ods_enable_type] = CAST(NULL AS smallint), [dwh_enable_type] = CAST(NULL AS smallint) 
-UNION ALL SELECT codegen_id = 1,[namespace] = N'https://nevadwh.ru/CatalogObject.Валюты', [schema] = N'odins', [table_name] = N'DIM_Валюты', [ods_enable_type] = 3, [dwh_enable_type] = 3 
-UNION ALL SELECT codegen_id = 2,[namespace] = N'https://nevadwh.ru/CatalogObject.Клиенты', [schema] = N'odins', [table_name] = N'DIM_Клиенты', [ods_enable_type] = 3, [dwh_enable_type] = 3 
-UNION ALL SELECT codegen_id = 3,[namespace] = N'https://nevadwh.ru/CatalogObject.Товары', [schema] = N'odins', [table_name] = N'DIM_Товары', [ods_enable_type] = 3, [dwh_enable_type] = 3 
-UNION ALL SELECT codegen_id = 4,[namespace] = N'https://nevadwh.ru/DocumentObject.Продажи', [schema] = N'odins', [table_name] = N'FACT_Продажи', [ods_enable_type] = 3, [dwh_enable_type] = 3 
+INSERT @codegen ([codegen_id], [namespace], [schema], [table_name], [ods_enable_type], [dwh_enable_type])
+SELECT TOP 0 [codegen_id] = CAST(NULL AS int), [namespace] = CAST(NULL AS [nvarchar](256)), [schema] = CAST(NULL AS [nvarchar](128)), [table_name] = CAST(NULL AS [nvarchar](256)), [ods_enable_type] = CAST(NULL AS smallint), [dwh_enable_type] = CAST(NULL AS smallint) 
+UNION ALL SELECT [codegen_id] = 1, [namespace] = N'https://nevadwh.ru/CatalogObject.Валюты', [schema] = N'odins', [table_name] = N'DIM_Валюты', [ods_enable_type] = 3, [dwh_enable_type] = 3 
+UNION ALL SELECT [codegen_id] = 2, [namespace] = N'https://nevadwh.ru/CatalogObject.Клиенты', [schema] = N'odins', [table_name] = N'DIM_Клиенты', [ods_enable_type] = 3, [dwh_enable_type] = 3 
+UNION ALL SELECT [codegen_id] = 3, [namespace] = N'https://nevadwh.ru/CatalogObject.Товары', [schema] = N'odins', [table_name] = N'DIM_Товары', [ods_enable_type] = 3, [dwh_enable_type] = 3 
+UNION ALL SELECT [codegen_id] = 4, [namespace] = N'https://nevadwh.ru/DocumentObject.Продажи', [schema] = N'odins', [table_name] = N'FACT_Продажи', [ods_enable_type] = 3, [dwh_enable_type] = 3 
 
 IF EXISTS ( 
     SELECT 1 FROM codegen d 
     LEFT OUTER JOIN @codegen s ON s.[codegen_id]=d.[codegen_id]
-    WHERE s.[codegen_id] IS NULL) THROW 60000, N'Таблица для генерации кода [config].[codegen] была вручную изменена в базе данных ', 1;
+    WHERE s.[codegen_id] IS NULL) THROW 60000, N'The table [dbo].[codegen] was change.', 1;
 
     MERGE INTO codegen trg
 USING 

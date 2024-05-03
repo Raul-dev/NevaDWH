@@ -17,7 +17,7 @@ VALUES
 IF EXISTS ( 
     SELECT 1 FROM [dbo].[dwh_session_state] d 
     LEFT OUTER JOIN @session_state s ON s.dwh_session_state_id=d.dwh_session_state_id
-    WHERE s.dwh_session_state_id IS NULL) THROW 60000, N'Словарь [dwh_session_state] был вручную изменен в базе данных ', 1;
+    WHERE s.dwh_session_state_id IS NULL) THROW 60000, N'The table [dwh_session_state] was change.', 1;
 
 MERGE INTO [dbo].[dwh_session_state] trg
 USING 
