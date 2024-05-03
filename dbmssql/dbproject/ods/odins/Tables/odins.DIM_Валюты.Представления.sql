@@ -10,7 +10,7 @@ CREATE TABLE [odins].[DIM_Валюты.Представления] (
 GO
 CREATE NONCLUSTERED INDEX [idx_DIM_Валюты.Представления_target] ON [odins].[DIM_Валюты.Представления]
 (
-	[DIM_ВалютыRefID] ASC
+    [DIM_ВалютыRefID] ASC
 )WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, SORT_IN_TEMPDB = OFF, DROP_EXISTING = OFF, ONLINE = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON, OPTIMIZE_FOR_SEQUENTIAL_KEY = OFF) ON [PRIMARY]
 
 GO

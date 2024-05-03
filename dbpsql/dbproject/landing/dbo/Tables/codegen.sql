@@ -4,9 +4,9 @@
     namespace character varying(256) COLLATE pg_catalog."default" NOT NULL,
     schema character varying(128) COLLATE pg_catalog."default" NOT NULL,
     table_name character varying(128) COLLATE pg_catalog."default" NOT NULL,
-	ods_enable_type smallint NULL,
-	dwh_enable_type smallint NULL,
-	landing_enable_type smallint NULL,
+    ods_enable_type smallint NULL,
+    dwh_enable_type smallint NULL,
+    landing_enable_type smallint NULL,
     CONSTRAINT "PK_codegen" PRIMARY KEY (codegen_id)
 )
 

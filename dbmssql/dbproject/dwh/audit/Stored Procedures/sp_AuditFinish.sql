@@ -1,9 +1,9 @@
 ﻿
 
 CREATE PROCEDURE [audit].[sp_AuditFinish] 
-    @LogID		int = NULL,    
-    @RecordCount	int = NULL,
-    @SPInfo		varchar(MAX) = NULL
+    @LogID        int = NULL,    
+    @RecordCount    int = NULL,
+    @SPInfo        varchar(MAX) = NULL
 AS 
 BEGIN
     SET NOCOUNT ON 
@@ -25,7 +25,7 @@ BEGIN
                      + CASE WHEN [TransactionCount] = @TranCount THEN '' 
                        ELSE 'Tran count changed to ' + ISNULL(LTRIM(STR(@TranCount, 10, 0)), 'NULL') + ';' END
                      + CASE WHEN @SPInfo IS NULL THEN ''
-                       ELSE 'Finish:' + CONVERT(varchar(19), GETDATE(), 120) + ':' + @SPInfo + ';' END					   
+                       ELSE 'Finish:' + CONVERT(varchar(19), GETDATE(), 120) + ':' + @SPInfo + ';' END                       
     WHERE [LogID] = @LogID
 
     DELETE FROM #AuditProc WHERE LogID >= @LogID

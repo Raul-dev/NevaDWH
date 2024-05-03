@@ -5,7 +5,7 @@ SELECT object_id  FROM sys.objects WHERE name= 'fn_GetSettigValue'
 )
 DROP TABLE [dbo].[Setting]
 CREATE TABLE [dbo].[Setting] (
-SettingID	varchar(50) Primary Key,
+SettingID    varchar(50) Primary Key,
 StrValue nvarchar(256)
 )
 
@@ -13,7 +13,7 @@ DROP FUNCTION [dbo].[fn_GetSettigValue]
 SELECT [dbo].[fn_GetSettingValue]('dx')
 */
 CREATE     Function [dbo].[fn_GetSettingInt](
-    @SettingID	varchar(50)
+    @SettingID    varchar(50)
 ) RETURNS INT
 AS
 BEGIN

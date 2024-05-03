@@ -1,5 +1,5 @@
 CREATE PROCEDURE dwh_AssignSessionID
-	@dwh_session_id bigint = NULL OUTPUT, -- @dwh_session_id = -1 create new package
+    @dwh_session_id bigint = NULL OUTPUT, -- @dwh_session_id = -1 create new package
     @RowCount       int = NULL OUTPUT,
     @ErrMessage     varchar(4000) = NULL OUTPUT
 AS
@@ -18,22 +18,22 @@ BEGIN TRY
 RETURN 0
 END TRY
 BEGIN CATCH
-	SELECT @ErrMessage = ERROR_MESSAGE()
-	IF XACT_STATE() <> 0 AND @@TRANCOUNT > 0 
-	BEGIN
-		 ROLLBACK TRANSACTION
-	END
+    SELECT @ErrMessage = ERROR_MESSAGE()
+    IF XACT_STATE() <> 0 AND @@TRANCOUNT > 0 
+    BEGIN
+         ROLLBACK TRANSACTION
+    END
 
     UPDATE dwh_session SET [dwh_session_state_id] = 3
     WHERE dwh_session_id = @dwh_session_id
-	INSERT [dwh_session_log] ( dwh_session_id, [dwh_session_state_id], [error_message])
-	SELECT dwh_session_id = @dwh_session_id,
-		[dwh_session_state_id] = 3,
-		[dwh_error_message] = 'AssignSessionID Error: ' +@ErrMessage
+    INSERT [dwh_session_log] ( dwh_session_id, [dwh_session_state_id], [error_message])
+    SELECT dwh_session_id = @dwh_session_id,
+        [dwh_session_state_id] = 3,
+        [dwh_error_message] = 'AssignSessionID Error: ' +@ErrMessage
 
-	--RAISERROR( N'Error: [%s].', 16, 1, @ErrMessage)
+    --RAISERROR( N'Error: [%s].', 16, 1, @ErrMessage)
     SELECT @dwh_session_id, -1 as row_count, @ErrMessage AS ErrMessage
-	RETURN -1
+    RETURN -1
 END CATCH
 
 END

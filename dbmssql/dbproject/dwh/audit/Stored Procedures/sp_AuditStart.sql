@@ -1,17 +1,17 @@
 ﻿
 
 /*
-	DECLARE @ID int 
-	EXEC audit.sp_AuditStart @ID = @ID output
-	SELECT @ID
-	SELECT [meta].[ufn_GetConfigValue]('AuditProcAll')
+    DECLARE @ID int 
+    EXEC audit.sp_AuditStart @ID = @ID output
+    SELECT @ID
+    SELECT [meta].[ufn_GetConfigValue]('AuditProcAll')
 */
 
-CREATE PROCEDURE [audit].[sp_AuditStart]	
+CREATE PROCEDURE [audit].[sp_AuditStart]    
     @SPName varchar(512) = NULL,
     @SPParams varchar(MAX) = NULL,
-    @SPSub  varchar(256) = NULL,		
-    @LogID int OUTPUT   	
+    @SPSub  varchar(256) = NULL,        
+    @LogID int OUTPUT       
 AS 
 BEGIN
     SET NOCOUNT ON 
@@ -28,11 +28,11 @@ BEGIN
     DECLARE @CountIds int 
     DECLARE @TranCount int 
     SET @TranCount = @@TRANCOUNT 
-	
+    
     SELECT @MainID  =   MIN(LogID), 
         @ParentID   =   MAX(LogID), 
         @CountIds   = COUNT(LogID) 
-	FROM #AuditProc
+    FROM #AuditProc
 
     SET @SPName = LEFT(REPLICATE('    ', @CountIds) + LTRIM(RTRIM(@SPName)), 512) + ISNULL(': ' + @SPSub, '')
 
@@ -46,5 +46,5 @@ BEGIN
         WHERE LogID = @LogID
 
     IF @ParentID IS NULL OR @ParentID < @LogID 
-        INSERT #AuditProc(LogID) VALUES(@LogID)					
+        INSERT #AuditProc(LogID) VALUES(@LogID)                    
 END

@@ -9,12 +9,12 @@ DELETE FROM codegen_dwh_table;
 DROP TABLE IF EXISTS tmp_codegen ;
 CREATE TEMPORARY TABLE IF NOT EXISTS tmp_codegen 
 (
-	codegen_id int NOT NULL,
-	namespace character varying(256) NOT NULL,
-	schema character varying(128) NOT NULL,
-	table_name character varying(128) NOT NULL,
+    codegen_id int NOT NULL,
+    namespace character varying(256) NOT NULL,
+    schema character varying(128) NOT NULL,
+    table_name character varying(128) NOT NULL,
     ods_enable_type smallint NULL,
-	dwh_enable_type smallint NULL
+    dwh_enable_type smallint NULL
 );
 
 

@@ -17,7 +17,7 @@ BEGIN
             [Code] = src.[Code],
             [Description] = src.[Description],
             [Описание] = src.[Описание],
-            dt_update = GetDate()
+            [dt_update] = GetDate()
         WHEN NOT MATCHED BY TARGET
         THEN INSERT (
             [nkey] ,
@@ -26,7 +26,7 @@ BEGIN
             [Code],
             [Description],
             [Описание],
-            dt_update
+            [dt_update]
     )
         VALUES
     (
@@ -36,7 +36,7 @@ BEGIN
             src.[Code],
             src.[Description],
             src.[Описание],
-            dt_update
+            [dt_update]
      );
 
 

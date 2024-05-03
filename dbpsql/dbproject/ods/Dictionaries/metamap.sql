@@ -21,8 +21,8 @@ CREATE TEMPORARY TABLE IF NOT EXISTS tmp_metamap
     namespace           VARCHAR (256)   NULL,
     namespace_ver       VARCHAR (256)   NULL,
     etl_query           VARCHAR (256)   NULL,
-	import_query        VARCHAR (256)   NULL,
-	is_enable			boolean NULL
+    import_query        VARCHAR (256)   NULL,
+    is_enable            boolean NULL
 );
 
 INSERT INTO tmp_metamap (metamap_id, msg_key, table_name, metaadapter_id, namespace, namespace_ver, etl_query, import_query, is_enable)

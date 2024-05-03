@@ -8,9 +8,9 @@ $$;
 -- SELECT * FROM dwh_processing_details
 -- call public."dwh_AssignSessionID" (null, null)
 CREATE OR REPLACE PROCEDURE "dwh_AssignSessionID" (
-	INOUT par_dwh_session_id bigint DEFAULT NULL::bigint,
-	INOUT par_rowcount bigint DEFAULT NULL::bigint,
-	INOUT par_create_session timestamp DEFAULT NULL::timestamp
+    INOUT par_dwh_session_id bigint DEFAULT NULL::bigint,
+    INOUT par_rowcount bigint DEFAULT NULL::bigint,
+    INOUT par_create_session timestamp DEFAULT NULL::timestamp
 )
 AS $BODY$
 DECLARE
@@ -19,34 +19,34 @@ DECLARE
 BEGIN
 
     par_rowcount:= 0;
-	IF NOT par_dwh_session_id IS NULL AND par_dwh_session_id != -1 THEN
+    IF NOT par_dwh_session_id IS NULL AND par_dwh_session_id != -1 THEN
 
-	    SELECT INTO par_dwh_session_id, par_rowcount, par_create_session
-		FROM (
+        SELECT INTO par_dwh_session_id, par_rowcount, par_create_session
+        FROM (
             SELECT s.dwh_session_id, sum(row_count) as row_count, MAX(s.create_session) AS create_session
             FROM dwh_session s
                 INNER JOIN dwh_processing_details p ON p.dwh_session_id = s.dwh_session_id
-		    WHERE dwh_session_state_id = 2 AND s.dwh_session_id = par_dwh_session_id
-		    GROUP BY s.dwh_session_id
+            WHERE dwh_session_state_id = 2 AND s.dwh_session_id = par_dwh_session_id
+            GROUP BY s.dwh_session_id
         ) s;
         RETURN ;
     END IF;
 
     IF par_dwh_session_id IS NULL OR par_dwh_session_id = -1 THEN
-		SELECT  min(dwh_session_id) into par_dwh_session_id FROM dwh_session WHERE (par_dwh_session_id IS NULL OR par_dwh_session_id != -1) AND dwh_session_state_id = 2;
+        SELECT  min(dwh_session_id) into par_dwh_session_id FROM dwh_session WHERE (par_dwh_session_id IS NULL OR par_dwh_session_id != -1) AND dwh_session_state_id = 2;
 
         RAISE NOTICE 'N1 par_dwh_session_id  %', par_dwh_session_id;
 
         IF NOT par_dwh_session_id IS NULL THEN
             SELECT COALESCE(create_session,now()) INTO par_create_session FROM dwh_session WHERE dwh_session_id = par_dwh_session_id; 
-			SELECT COALESCE(SUM(row_count),0) INTO par_rowcount
-			FROM dwh_processing_details WHERE dwh_session_id = par_dwh_session_id
-			GROUP BY dwh_session_id;
+            SELECT COALESCE(SUM(row_count),0) INTO par_rowcount
+            FROM dwh_processing_details WHERE dwh_session_id = par_dwh_session_id
+            GROUP BY dwh_session_id;
             RAISE NOTICE 'N2 par_dwh_session_id  %', par_dwh_session_id;
             RETURN;
         END IF;
 
-		call public."dwh_SaveSessionState" ( par_dwh_session_id::bigint , 1::smallint, 1::smallint, null::varchar(4000) );
+        call public."dwh_SaveSessionState" ( par_dwh_session_id::bigint , 1::smallint, 1::smallint, null::varchar(4000) );
     END IF;
     
     IF var_RowCount > 0 THEN
@@ -65,7 +65,7 @@ BEGIN
     SELECT ods_id, "RefID" FROM odins."DIM_Валюты" FOR UPDATE;
 
     GET DIAGNOSTICS var_rowcount = ROW_COUNT;
-	par_rowcount := par_rowcount + var_rowcount;
+    par_rowcount := par_rowcount + var_rowcount;
 
     IF var_rowcount > 0 THEN
         INSERT INTO dwh_processing_details( dwh_session_id, schema_name, table_name, row_count)
@@ -131,7 +131,7 @@ BEGIN
 
 
     GET DIAGNOSTICS var_rowcount = ROW_COUNT;
-	par_rowcount := par_rowcount + var_rowcount;
+    par_rowcount := par_rowcount + var_rowcount;
 
     IF var_rowcount > 0 THEN
         INSERT INTO dwh_processing_details( dwh_session_id, schema_name, table_name, row_count)
@@ -152,7 +152,7 @@ BEGIN
     SELECT ods_id, "RefID" FROM odins."DIM_Клиенты" FOR UPDATE;
 
     GET DIAGNOSTICS var_rowcount = ROW_COUNT;
-	par_rowcount := par_rowcount + var_rowcount;
+    par_rowcount := par_rowcount + var_rowcount;
 
     IF var_rowcount > 0 THEN
         INSERT INTO dwh_processing_details( dwh_session_id, schema_name, table_name, row_count)
@@ -197,7 +197,7 @@ BEGIN
     SELECT ods_id, "RefID" FROM odins."DIM_Товары" FOR UPDATE;
 
     GET DIAGNOSTICS var_rowcount = ROW_COUNT;
-	par_rowcount := par_rowcount + var_rowcount;
+    par_rowcount := par_rowcount + var_rowcount;
 
     IF var_rowcount > 0 THEN
         INSERT INTO dwh_processing_details( dwh_session_id, schema_name, table_name, row_count)
@@ -242,7 +242,7 @@ BEGIN
     SELECT ods_id, "RefID" FROM odins."FACT_Продажи" FOR UPDATE;
 
     GET DIAGNOSTICS var_rowcount = ROW_COUNT;
-	par_rowcount := par_rowcount + var_rowcount;
+    par_rowcount := par_rowcount + var_rowcount;
 
     IF var_rowcount > 0 THEN
         INSERT INTO dwh_processing_details( dwh_session_id, schema_name, table_name, row_count)
@@ -310,7 +310,7 @@ BEGIN
 
 
     GET DIAGNOSTICS var_rowcount = ROW_COUNT;
-	par_rowcount := par_rowcount + var_rowcount;
+    par_rowcount := par_rowcount + var_rowcount;
 
     IF var_rowcount > 0 THEN
         INSERT INTO dwh_processing_details( dwh_session_id, schema_name, table_name, row_count)

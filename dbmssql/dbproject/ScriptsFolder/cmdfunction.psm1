@@ -194,7 +194,7 @@ function GetSqlValue {
     
     #$tmp = $reader.Read()
     
-    $res.Value = [int]($reader.GetValue(0))
+    $res.Value = int($reader.GetValue(0))
     
     $reader.Dispose()
 

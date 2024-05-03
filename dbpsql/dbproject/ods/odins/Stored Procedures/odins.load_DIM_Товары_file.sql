@@ -15,7 +15,7 @@ DECLARE
 BEGIN
 
     DROP TABLE IF EXISTS "DIM_Товары_tmp1";
-	
+    
 END;
 
 $BODY$

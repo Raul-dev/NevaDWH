@@ -23,7 +23,7 @@ BEGIN
             [ПараметрыПрописи] = src.[ПараметрыПрописи],
             [ФормулаРасчетаКурса] = src.[ФормулаРасчетаКурса],
             [СпособУстановкиКурса] = src.[СпособУстановкиКурса],
-            dt_update = GetDate()
+            [dt_update] = GetDate()
         WHEN NOT MATCHED BY TARGET
         THEN INSERT (
             [nkey] ,
@@ -38,7 +38,7 @@ BEGIN
             [ПараметрыПрописи],
             [ФормулаРасчетаКурса],
             [СпособУстановкиКурса],
-            dt_update
+            [dt_update]
     )
         VALUES
     (
@@ -54,23 +54,24 @@ BEGIN
             src.[ПараметрыПрописи],
             src.[ФормулаРасчетаКурса],
             src.[СпособУстановкиКурса],
-            dt_update
+            [dt_update]
      );
 
 
 --Sub table
-DELETE FROM [odins].[DIM_Валюты.Представления] ;
+    DELETE FROM [odins].[DIM_Валюты.Представления];
 
-	WITH XMLNAMESPACES (DEFAULT 'http://v8.1c.ru/8.1/data/enterprise/current-config')
-	INSERT [odins].[DIM_Валюты.Представления] (nkey, DIM_ВалютыRefID, КодЯзыка, ПараметрыПрописи,  dt_update)	SELECT 	nkey= CAST(SUBSTRING(HASHBYTES('SHA2_256', COALESCE(CAST(b.RefID AS varchar(36)), '00000000-0000-0000-0000-000000000000')+ 
-		'|' + COALESCE(CAST(STR(LTRIM(ROW_NUMBER() OVER (PARTITION BY b.RefID ORDER BY b.id))) AS varchar(36)), '00000000-0000-0000-0000-000000000000' ) )
-			, 0,16) as uniqueidentifier),
+
+    WITH XMLNAMESPACES (DEFAULT 'http://v8.1c.ru/8.1/data/enterprise/current-config')
+    INSERT [odins].[DIM_Валюты.Представления] (nkey, DIM_ВалютыRefID, КодЯзыка, ПараметрыПрописи,  dt_update)    SELECT     [nkey] = CAST(SUBSTRING(HASHBYTES('SHA2_256', COALESCE(CAST(b.RefID AS varchar(36)), '00000000-0000-0000-0000-000000000000')+ 
+        '|' + COALESCE(CAST(STR(LTRIM(ROW_NUMBER() OVER (PARTITION BY b.RefID ORDER BY b.id))) AS varchar(36)), '00000000-0000-0000-0000-000000000000' ) )
+            , 0,16) as uniqueidentifier),
     [DIM_ВалютыRefID] = b.RefID,
     [КодЯзыка] = X.C.value('(КодЯзыка/text())[1]', 'varchar(10)'),
     [ПараметрыПрописи] = X.C.value('(ПараметрыПрописи/text())[1]', 'varchar(200)'),
-    dt_update
-	FROM staging.[DIM_Валюты] b
-	CROSS APPLY b.[DIM_Валюты.Представления].nodes('/Представления') AS X(C);
+    [dt_update]
+    FROM staging.[DIM_Валюты] b
+    CROSS APPLY b.[DIM_Валюты.Представления].nodes('/Представления') AS X(C);
 END
 
 GO

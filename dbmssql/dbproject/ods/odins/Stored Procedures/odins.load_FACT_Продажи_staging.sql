@@ -22,7 +22,7 @@ BEGIN
             [ТипДоставки] = src.[ТипДоставки],
             [ПримерСоставногоТипа] = src.[ПримерСоставногоТипа],
             [ПримерСоставногоТипа_ТипЗначения] = src.[ПримерСоставногоТипа_ТипЗначения],
-            dt_update = GetDate()
+            [dt_update] = GetDate()
         WHEN NOT MATCHED BY TARGET
         THEN INSERT (
             [nkey] ,
@@ -36,7 +36,7 @@ BEGIN
             [ТипДоставки],
             [ПримерСоставногоТипа],
             [ПримерСоставногоТипа_ТипЗначения],
-            dt_update
+            [dt_update]
     )
         VALUES
     (
@@ -51,25 +51,26 @@ BEGIN
             src.[ТипДоставки],
             src.[ПримерСоставногоТипа],
             src.[ПримерСоставногоТипа_ТипЗначения],
-            dt_update
+            [dt_update]
      );
 
 
 --Sub table
-DELETE FROM [odins].[FACT_Продажи.Товары] ;
+    DELETE FROM [odins].[FACT_Продажи.Товары];
 
-	WITH XMLNAMESPACES (DEFAULT 'http://v8.1c.ru/8.1/data/enterprise/current-config')
-	INSERT [odins].[FACT_Продажи.Товары] (nkey, FACT_ПродажиRefID, Доставка, Товар, Колличество, Цена,  dt_update)	SELECT 	nkey= CAST(SUBSTRING(HASHBYTES('SHA2_256', COALESCE(CAST(b.RefID AS varchar(36)), '00000000-0000-0000-0000-000000000000')+ 
-		'|' + COALESCE(CAST(STR(LTRIM(ROW_NUMBER() OVER (PARTITION BY b.RefID ORDER BY b.id))) AS varchar(36)), '00000000-0000-0000-0000-000000000000' ) )
-			, 0,16) as uniqueidentifier),
+
+    WITH XMLNAMESPACES (DEFAULT 'http://v8.1c.ru/8.1/data/enterprise/current-config')
+    INSERT [odins].[FACT_Продажи.Товары] (nkey, FACT_ПродажиRefID, Доставка, Товар, Колличество, Цена,  dt_update)    SELECT     [nkey] = CAST(SUBSTRING(HASHBYTES('SHA2_256', COALESCE(CAST(b.RefID AS varchar(36)), '00000000-0000-0000-0000-000000000000')+ 
+        '|' + COALESCE(CAST(STR(LTRIM(ROW_NUMBER() OVER (PARTITION BY b.RefID ORDER BY b.id))) AS varchar(36)), '00000000-0000-0000-0000-000000000000' ) )
+            , 0,16) as uniqueidentifier),
     [FACT_ПродажиRefID] = b.RefID,
     [Доставка] = X.C.value('(Доставка/text())[1]', 'bit'),
     [Товар] = X.C.value('(Товар/text())[1]', 'varchar(36)'),
     [Колличество] = X.C.value('(Колличество/text())[1]', 'decimal(12,0)'),
     [Цена] = X.C.value('(Цена/text())[1]', 'decimal(16,4)'),
-    dt_update
-	FROM staging.[FACT_Продажи] b
-	CROSS APPLY b.[FACT_Продажи.Товары].nodes('/Товары') AS X(C);
+    [dt_update]
+    FROM staging.[FACT_Продажи] b
+    CROSS APPLY b.[FACT_Продажи.Товары].nodes('/Товары') AS X(C);
 END
 
 GO

@@ -45,12 +45,12 @@ DELETE FROM codegen_dwh_table;
 
 CREATE TEMPORARY TABLE IF NOT EXISTS tmp_codegen 
 (
-	codegen_id int NOT NULL,
-	namespace character varying(256) NOT NULL,
-	schema character varying(128) NOT NULL,
-	table_name character varying(128) NOT NULL,
+    codegen_id int NOT NULL,
+    namespace character varying(256) NOT NULL,
+    schema character varying(128) NOT NULL,
+    table_name character varying(128) NOT NULL,
     ods_enable_type smallint NULL,
-	dwh_enable_type smallint NULL
+    dwh_enable_type smallint NULL
 );
 
 INSERT INTO tmp_codegen (codegen_id, namespace, schema, table_name, ods_enable_type, dwh_enable_type)
@@ -192,8 +192,8 @@ CREATE TEMPORARY TABLE IF NOT EXISTS tmp_metamap
     namespace           VARCHAR (256)   NULL,
     namespace_ver       VARCHAR (256)   NULL,
     etl_query           VARCHAR (256)   NULL,
-	import_query        VARCHAR (256)   NULL,
-	is_enable			boolean NULL
+    import_query        VARCHAR (256)   NULL,
+    is_enable            boolean NULL
 );
 
 INSERT INTO tmp_metamap (metamap_id, msg_key, table_name, metaadapter_id, namespace, namespace_ver, etl_query, import_query, is_enable)

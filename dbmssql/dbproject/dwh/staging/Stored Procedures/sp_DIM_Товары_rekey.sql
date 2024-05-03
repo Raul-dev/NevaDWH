@@ -11,71 +11,74 @@ DECLARE @ErrMessage nvarchar(4000)
 BEGIN TRY
 DECLARE @start_date datetime
 DECLARE @LocalCount bigint
-	SELECT @start_date = create_session FROM session WHERE session_id = @session_id
-	CREATE TABLE #DIM_Товары (		identificator uniqueidentifier	)
-	UPDATE staging
-		SET id = ISNULL(trget.id, staging.staging_id),
-		session_id = ISNULL(trget.session_id, staging.session_id),
-		start_date = ISNULL(trget.start_date, staging.start_date)
-		OUTPUT deleted.[RefID] into #DIM_Товары
-		FROM [staging].[DIM_Товары] as staging
-			LEFT JOIN [target].[DIM_Товары] as trget
-			ON trget.end_date = dbo.fn_GetMaxDate() AND trget.[nkey] = staging.[nkey] AND trget.[vkey] = staging.[vkey]
+    SELECT @start_date = create_session FROM session WHERE session_id = @session_id
+    CREATE TABLE #DIM_Товары (
+        identificator uniqueidentifier
+    )
 
-	INSERT [staging].[DIM_Товары] (
-		[id],
-		[session_id],
-		[source_name],
-		[nkey],
-		[vkey],
-		[start_date],
-		[end_date],
-		[RefID],
-		[DeletionMark],
-		[Code],
-		[Description],
-		[Описание],
-		session_id_update,
-		dt_update
-	)
-	SELECT
-		[id],
-		[session_id],
-		[source_name],
-		[nkey],
-		[vkey],
-		[start_date],
-		@start_date as [end_date],
-		[RefID],
-		[DeletionMark],
-		[Code],
-		[Description],
-		[Описание],
-		@session_id AS session_id_update,
-		@start_date AS dt_update
-	FROM (
-		SELECT source.*
-			FROM [target].[DIM_Товары] source
-			WHERE source.[end_date] = dbo.fn_GetMaxDate() AND
-			EXISTS( SELECT 1 FROM [staging].[DIM_Товары] as stg WHERE source.[nkey] = stg.[nkey] AND source.id <> stg.id )
-		) a
-	SET @LocalCount= ROWCOUNT_BIG ( ) 
-	SELECT @RowCount = @RowCount + @LocalCount
+    UPDATE staging SET 
+        [id] = ISNULL(trget.id, staging.staging_id),
+        [session_id] = ISNULL(trget.session_id, staging.session_id),
+        [start_date] = ISNULL(trget.start_date, staging.start_date)
+    OUTPUT deleted.[RefID] into #DIM_Товары
+    FROM [staging].[DIM_Товары] as staging
+    LEFT JOIN [target].[DIM_Товары] as trget
+            ON trget.end_date = dbo.fn_GetMaxDate() AND trget.[nkey] = staging.[nkey] AND trget.[vkey] = staging.[vkey]
+
+    INSERT [staging].[DIM_Товары] (
+        [id],
+        [session_id],
+        [source_name],
+        [nkey],
+        [vkey],
+        [start_date],
+        [end_date],
+        [RefID],
+        [DeletionMark],
+        [Code],
+        [Description],
+        [Описание],
+        session_id_update,
+        dt_update
+    )
+    SELECT
+        [id],
+        [session_id],
+        [source_name],
+        [nkey],
+        [vkey],
+        [start_date],
+        @start_date as [end_date],
+        [RefID],
+        [DeletionMark],
+        [Code],
+        [Description],
+        [Описание],
+        @session_id AS session_id_update,
+        @start_date AS dt_update
+    FROM (
+        SELECT source.*
+            FROM [target].[DIM_Товары] source
+            WHERE source.[end_date] = dbo.fn_GetMaxDate() AND
+            EXISTS( SELECT 1 FROM [staging].[DIM_Товары] as stg WHERE source.[nkey] = stg.[nkey] AND source.id <> stg.id )
+        ) a
+    SET @LocalCount= ROWCOUNT_BIG ( ) 
+    SELECT @RowCount = @RowCount + @LocalCount
 END TRY
 BEGIN CATCH
-	SELECT @ErrMessage = ERROR_MESSAGE()
-	IF XACT_STATE() <> 0 AND @@TRANCOUNT > 0 
-	BEGIN
-		 ROLLBACK TRANSACTION
-	END
+    SELECT @ErrMessage = ERROR_MESSAGE()
+    IF XACT_STATE() <> 0 AND @@TRANCOUNT > 0 
+    BEGIN
+         ROLLBACK TRANSACTION
+    END
 
-	INSERT [dbo].[session_log] ( session_id, [session_state_id], [error_message])
-	SELECT session_id = @session_id,
-		[session_state_id] = 3,
-		[error_message] = 'ETL rekey [odins_DIM_Товары]. Error: ' +@ErrMessage
+    INSERT [dbo].[session_log] ( session_id, [session_state_id], [error_message])
+    SELECT session_id = @session_id,
+        [session_state_id] = 3,
+        [error_message] = 'ETL rekey [odins_DIM_Товары]. Error: ' +@ErrMessage
 
-	RAISERROR( N'Error: [%s].', 16, 1, @ErrMessage)
-	RETURN -1
+    RAISERROR( N'Error: [%s].', 16, 1, @ErrMessage)
+    RETURN -1
 END CATCH
 
 END

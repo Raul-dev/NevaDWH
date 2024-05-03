@@ -15,10 +15,10 @@ DECLARE
 BEGIN
 
     DROP TABLE IF EXISTS "metadata_tmp1";
-	CREATE TEMPORARY TABLE "metadata_tmp1" (
-		buffer_id int,
-		"namespace_ver" varchar(256)
-	);
+    CREATE TEMPORARY TABLE "metadata_tmp1" (
+        buffer_id int,
+        "namespace_ver" varchar(256)
+    );
     LOCK TABLE metadata_buffer IN ROW EXCLUSIVE MODE;
 
     INSERT INTO "metadata_tmp1" (
@@ -27,12 +27,12 @@ BEGIN
         FROM "metadata_buffer" b
         WHERE b."is_error" = false FOR UPDATE
     );
-	GET DIAGNOSTICS var_rowcount = ROW_COUNT;
-	par_rowcount := var_rowcount;
+    GET DIAGNOSTICS var_rowcount = ROW_COUNT;
+    par_rowcount := var_rowcount;
 
-	IF var_rowcount = 0 THEN
+    IF var_rowcount = 0 THEN
         return;
-	END IF;
+    END IF;
 
     DROP TABLE IF EXISTS "metadata_tmp2";
     CREATE TEMPORARY TABLE "metadata_tmp2" (
@@ -64,8 +64,8 @@ BEGIN
         namespace_ver = b.namespace_ver,
         msg = b.msg,
         type = b.type
-	 FROM metadata_tmp2 b
-	 WHERE 
+     FROM metadata_tmp2 b
+     WHERE 
         b.nkey = t.nkey;
 
 
@@ -78,7 +78,7 @@ BEGIN
     FROM metadata_buffer as trg
     USING metadata_tmp1 AS tmp
     WHERE 
-    	trg.buffer_id = tmp.buffer_id;
+        trg.buffer_id = tmp.buffer_id;
 
 END;
 

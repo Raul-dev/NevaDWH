@@ -15,10 +15,10 @@ DECLARE
 BEGIN
 
    
-	
-		UPDATE dwh_session SET dwh_session_state_id = 6
-	WHERE dwh_session_id = par_dwh_session_id;
-	
+    
+        UPDATE dwh_session SET dwh_session_state_id = 6
+    WHERE dwh_session_id = par_dwh_session_id;
+    
 END;
 
 $BODY$

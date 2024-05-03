@@ -2,12 +2,12 @@ DELETE [dbo].[codegen_dwh_column]
 DELETE [dbo].[codegen_dwh_table]
 DECLARE @codegen TABLE
 (
-	[codegen_id] [int] NOT NULL,
-	[namespace] [nvarchar](256) COLLATE Cyrillic_General_CI_AS NOT NULL,
-	[schema] [nvarchar](128) COLLATE Cyrillic_General_CI_AS NOT NULL,
-	[table_name] [nvarchar](128) COLLATE Cyrillic_General_CI_AS NOT NULL,
-    [ods_enable_type] [smallint] NULL,
-	[dwh_enable_type] [smallint] NULL
+    [codegen_id] int NOT NULL,
+    [namespace] nvarchar(256) COLLATE Cyrillic_General_CI_AS NOT NULL,
+    [schema] nvarchar(128) COLLATE Cyrillic_General_CI_AS NOT NULL,
+    [table_name] nvarchar(128) COLLATE Cyrillic_General_CI_AS NOT NULL,
+    [ods_enable_type] smallint NULL,
+    [dwh_enable_type] smallint NULL
 )
 
 

@@ -1,15 +1,15 @@
 ﻿
 CREATE  PROCEDURE [audit].[sp_AuditInfo] 
-    @LogID		INT = NULL,    
-    @SPInfo		VARCHAR(MAX) = NULL
+    @LogID        INT = NULL,    
+    @SPInfo        VARCHAR(MAX) = NULL
 AS 
 BEGIN
-    SET NOCOUNT ON		 
+    SET NOCOUNT ON         
 
     IF @SPInfo IS NOT NULL
         UPDATE [audit].[LogProcedures]
-        SET	[SPInfo] = ISNULL([SPInfo], '') 
-                       + ISNULL(@SPInfo + '; ', '')					
-        WHERE LogID = @LogID	
+        SET    [SPInfo] = ISNULL([SPInfo], '') 
+                       + ISNULL(@SPInfo + '; ', '')                    
+        WHERE LogID = @LogID    
 
 END

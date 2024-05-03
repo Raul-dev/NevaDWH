@@ -12,7 +12,7 @@ CREATE TABLE IF NOT EXISTS target."DIM_Валюты" (
     nkey              uuid NOT NULL,
     vkey              uuid NOT NULL,
     start_date        timestamp without time zone NOT NULL,
-	end_date          timestamp without time zone NOT NULL,
+    end_date          timestamp without time zone NOT NULL,
     "RefID"            uuid  NOT NULL ,
     "DeletionMark"            boolean  NULL ,
     "Code"            varchar(128)  NULL ,

@@ -15,7 +15,7 @@ DECLARE
 BEGIN
 
     DROP TABLE IF EXISTS "FACT_Продажи_tmp1";
-	
+    
 END;
 
 $BODY$

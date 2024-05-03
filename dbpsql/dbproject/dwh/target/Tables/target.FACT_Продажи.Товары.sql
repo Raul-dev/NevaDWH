@@ -12,7 +12,7 @@ CREATE TABLE IF NOT EXISTS target."FACT_Продажи_Товары" (
     nkey              uuid NOT NULL,
     vkey              uuid NOT NULL,
     start_date        timestamp without time zone NOT NULL,
-	end_date          timestamp without time zone NOT NULL,
+    end_date          timestamp without time zone NOT NULL,
     "FACT_ПродажиRefID"            uuid  NOT NULL ,
     "Доставка"            boolean  NULL ,
     "Товар"            varchar(36)  NULL ,

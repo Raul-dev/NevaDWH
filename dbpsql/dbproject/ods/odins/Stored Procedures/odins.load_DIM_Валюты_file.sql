@@ -15,7 +15,7 @@ DECLARE
 BEGIN
 
     DROP TABLE IF EXISTS "DIM_Валюты_tmp1";
-	
+    
 END;
 
 $BODY$

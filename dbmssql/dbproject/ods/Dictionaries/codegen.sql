@@ -2,16 +2,16 @@ DELETE [dbo].[codegen_dwh_column]
 DELETE [dbo].[codegen_dwh_table]
 DECLARE @codegen TABLE
 (
-	[codegen_id]       [int] NOT NULL,
-	[namespace]        [nvarchar](256) COLLATE Cyrillic_General_CI_AS NOT NULL,
-	[schema]           [nvarchar](128) COLLATE Cyrillic_General_CI_AS NOT NULL,
-	[table_name]       [nvarchar](128) COLLATE Cyrillic_General_CI_AS NOT NULL,
-    [ods_enable_type]  [smallint] NULL,
-	[dwh_enable_type]  [smallint] NULL
+    [codegen_id]       int NOT NULL,
+    [namespace]        nvarchar(256) COLLATE Cyrillic_General_CI_AS NOT NULL,
+    [schema]           nvarchar(128) COLLATE Cyrillic_General_CI_AS NOT NULL,
+    [table_name]       nvarchar(128) COLLATE Cyrillic_General_CI_AS NOT NULL,
+    [ods_enable_type]  smallint NULL,
+    [dwh_enable_type]  smallint NULL
 )
 
 INSERT @codegen ([codegen_id], [namespace], [schema], [table_name], [ods_enable_type], [dwh_enable_type])
-SELECT TOP 0 [codegen_id] = CAST(NULL AS int), [namespace] = CAST(NULL AS [nvarchar](256)), [schema] = CAST(NULL AS [nvarchar](128)), [table_name] = CAST(NULL AS [nvarchar](256)), [ods_enable_type] = CAST(NULL AS smallint), [dwh_enable_type] = CAST(NULL AS smallint) 
+SELECT TOP 0 [codegen_id] = CAST(NULL AS int), [namespace] = CAST(NULL AS nvarchar(256)), [schema] = CAST(NULL AS nvarchar(128)), [table_name] = CAST(NULL AS nvarchar(256)), [ods_enable_type] = CAST(NULL AS smallint), [dwh_enable_type] = CAST(NULL AS smallint) 
 UNION ALL SELECT [codegen_id] = 1, [namespace] = N'https://nevadwh.ru/CatalogObject.Валюты', [schema] = N'odins', [table_name] = N'DIM_Валюты', [ods_enable_type] = 3, [dwh_enable_type] = 3 
 UNION ALL SELECT [codegen_id] = 2, [namespace] = N'https://nevadwh.ru/CatalogObject.Клиенты', [schema] = N'odins', [table_name] = N'DIM_Клиенты', [ods_enable_type] = 3, [dwh_enable_type] = 3 
 UNION ALL SELECT [codegen_id] = 3, [namespace] = N'https://nevadwh.ru/CatalogObject.Товары', [schema] = N'odins', [table_name] = N'DIM_Товары', [ods_enable_type] = 3, [dwh_enable_type] = 3 
@@ -19,7 +19,7 @@ UNION ALL SELECT [codegen_id] = 4, [namespace] = N'https://nevadwh.ru/DocumentOb
 
 IF EXISTS ( 
     SELECT 1 FROM codegen d 
-    LEFT OUTER JOIN @codegen s ON s.[codegen_id]=d.[codegen_id]
+    LEFT OUTER JOIN @codegen s ON s.[codegen_id] = d.[codegen_id]
     WHERE s.[codegen_id] IS NULL) THROW 60000, N'The table [dbo].[codegen] was change.', 1;
 
     MERGE INTO codegen trg
@@ -33,7 +33,7 @@ WHEN MATCHED THEN UPDATE SET
     [ods_enable_type] = src.[ods_enable_type],
     [dwh_enable_type] = src.[dwh_enable_type]
 WHEN NOT MATCHED BY TARGET THEN 
-INSERT ([codegen_id],[namespace], [schema], [table_name], [ods_enable_type], [dwh_enable_type])
+INSERT ([codegen_id], [namespace], [schema], [table_name], [ods_enable_type], [dwh_enable_type])
     VALUES (
         src.[codegen_id],
         src.[namespace],
@@ -47,7 +47,7 @@ WHEN NOT MATCHED BY SOURCE THEN DELETE;
 --UPDATE [dbo].[codegen_dwh_table] SET [is_enable] = 1
 --UPDATE [dbo].[codegen_dwh_column] SET [is_enable] = 1
 
-INSERT [dbo].[codegen_dwh_table] ([codegen_dwh_table_id], [codegen_id], [table_name], [is_root],[is_enable], [dwh_table_name], [is_vkey_session], [is_vkey_sourcename], [is_historical])
+INSERT [dbo].[codegen_dwh_table] ([codegen_dwh_table_id], [codegen_id], [table_name], [is_root], [is_enable], [dwh_table_name], [is_vkey_session], [is_vkey_sourcename], [is_historical])
 SELECT TOP 0 [codegen_dwh_table_ID] = CAST( NULL AS int), [codegen_id] = CAST( NULL AS int), [table_name] = CAST( NULL AS varchar(128)), [is_root] = CAST( NULL AS BIT), [is_enable] = CAST( NULL AS BIT), [dwh_table_name] = CAST( NULL AS varchar(128)), [is_vkey_session] = CAST( NULL AS BIT), [is_vkey_sourcename] = CAST( NULL AS BIT), [is_historical] = CAST( NULL AS BIT)
 
 UNION ALL SELECT [codegen_dwh_table_ID] = 1, [codegen_id] = 1, [table_name] = 'DIM_Валюты', [is_root] = 1, [is_enable] = 1, [dwh_table_name] = 'DIM_Валюты', [is_vkey_session] = 0, [is_vkey_sourcename] = 0, [is_historical] = 0
@@ -60,7 +60,7 @@ UNION ALL SELECT [codegen_dwh_table_ID] = 6, [codegen_id] = 4, [table_name] = 'F
 
 -- DIM_Валюты
 INSERT [dbo].[codegen_dwh_column]([codegen_dwh_column_id],[codegen_dwh_table_id],[column_name],[data_type],[text_length],[precision],[scale],[is_enable],[is_versionkey],[is_nulable],[null_value] )
-SELECT TOP 0 [codegen_dwh_column_id] = CAST( NULL AS [int]), [codegen_dwh_table_id] = CAST( NULL AS [int]), [column_name] = CAST( NULL AS [varchar](128)), [data_type] = CAST( NULL AS [varchar](128)), [text_length] = CAST( NULL AS [varchar](128)), [precision] = CAST( NULL AS [varchar](128)), [scale] = CAST( NULL AS [varchar](128)), [is_enable] = CAST( NULL AS [bit]), [is_versionkey] = CAST( NULL AS [bit]), [is_nulable] = CAST( NULL AS [bit]), [null_value]  = CAST( NULL AS [varchar](128))
+SELECT TOP 0 [codegen_dwh_column_id] = CAST( NULL AS int), [codegen_dwh_table_id] = CAST( NULL AS int), [column_name] = CAST( NULL AS [varchar](128)), [data_type] = CAST( NULL AS [varchar](128)), [text_length] = CAST( NULL AS [varchar](128)), [precision] = CAST( NULL AS [varchar](128)), [scale] = CAST( NULL AS [varchar](128)), [is_enable] = CAST( NULL AS [bit]), [is_versionkey] = CAST( NULL AS [bit]), [is_nulable] = CAST( NULL AS [bit]), [null_value]  = CAST( NULL AS [varchar](128))
 UNION ALL SELECT [codegen_dwh_column_id] = 1, [codegen_dwh_table_id] = 1, [column_name] = 'RefID', [data_type] = 'uniqueidentifier', [text_length] = NULL, [precision] = NULL, [scale] = NULL, [is_enable] = 1, [is_versionkey] = 0, [is_nulable] = 1, [null_value]  = NULL
 UNION ALL SELECT [codegen_dwh_column_id] = 2, [codegen_dwh_table_id] = 1, [column_name] = 'DeletionMark', [data_type] = 'bit', [text_length] = NULL, [precision] = NULL, [scale] = NULL, [is_enable] = 1, [is_versionkey] = 0, [is_nulable] = 1, [null_value]  = NULL
 UNION ALL SELECT [codegen_dwh_column_id] = 3, [codegen_dwh_table_id] = 1, [column_name] = 'Code', [data_type] = 'varchar', [text_length] = '128', [precision] = NULL, [scale] = NULL, [is_enable] = 1, [is_versionkey] = 0, [is_nulable] = 1, [null_value]  = NULL
@@ -78,7 +78,7 @@ UNION ALL SELECT [codegen_dwh_column_id] = 14, [codegen_dwh_table_ID] = 2, [colu
 
 -- DIM_Клиенты
 INSERT [dbo].[codegen_dwh_column]([codegen_dwh_column_id],[codegen_dwh_table_id],[column_name],[data_type],[text_length],[precision],[scale],[is_enable],[is_versionkey],[is_nulable],[null_value] )
-SELECT TOP 0 [codegen_dwh_column_id] = CAST( NULL AS [int]), [codegen_dwh_table_id] = CAST( NULL AS [int]), [column_name] = CAST( NULL AS [varchar](128)), [data_type] = CAST( NULL AS [varchar](128)), [text_length] = CAST( NULL AS [varchar](128)), [precision] = CAST( NULL AS [varchar](128)), [scale] = CAST( NULL AS [varchar](128)), [is_enable] = CAST( NULL AS [bit]), [is_versionkey] = CAST( NULL AS [bit]), [is_nulable] = CAST( NULL AS [bit]), [null_value]  = CAST( NULL AS [varchar](128))
+SELECT TOP 0 [codegen_dwh_column_id] = CAST( NULL AS int), [codegen_dwh_table_id] = CAST( NULL AS int), [column_name] = CAST( NULL AS [varchar](128)), [data_type] = CAST( NULL AS [varchar](128)), [text_length] = CAST( NULL AS [varchar](128)), [precision] = CAST( NULL AS [varchar](128)), [scale] = CAST( NULL AS [varchar](128)), [is_enable] = CAST( NULL AS [bit]), [is_versionkey] = CAST( NULL AS [bit]), [is_nulable] = CAST( NULL AS [bit]), [null_value]  = CAST( NULL AS [varchar](128))
 UNION ALL SELECT [codegen_dwh_column_id] = 15, [codegen_dwh_table_id] = 3, [column_name] = 'RefID', [data_type] = 'uniqueidentifier', [text_length] = NULL, [precision] = NULL, [scale] = NULL, [is_enable] = 1, [is_versionkey] = 0, [is_nulable] = 1, [null_value]  = NULL
 UNION ALL SELECT [codegen_dwh_column_id] = 16, [codegen_dwh_table_id] = 3, [column_name] = 'DeletionMark', [data_type] = 'bit', [text_length] = NULL, [precision] = NULL, [scale] = NULL, [is_enable] = 1, [is_versionkey] = 0, [is_nulable] = 1, [null_value]  = NULL
 UNION ALL SELECT [codegen_dwh_column_id] = 17, [codegen_dwh_table_id] = 3, [column_name] = 'Code', [data_type] = 'varchar', [text_length] = '128', [precision] = NULL, [scale] = NULL, [is_enable] = 1, [is_versionkey] = 0, [is_nulable] = 1, [null_value]  = NULL
@@ -87,7 +87,7 @@ UNION ALL SELECT [codegen_dwh_column_id] = 19, [codegen_dwh_table_id] = 3, [colu
 
 -- DIM_Товары
 INSERT [dbo].[codegen_dwh_column]([codegen_dwh_column_id],[codegen_dwh_table_id],[column_name],[data_type],[text_length],[precision],[scale],[is_enable],[is_versionkey],[is_nulable],[null_value] )
-SELECT TOP 0 [codegen_dwh_column_id] = CAST( NULL AS [int]), [codegen_dwh_table_id] = CAST( NULL AS [int]), [column_name] = CAST( NULL AS [varchar](128)), [data_type] = CAST( NULL AS [varchar](128)), [text_length] = CAST( NULL AS [varchar](128)), [precision] = CAST( NULL AS [varchar](128)), [scale] = CAST( NULL AS [varchar](128)), [is_enable] = CAST( NULL AS [bit]), [is_versionkey] = CAST( NULL AS [bit]), [is_nulable] = CAST( NULL AS [bit]), [null_value]  = CAST( NULL AS [varchar](128))
+SELECT TOP 0 [codegen_dwh_column_id] = CAST( NULL AS int), [codegen_dwh_table_id] = CAST( NULL AS int), [column_name] = CAST( NULL AS [varchar](128)), [data_type] = CAST( NULL AS [varchar](128)), [text_length] = CAST( NULL AS [varchar](128)), [precision] = CAST( NULL AS [varchar](128)), [scale] = CAST( NULL AS [varchar](128)), [is_enable] = CAST( NULL AS [bit]), [is_versionkey] = CAST( NULL AS [bit]), [is_nulable] = CAST( NULL AS [bit]), [null_value]  = CAST( NULL AS [varchar](128))
 UNION ALL SELECT [codegen_dwh_column_id] = 20, [codegen_dwh_table_id] = 4, [column_name] = 'RefID', [data_type] = 'uniqueidentifier', [text_length] = NULL, [precision] = NULL, [scale] = NULL, [is_enable] = 1, [is_versionkey] = 0, [is_nulable] = 1, [null_value]  = NULL
 UNION ALL SELECT [codegen_dwh_column_id] = 21, [codegen_dwh_table_id] = 4, [column_name] = 'DeletionMark', [data_type] = 'bit', [text_length] = NULL, [precision] = NULL, [scale] = NULL, [is_enable] = 1, [is_versionkey] = 0, [is_nulable] = 1, [null_value]  = NULL
 UNION ALL SELECT [codegen_dwh_column_id] = 22, [codegen_dwh_table_id] = 4, [column_name] = 'Code', [data_type] = 'varchar', [text_length] = '128', [precision] = NULL, [scale] = NULL, [is_enable] = 1, [is_versionkey] = 0, [is_nulable] = 1, [null_value]  = NULL
@@ -96,7 +96,7 @@ UNION ALL SELECT [codegen_dwh_column_id] = 24, [codegen_dwh_table_id] = 4, [colu
 
 -- FACT_Продажи
 INSERT [dbo].[codegen_dwh_column]([codegen_dwh_column_id],[codegen_dwh_table_id],[column_name],[data_type],[text_length],[precision],[scale],[is_enable],[is_versionkey],[is_nulable],[null_value] )
-SELECT TOP 0 [codegen_dwh_column_id] = CAST( NULL AS [int]), [codegen_dwh_table_id] = CAST( NULL AS [int]), [column_name] = CAST( NULL AS [varchar](128)), [data_type] = CAST( NULL AS [varchar](128)), [text_length] = CAST( NULL AS [varchar](128)), [precision] = CAST( NULL AS [varchar](128)), [scale] = CAST( NULL AS [varchar](128)), [is_enable] = CAST( NULL AS [bit]), [is_versionkey] = CAST( NULL AS [bit]), [is_nulable] = CAST( NULL AS [bit]), [null_value]  = CAST( NULL AS [varchar](128))
+SELECT TOP 0 [codegen_dwh_column_id] = CAST( NULL AS int), [codegen_dwh_table_id] = CAST( NULL AS int), [column_name] = CAST( NULL AS [varchar](128)), [data_type] = CAST( NULL AS [varchar](128)), [text_length] = CAST( NULL AS [varchar](128)), [precision] = CAST( NULL AS [varchar](128)), [scale] = CAST( NULL AS [varchar](128)), [is_enable] = CAST( NULL AS [bit]), [is_versionkey] = CAST( NULL AS [bit]), [is_nulable] = CAST( NULL AS [bit]), [null_value]  = CAST( NULL AS [varchar](128))
 UNION ALL SELECT [codegen_dwh_column_id] = 25, [codegen_dwh_table_id] = 5, [column_name] = 'RefID', [data_type] = 'uniqueidentifier', [text_length] = NULL, [precision] = NULL, [scale] = NULL, [is_enable] = 1, [is_versionkey] = 0, [is_nulable] = 1, [null_value]  = NULL
 UNION ALL SELECT [codegen_dwh_column_id] = 26, [codegen_dwh_table_id] = 5, [column_name] = 'DeletionMark', [data_type] = 'bit', [text_length] = NULL, [precision] = NULL, [scale] = NULL, [is_enable] = 1, [is_versionkey] = 0, [is_nulable] = 1, [null_value]  = NULL
 UNION ALL SELECT [codegen_dwh_column_id] = 27, [codegen_dwh_table_id] = 5, [column_name] = 'Number', [data_type] = 'int', [text_length] = NULL, [precision] = NULL, [scale] = NULL, [is_enable] = 1, [is_versionkey] = 0, [is_nulable] = 1, [null_value]  = NULL

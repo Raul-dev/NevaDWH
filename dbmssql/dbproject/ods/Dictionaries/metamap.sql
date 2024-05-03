@@ -17,7 +17,7 @@ DECLARE @metamap TABLE
     [namespace_ver]         nvarchar (256) NULL,
     [etl_query]             nvarchar (256) NULL,
     [import_query]          nvarchar (256) NULL,
-    [is_enable]				bit            NULL
+    [is_enable]             bit            NULL
 )
 INSERT @metamap ([metamap_id], [msg_key], [table_name], [metaadapter_id], [namespace], [namespace_ver], [etl_query], [import_query], [is_enable])
 VALUES
@@ -45,9 +45,9 @@ WHEN MATCHED THEN UPDATE SET
     [metaadapter_id] = src.[metaadapter_id],
     [namespace]      = src.[namespace],
     [namespace_ver]  = src.[namespace_ver],
-    [etl_query]      = src.etl_query,
-    [import_query]   = src.import_query,
-    [is_enable]      = src.is_enable
+    [etl_query]      = src.[etl_query],
+    [import_query]   = src.[import_query],
+    [is_enable]      = src.[is_enable]
 WHEN NOT MATCHED BY TARGET THEN 
 INSERT ([metamap_id], [msg_key], [table_name], [metaadapter_id], [namespace], [namespace_ver], [etl_query], [import_query], [is_enable])
     VALUES (

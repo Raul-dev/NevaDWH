@@ -16,24 +16,24 @@ DECLARE
 
        SELECT ARRAY[ARRAY['nva', 'http://v8.1c.ru/8.1/data/enterprise/current-config'], ARRAY['xsi', 'http://www.w3.org/2001/XMLSchema-instance'], ARRAY['xs', 'http://www.w3.org/2001/XMLSchema']] into var_xmlns;
     DROP TABLE IF EXISTS "FACT_Продажи_tmp1";
-	CREATE TEMPORARY TABLE "FACT_Продажи_tmp1" (
-		buffer_id int,
-		"RefID" uuid
-	);
+    CREATE TEMPORARY TABLE "FACT_Продажи_tmp1" (
+        buffer_id int,
+        "RefID" uuid
+    );
 
-	INSERT INTO "FACT_Продажи_tmp1" (buffer_id, "RefID")
+    INSERT INTO "FACT_Продажи_tmp1" (buffer_id, "RefID")
     SELECT MAX(buffer_id) AS buffer_id,
     CAST((xpath('/nva:Data/nva:Реквизиты/nva:DocumentObject.Продажи/nva:Ref/text()', msg::xml, var_xmlns ))[1]::text as uuid) ref
     FROM "odins"."FACT_Продажи_buffer" b
     WHERE b."is_error" = false
     GROUP BY CAST((xpath('/nva:Data/nva:Реквизиты/nva:DocumentObject.Продажи/nva:Ref/text()', msg::xml, var_xmlns ))[1]::text as uuid);
-	
-	GET DIAGNOSTICS var_rowcount = ROW_COUNT;
-	par_rowcount := var_rowcount;
+    
+    GET DIAGNOSTICS var_rowcount = ROW_COUNT;
+    par_rowcount := var_rowcount;
 
-	IF var_rowcount = 0 THEN
+    IF var_rowcount = 0 THEN
         return;
-	END IF;
+    END IF;
 
     DROP TABLE IF EXISTS "FACT_Продажи_tmp2";
     CREATE TEMPORARY TABLE "FACT_Продажи_tmp2" (
