@@ -11,10 +11,9 @@ CREATE TABLE [Dim_date](
 	[CalendarYear] [smallint] NOT NULL,
 	[DayName] [nvarchar](14) NOT NULL,
 	[MonthName] [nvarchar](14) NOT NULL,
-	LastOfMonth [date] NOT NULL,
-	FirstOfQuarter [date] NOT NULL,
-	LastOfQuarter [date] NOT NULL,
-	
+	[LastOfMonth] [date] NOT NULL,
+	[FirstOfQuarter] [date] NOT NULL,
+	[LastOfQuarter] [date] NOT NULL,
 	[EnglishDayName]  AS (datename(week,[FullDateAlternateKey])),
 	[EnglishMonthName]  AS (datename(month,[FullDateAlternateKey])),
 	[SimpleRussianDate]  AS (format([FullDateAlternateKey],'d','ru-ru')),

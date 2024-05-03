@@ -14,7 +14,7 @@ INSERT @codegen_enable_type ([codegen_enable_type_id], [description]) VALUES
 IF EXISTS ( 
     SELECT 1 FROM [dbo].[codegen_enable_type] d 
     LEFT OUTER JOIN @codegen_enable_type s ON s.codegen_enable_type_id=d.codegen_enable_type_id
-    WHERE s.codegen_enable_type_id IS NULL) THROW 60000, N'Словарь [codegen_enable_type] был вручную изменен в базе данных ', 1;
+    WHERE s.codegen_enable_type_id IS NULL) THROW 60000, N'The table [codegen_enable_type] was change.', 1;
 
 MERGE INTO [dbo].[codegen_enable_type] trg
 USING 

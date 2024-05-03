@@ -1,6 +1,6 @@
 IF NOT EXISTS(SELECT 1 FROM [dbo].[metaadapter] )
 BEGIN
-    insert into [dbo].[metaadapter] ([metaadapter_id],name) 
+    INSERT INTO [dbo].[metaadapter] ([metaadapter_id],name) 
     SELECT 4, N'FirstBitJson'
     UNION ALL SELECT 3, N'FirstBitXml'
     UNION ALL SELECT 2, N'NevaDWHJson'
@@ -11,26 +11,25 @@ END
 
 DECLARE @metamap TABLE
 (
-    [metamap_id]                 SMALLINT       NOT NULL,
+    [metamap_id]            SMALLINT       NOT NULL,
     [msg_key]               NVARCHAR(256) NOT NULL,
-    [table_name]               NVARCHAR(128) NOT NULL,
-    metaadapter_id             tinyint    NULL,
+    [table_name]            NVARCHAR(128) NOT NULL,
+    [metaadapter_id]        tinyint    NULL,
     [namespace]             NVARCHAR (256)  NULL,
     [namespace_ver]         NVARCHAR (256)  NULL,
-    etl_query              NVARCHAR (256)  NULL,
-	import_query               NVARCHAR (256)  NULL,
-	is_enable				   BIT NULL
+    [etl_query]             NVARCHAR (256)  NULL,
+    [import_query]          NVARCHAR (256)  NULL,
+    [is_enable]                BIT NULL
 )
-
 
 
 
 MERGE INTO [dbo].[metamap] trg
 USING (
-	SELECT m.* FROM @metamap m
-		
-	)
-	src ON src.[metamap_id] = trg.[metamap_id]
+    SELECT m.* FROM @metamap m
+        
+    )
+    src ON src.[metamap_id] = trg.[metamap_id]
 WHEN MATCHED THEN UPDATE SET 
     [msg_key] = src.[msg_key],
     [table_name] = src.[table_name],

@@ -1,5 +1,5 @@
-﻿if NOT EXISTS(SELECT 1 FROM data_source WHERe data_source_id =1 )
-insert into data_source (data_source_id,name) values(1, N'ods1c')
+﻿IF NOT EXISTS(SELECT 1 FROM [data_source] WHERe [data_source_id] =1 )
+INSERT INTO [data_source] (data_source_id,name) values(1, N'ods1c')
 
 
 DECLARE @session_state TABLE
@@ -16,7 +16,7 @@ INSERT @session_state ([session_state_id], [name])VALUES
 IF EXISTS ( 
     SELECT 1 FROM [dbo].[session_state] d 
     LEFT OUTER JOIN @session_state s ON s.session_state_id=d.session_state_id
-    WHERE s.session_state_id IS NULL) THROW 60000, N'Словарь [session_state] был вручную изменен в базе данных ', 1;
+    WHERE s.session_state_id IS NULL) THROW 60000, N'The table [session_state] was change.', 1;
 
 MERGE INTO [dbo].[session_state] trg
 USING 

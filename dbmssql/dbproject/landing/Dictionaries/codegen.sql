@@ -23,7 +23,7 @@ WHEN MATCHED THEN UPDATE SET
     [ods_enable_type] = src.[ods_enable_type],
     [dwh_enable_type] = src.[dwh_enable_type]
 WHEN NOT MATCHED BY TARGET THEN 
-INSERT ([codegen_id],[namespace], [schema], [table_name], [ods_enable_type], [dwh_enable_type])
+INSERT ([codegen_id], [namespace], [schema], [table_name], [ods_enable_type], [dwh_enable_type])
     VALUES (
         src.[codegen_id],
         src.[namespace],

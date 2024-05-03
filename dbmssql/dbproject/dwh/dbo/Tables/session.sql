@@ -6,7 +6,7 @@
     [session_state_id]   TINYINT        NOT NULL,
     [rows_count]   int        NOT NULL,
     [create_session] DATETIME2 (4) NULL,
-    [error_message]  NVARCHAR (4000) COLLATE Cyrillic_General_CI_AS NULL,
+    [error_message]  VARCHAR (4000) COLLATE Cyrillic_General_CI_AS NULL,
     [dt_update]    DATETIME2 (4)  CONSTRAINT [DF_session_dt_update_DEFAULT] DEFAULT (getdate()) NOT NULL,
     [dt_create]    DATETIME2 (4)  CONSTRAINT [DF_session_dt_create_DEFAULT] DEFAULT (getdate()) NOT NULL,
     CONSTRAINT [PK_session] PRIMARY KEY CLUSTERED ([session_id] ASC),

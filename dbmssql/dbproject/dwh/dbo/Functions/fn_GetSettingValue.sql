@@ -11,11 +11,11 @@ StrValue nvarchar(256)
 DROP FUNCTION [dbo].[fn_GetSettigValue]
 */
 CREATE   Function [dbo].[fn_GetSettingValue](
-	@SettingID	varchar(50)
+    @SettingID	varchar(50)
 ) RETURNS nvarchar(256)
 AS
 BEGIN
-	DECLARE @Value nvarchar(256)
-	SET @Value = (SELECT StrValue FROM [dbo].[Setting] WITH( READCOMMITTED ) WHERE SettingID = @SettingID)
-	RETURN @Value;
+    DECLARE @Value nvarchar(256)
+    SET @Value = (SELECT StrValue FROM [dbo].[Setting] WITH( READCOMMITTED ) WHERE SettingID = @SettingID)
+    RETURN @Value;
 END

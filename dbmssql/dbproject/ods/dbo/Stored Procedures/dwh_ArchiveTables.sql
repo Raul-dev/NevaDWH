@@ -1,6 +1,6 @@
  CREATE PROCEDURE dwh_ArchiveTables( 
     @dwh_session_id bigint = NULL,
-    @ErrMessage	NVARCHAR(4000) = NULL OUTPUT
+    @ErrMessage	    nvarchar(4000) = NULL OUTPUT
 )
 AS
 BEGIN

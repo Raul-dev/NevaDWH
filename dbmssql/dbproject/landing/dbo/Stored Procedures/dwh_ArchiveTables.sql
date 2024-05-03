@@ -1,18 +1,18 @@
  CREATE PROCEDURE dwh_ArchiveTables( 
-	@dwh_session_id bigint = NULL,
-    @ErrMessage	    nvarchar(4000) = NULL OUTPUT
+    @dwh_session_id bigint = NULL,
+    @ErrMessage	NVARCHAR(4000) = NULL OUTPUT
 )
 AS
 BEGIN
 BEGIN TRY
 
-BEGIN TRANSACTION
+    BEGIN TRANSACTION
 
-    
-	UPDATE [dwh_session] SET dwh_session_state_id = 6
-	WHERE dwh_session_id = @dwh_session_id
-	COMMIT TRANSACTION
-	IF @ErrMessage IS NULL SET @ErrMessage = ''
+
+    UPDATE [dwh_session] SET dwh_session_state_id = 6
+    WHERE dwh_session_id = @dwh_session_id
+    COMMIT TRANSACTION
+    IF @ErrMessage IS NULL SET @ErrMessage = ''
 END TRY
 BEGIN CATCH
 	SELECT @ErrMessage = ERROR_MESSAGE()
@@ -27,9 +27,9 @@ BEGIN CATCH
 		[dwh_session_state_id] = 3,
 		[error_message] = 'ArchiveTables Error: ' +@ErrMessage
 	IF XACT_STATE() != -1 
-	BEGIN
+	  BEGIN
 		IF (@@TRANCOUNT > 0 ) ROLLBACK TRANSACTION
-	END
+	  END
 
 	RAISERROR( N'Error: [%s].', 16, 1, @ErrMessage)
 	RETURN -1

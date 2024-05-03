@@ -1,7 +1,6 @@
 Param (
     [parameter(Mandatory=$false)][string]$IsUpdate=$false
   )
-# todo: put this in a dedicated file for reuse and dot-source the file
 function Test-Administrator  
 {  
     [OutputType([bool])]
