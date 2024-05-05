@@ -28,3 +28,4 @@ CREATE TABLE IF NOT EXISTS target."DIM_Валюты" (
     dt_update     timestamp without time zone NOT NULL default now(),
     dt_create     timestamp without time zone NOT NULL default now()
 );
+CREATE UNIQUE INDEX IF NOT EXISTS "IDX_target_DIM_Валюты" ON target."DIM_Валюты" (nkey);

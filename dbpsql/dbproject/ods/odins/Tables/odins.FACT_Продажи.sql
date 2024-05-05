@@ -24,3 +24,4 @@ CREATE TABLE IF NOT EXISTS odins."FACT_Продажи" (
 
 COMMENT ON TABLE "odins"."FACT_Продажи" IS '{"Description":"FACT_Продажи"}';
 
+CREATE UNIQUE INDEX IF NOT EXISTS "IDX_odins_FACT_Продажи" ON odins."FACT_Продажи" (nkey);

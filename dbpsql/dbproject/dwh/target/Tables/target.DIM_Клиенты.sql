@@ -22,3 +22,4 @@ CREATE TABLE IF NOT EXISTS target."DIM_Клиенты" (
     dt_update     timestamp without time zone NOT NULL default now(),
     dt_create     timestamp without time zone NOT NULL default now()
 );
+CREATE UNIQUE INDEX IF NOT EXISTS "IDX_target_DIM_Клиенты" ON target."DIM_Клиенты" (nkey);

@@ -183,6 +183,11 @@ try{
         $SqlSchemaFolder = $SourceDBFolder+"\"+$SchemaFolders[$i].Name+"\Tables"
         Write-Host $SqlSchemaFolder
         ConcatenateScriptFolder $SqlSchemaFolder $OutputDumpFile
+        $SqlSchemaFolder = $SourceDBFolder+"\"+$SchemaFolders[$i].Name+"\Views"
+        Write-Host $SqlSchemaFolder
+        if (Test-Path $SqlSchemaFolder) {
+            ConcatenateScriptFolder $SqlSchemaFolder $OutputDumpFile
+        }
         $SqlSchemaFolder = $SourceDBFolder+"\"+$SchemaFolders[$i].Name+"\Stored Procedures"
         Write-Host $SqlSchemaFolder
         if (Test-Path $SqlSchemaFolder) {

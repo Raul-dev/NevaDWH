@@ -859,6 +859,7 @@ CREATE TABLE IF NOT EXISTS odins."DIM_Валюты" (
 
 COMMENT ON TABLE "odins"."DIM_Валюты" IS '{"Description":"DIM_Валюты"}';
 
+CREATE UNIQUE INDEX IF NOT EXISTS "IDX_odins_DIM_Валюты" ON odins."DIM_Валюты" (nkey);
 do
 $$
 BEGIN
@@ -891,6 +892,7 @@ CREATE TABLE IF NOT EXISTS odins."DIM_Валюты_Представления" (
 
 COMMENT ON TABLE "odins"."DIM_Валюты_Представления" IS '{"Description":"DIM_Валюты.Представления"}';
 
+CREATE UNIQUE INDEX IF NOT EXISTS "IDX_odins_DIM_Валюты_Представления" ON odins."DIM_Валюты_Представления" (nkey);
 do
 $$
 BEGIN
@@ -943,6 +945,7 @@ CREATE TABLE IF NOT EXISTS odins."DIM_Клиенты" (
 
 COMMENT ON TABLE "odins"."DIM_Клиенты" IS '{"Description":"DIM_Клиенты"}';
 
+CREATE UNIQUE INDEX IF NOT EXISTS "IDX_odins_DIM_Клиенты" ON odins."DIM_Клиенты" (nkey);
 do
 $$
 BEGIN
@@ -995,6 +998,7 @@ CREATE TABLE IF NOT EXISTS odins."DIM_Товары" (
 
 COMMENT ON TABLE "odins"."DIM_Товары" IS '{"Description":"DIM_Товары"}';
 
+CREATE UNIQUE INDEX IF NOT EXISTS "IDX_odins_DIM_Товары" ON odins."DIM_Товары" (nkey);
 do
 $$
 BEGIN
@@ -1057,6 +1061,7 @@ CREATE TABLE IF NOT EXISTS odins."FACT_Продажи" (
 
 COMMENT ON TABLE "odins"."FACT_Продажи" IS '{"Description":"FACT_Продажи"}';
 
+CREATE UNIQUE INDEX IF NOT EXISTS "IDX_odins_FACT_Продажи" ON odins."FACT_Продажи" (nkey);
 do
 $$
 BEGIN
@@ -1093,6 +1098,7 @@ CREATE TABLE IF NOT EXISTS odins."FACT_Продажи_Товары" (
 
 COMMENT ON TABLE "odins"."FACT_Продажи_Товары" IS '{"Description":"FACT_Продажи.Товары"}';
 
+CREATE UNIQUE INDEX IF NOT EXISTS "IDX_odins_FACT_Продажи_Товары" ON odins."FACT_Продажи_Товары" (nkey);
 do
 $$
 BEGIN
@@ -1150,19 +1156,21 @@ CREATE OR REPLACE PROCEDURE odins."load_DIM_Валюты" (
 )
 AS $BODY$
 DECLARE
-    var_rowcount INTEGER;
-    var_xmlns text ARRAY;BEGIN
+    var_rowcount integer;
+    var_xmlns text ARRAY;
+BEGIN
 
-       SELECT ARRAY[ARRAY['nva', 'http://v8.1c.ru/8.1/data/enterprise/current-config'], ARRAY['xsi', 'http://www.w3.org/2001/XMLSchema-instance'], ARRAY['xs', 'http://www.w3.org/2001/XMLSchema']] into var_xmlns;
+    SELECT ARRAY[ARRAY['nva', 'http://v8.1c.ru/8.1/data/enterprise/current-config'], ARRAY['xsi', 'http://www.w3.org/2001/XMLSchema-instance'], ARRAY['xs', 'http://www.w3.org/2001/XMLSchema']] into var_xmlns;
+
     DROP TABLE IF EXISTS "DIM_Валюты_tmp1";
     CREATE TEMPORARY TABLE "DIM_Валюты_tmp1" (
-        buffer_id int,
+        "buffer_id" int,
         "RefID" uuid
     );
 
     INSERT INTO "DIM_Валюты_tmp1" (buffer_id, "RefID")
     SELECT MAX(buffer_id) AS buffer_id,
-    CAST((xpath('/nva:Data/nva:Реквизиты/nva:CatalogObject.Валюты/nva:Ref/text()', msg::xml, var_xmlns ))[1]::text as uuid) ref
+        CAST((xpath('/nva:Data/nva:Реквизиты/nva:CatalogObject.Валюты/nva:Ref/text()', msg::xml, var_xmlns ))[1]::text as uuid) ref
     FROM "odins"."DIM_Валюты_buffer" b
     WHERE b."is_error" = false
     GROUP BY CAST((xpath('/nva:Data/nva:Реквизиты/nva:CatalogObject.Валюты/nva:Ref/text()', msg::xml, var_xmlns ))[1]::text as uuid);
@@ -1171,7 +1179,7 @@ DECLARE
     par_rowcount := var_rowcount;
 
     IF var_rowcount = 0 THEN
-        return;
+        RETURN;
     END IF;
 
     DROP TABLE IF EXISTS "DIM_Валюты_tmp2";
@@ -1194,15 +1202,10 @@ DECLARE
 
     INSERT INTO "DIM_Валюты_tmp2"
      (
-/*
-SELECT ARRAY[ARRAY['nva', 'http://v8.1c.ru/8.1/data/enterprise/current-config']] into my;
-RAISE NOTICE 'CREATE PROCEDURE odins."load_DIM_Клиенты"';
-SELECT  xpath('//nva:ПолноеИмя/text()', msg::xml, my) AS status INTO par
-*/
     SELECT
         CAST(md5(CONVERT(
                 CAST((xpath('/nva:Data/nva:Реквизиты/nva:CatalogObject.Валюты/nva:Ref/text()', msg::xml, var_xmlns ))[1] as VARCHAR)                
-                ::bytea,'UTF8','UHC')) AS UUID) AS  nkey,
+                ::bytea,'UTF8','UHC')) AS UUID) AS "nkey",
 
         (xpath('/nva:Data/nva:Реквизиты/nva:CatalogObject.Валюты/nva:DIM_Валюты.Представления/text()', msg::xml, var_xmlns ))[1]::xml  AS "DIM_Валюты_Представления",
         CAST((xpath('/nva:Data/nva:Реквизиты/nva:CatalogObject.Валюты/nva:Ref/text()', msg::xml, var_xmlns ))[1]::text as uuid)  AS "RefID",
@@ -1235,8 +1238,7 @@ SELECT  xpath('//nva:ПолноеИмя/text()', msg::xml, my) AS status INTO pa
         "ФормулаРасчетаКурса" = src."ФормулаРасчетаКурса",
         "СпособУстановкиКурса" = src."СпособУстановкиКурса",
         dt_update = now()
-    FROM  
-        "DIM_Валюты_tmp2" AS src 
+    FROM "DIM_Валюты_tmp2" AS src 
     WHERE org."nkey" = src."nkey" ;
     INSERT INTO "odins"."DIM_Валюты" (
         "nkey" ,
@@ -1267,17 +1269,14 @@ SELECT  xpath('//nva:ПолноеИмя/text()', msg::xml, my) AS status INTO pa
         src."ПараметрыПрописи",
         src."ФормулаРасчетаКурса",
         src."СпособУстановкиКурса",
-        src.dt_update
-          FROM "DIM_Валюты_tmp2" AS src 
+        src."dt_update"
+     FROM "DIM_Валюты_tmp2" AS src 
         LEFT JOIN "odins"."DIM_Валюты" AS org ON org."nkey" = src."nkey" 
      WHERE org."RefID" IS NULL ;
      
 
-
     DELETE FROM "odins"."DIM_Валюты_buffer" AS b 
     WHERE EXISTS (SELECT 1 FROM "DIM_Валюты_tmp1" AS t WHERE CAST((xpath('/nva:Data/nva:Реквизиты/nva:CatalogObject.Валюты/nva:Ref/text()', msg::xml, var_xmlns ))[1]::text as uuid) = t."RefID" AND b.buffer_id <= t.buffer_id );
-
-
 
 END;
 
@@ -1340,19 +1339,21 @@ CREATE OR REPLACE PROCEDURE odins."load_DIM_Клиенты" (
 )
 AS $BODY$
 DECLARE
-    var_rowcount INTEGER;
-    var_xmlns text ARRAY;BEGIN
+    var_rowcount integer;
+    var_xmlns text ARRAY;
+BEGIN
 
-       SELECT ARRAY[ARRAY['nva', 'http://v8.1c.ru/8.1/data/enterprise/current-config'], ARRAY['xsi', 'http://www.w3.org/2001/XMLSchema-instance'], ARRAY['xs', 'http://www.w3.org/2001/XMLSchema']] into var_xmlns;
+    SELECT ARRAY[ARRAY['nva', 'http://v8.1c.ru/8.1/data/enterprise/current-config'], ARRAY['xsi', 'http://www.w3.org/2001/XMLSchema-instance'], ARRAY['xs', 'http://www.w3.org/2001/XMLSchema']] into var_xmlns;
+
     DROP TABLE IF EXISTS "DIM_Клиенты_tmp1";
     CREATE TEMPORARY TABLE "DIM_Клиенты_tmp1" (
-        buffer_id int,
+        "buffer_id" int,
         "RefID" uuid
     );
 
     INSERT INTO "DIM_Клиенты_tmp1" (buffer_id, "RefID")
     SELECT MAX(buffer_id) AS buffer_id,
-    CAST((xpath('/nva:Data/nva:Реквизиты/nva:CatalogObject.Клиенты/nva:Ref/text()', msg::xml, var_xmlns ))[1]::text as uuid) ref
+        CAST((xpath('/nva:Data/nva:Реквизиты/nva:CatalogObject.Клиенты/nva:Ref/text()', msg::xml, var_xmlns ))[1]::text as uuid) ref
     FROM "odins"."DIM_Клиенты_buffer" b
     WHERE b."is_error" = false
     GROUP BY CAST((xpath('/nva:Data/nva:Реквизиты/nva:CatalogObject.Клиенты/nva:Ref/text()', msg::xml, var_xmlns ))[1]::text as uuid);
@@ -1361,7 +1362,7 @@ DECLARE
     par_rowcount := var_rowcount;
 
     IF var_rowcount = 0 THEN
-        return;
+        RETURN;
     END IF;
 
     DROP TABLE IF EXISTS "DIM_Клиенты_tmp2";
@@ -1377,15 +1378,10 @@ DECLARE
 
     INSERT INTO "DIM_Клиенты_tmp2"
      (
-/*
-SELECT ARRAY[ARRAY['nva', 'http://v8.1c.ru/8.1/data/enterprise/current-config']] into my;
-RAISE NOTICE 'CREATE PROCEDURE odins."load_DIM_Клиенты"';
-SELECT  xpath('//nva:ПолноеИмя/text()', msg::xml, my) AS status INTO par
-*/
     SELECT
         CAST(md5(CONVERT(
                 CAST((xpath('/nva:Data/nva:Реквизиты/nva:CatalogObject.Клиенты/nva:Ref/text()', msg::xml, var_xmlns ))[1] as VARCHAR)                
-                ::bytea,'UTF8','UHC')) AS UUID) AS  nkey,
+                ::bytea,'UTF8','UHC')) AS UUID) AS "nkey",
 
         CAST((xpath('/nva:Data/nva:Реквизиты/nva:CatalogObject.Клиенты/nva:Ref/text()', msg::xml, var_xmlns ))[1]::text as uuid)  AS "RefID",
         CAST((xpath('/nva:Data/nva:Реквизиты/nva:CatalogObject.Клиенты/nva:DeletionMark/text()', msg::xml, var_xmlns ))[1]::text as boolean)  AS "DeletionMark",
@@ -1405,8 +1401,7 @@ SELECT  xpath('//nva:ПолноеИмя/text()', msg::xml, my) AS status INTO pa
         "Description" = src."Description",
         "Контакт" = src."Контакт",
         dt_update = now()
-    FROM  
-        "DIM_Клиенты_tmp2" AS src 
+    FROM "DIM_Клиенты_tmp2" AS src 
     WHERE org."nkey" = src."nkey" ;
     INSERT INTO "odins"."DIM_Клиенты" (
         "nkey" ,
@@ -1425,17 +1420,14 @@ SELECT  xpath('//nva:ПолноеИмя/text()', msg::xml, my) AS status INTO pa
         src."Code",
         src."Description",
         src."Контакт",
-        src.dt_update
-          FROM "DIM_Клиенты_tmp2" AS src 
+        src."dt_update"
+     FROM "DIM_Клиенты_tmp2" AS src 
         LEFT JOIN "odins"."DIM_Клиенты" AS org ON org."nkey" = src."nkey" 
      WHERE org."RefID" IS NULL ;
      
 
-
     DELETE FROM "odins"."DIM_Клиенты_buffer" AS b 
     WHERE EXISTS (SELECT 1 FROM "DIM_Клиенты_tmp1" AS t WHERE CAST((xpath('/nva:Data/nva:Реквизиты/nva:CatalogObject.Клиенты/nva:Ref/text()', msg::xml, var_xmlns ))[1]::text as uuid) = t."RefID" AND b.buffer_id <= t.buffer_id );
-
-
 
 END;
 
@@ -1498,19 +1490,21 @@ CREATE OR REPLACE PROCEDURE odins."load_DIM_Товары" (
 )
 AS $BODY$
 DECLARE
-    var_rowcount INTEGER;
-    var_xmlns text ARRAY;BEGIN
+    var_rowcount integer;
+    var_xmlns text ARRAY;
+BEGIN
 
-       SELECT ARRAY[ARRAY['nva', 'http://v8.1c.ru/8.1/data/enterprise/current-config'], ARRAY['xsi', 'http://www.w3.org/2001/XMLSchema-instance'], ARRAY['xs', 'http://www.w3.org/2001/XMLSchema']] into var_xmlns;
+    SELECT ARRAY[ARRAY['nva', 'http://v8.1c.ru/8.1/data/enterprise/current-config'], ARRAY['xsi', 'http://www.w3.org/2001/XMLSchema-instance'], ARRAY['xs', 'http://www.w3.org/2001/XMLSchema']] into var_xmlns;
+
     DROP TABLE IF EXISTS "DIM_Товары_tmp1";
     CREATE TEMPORARY TABLE "DIM_Товары_tmp1" (
-        buffer_id int,
+        "buffer_id" int,
         "RefID" uuid
     );
 
     INSERT INTO "DIM_Товары_tmp1" (buffer_id, "RefID")
     SELECT MAX(buffer_id) AS buffer_id,
-    CAST((xpath('/nva:Data/nva:Реквизиты/nva:CatalogObject.Товары/nva:Ref/text()', msg::xml, var_xmlns ))[1]::text as uuid) ref
+        CAST((xpath('/nva:Data/nva:Реквизиты/nva:CatalogObject.Товары/nva:Ref/text()', msg::xml, var_xmlns ))[1]::text as uuid) ref
     FROM "odins"."DIM_Товары_buffer" b
     WHERE b."is_error" = false
     GROUP BY CAST((xpath('/nva:Data/nva:Реквизиты/nva:CatalogObject.Товары/nva:Ref/text()', msg::xml, var_xmlns ))[1]::text as uuid);
@@ -1519,7 +1513,7 @@ DECLARE
     par_rowcount := var_rowcount;
 
     IF var_rowcount = 0 THEN
-        return;
+        RETURN;
     END IF;
 
     DROP TABLE IF EXISTS "DIM_Товары_tmp2";
@@ -1535,15 +1529,10 @@ DECLARE
 
     INSERT INTO "DIM_Товары_tmp2"
      (
-/*
-SELECT ARRAY[ARRAY['nva', 'http://v8.1c.ru/8.1/data/enterprise/current-config']] into my;
-RAISE NOTICE 'CREATE PROCEDURE odins."load_DIM_Клиенты"';
-SELECT  xpath('//nva:ПолноеИмя/text()', msg::xml, my) AS status INTO par
-*/
     SELECT
         CAST(md5(CONVERT(
                 CAST((xpath('/nva:Data/nva:Реквизиты/nva:CatalogObject.Товары/nva:Ref/text()', msg::xml, var_xmlns ))[1] as VARCHAR)                
-                ::bytea,'UTF8','UHC')) AS UUID) AS  nkey,
+                ::bytea,'UTF8','UHC')) AS UUID) AS "nkey",
 
         CAST((xpath('/nva:Data/nva:Реквизиты/nva:CatalogObject.Товары/nva:Ref/text()', msg::xml, var_xmlns ))[1]::text as uuid)  AS "RefID",
         CAST((xpath('/nva:Data/nva:Реквизиты/nva:CatalogObject.Товары/nva:DeletionMark/text()', msg::xml, var_xmlns ))[1]::text as boolean)  AS "DeletionMark",
@@ -1563,8 +1552,7 @@ SELECT  xpath('//nva:ПолноеИмя/text()', msg::xml, my) AS status INTO pa
         "Description" = src."Description",
         "Описание" = src."Описание",
         dt_update = now()
-    FROM  
-        "DIM_Товары_tmp2" AS src 
+    FROM "DIM_Товары_tmp2" AS src 
     WHERE org."nkey" = src."nkey" ;
     INSERT INTO "odins"."DIM_Товары" (
         "nkey" ,
@@ -1583,17 +1571,14 @@ SELECT  xpath('//nva:ПолноеИмя/text()', msg::xml, my) AS status INTO pa
         src."Code",
         src."Description",
         src."Описание",
-        src.dt_update
-          FROM "DIM_Товары_tmp2" AS src 
+        src."dt_update"
+     FROM "DIM_Товары_tmp2" AS src 
         LEFT JOIN "odins"."DIM_Товары" AS org ON org."nkey" = src."nkey" 
      WHERE org."RefID" IS NULL ;
      
 
-
     DELETE FROM "odins"."DIM_Товары_buffer" AS b 
     WHERE EXISTS (SELECT 1 FROM "DIM_Товары_tmp1" AS t WHERE CAST((xpath('/nva:Data/nva:Реквизиты/nva:CatalogObject.Товары/nva:Ref/text()', msg::xml, var_xmlns ))[1]::text as uuid) = t."RefID" AND b.buffer_id <= t.buffer_id );
-
-
 
 END;
 
@@ -1656,19 +1641,21 @@ CREATE OR REPLACE PROCEDURE odins."load_FACT_Продажи" (
 )
 AS $BODY$
 DECLARE
-    var_rowcount INTEGER;
-    var_xmlns text ARRAY;BEGIN
+    var_rowcount integer;
+    var_xmlns text ARRAY;
+BEGIN
 
-       SELECT ARRAY[ARRAY['nva', 'http://v8.1c.ru/8.1/data/enterprise/current-config'], ARRAY['xsi', 'http://www.w3.org/2001/XMLSchema-instance'], ARRAY['xs', 'http://www.w3.org/2001/XMLSchema']] into var_xmlns;
+    SELECT ARRAY[ARRAY['nva', 'http://v8.1c.ru/8.1/data/enterprise/current-config'], ARRAY['xsi', 'http://www.w3.org/2001/XMLSchema-instance'], ARRAY['xs', 'http://www.w3.org/2001/XMLSchema']] into var_xmlns;
+
     DROP TABLE IF EXISTS "FACT_Продажи_tmp1";
     CREATE TEMPORARY TABLE "FACT_Продажи_tmp1" (
-        buffer_id int,
+        "buffer_id" int,
         "RefID" uuid
     );
 
     INSERT INTO "FACT_Продажи_tmp1" (buffer_id, "RefID")
     SELECT MAX(buffer_id) AS buffer_id,
-    CAST((xpath('/nva:Data/nva:Реквизиты/nva:DocumentObject.Продажи/nva:Ref/text()', msg::xml, var_xmlns ))[1]::text as uuid) ref
+        CAST((xpath('/nva:Data/nva:Реквизиты/nva:DocumentObject.Продажи/nva:Ref/text()', msg::xml, var_xmlns ))[1]::text as uuid) ref
     FROM "odins"."FACT_Продажи_buffer" b
     WHERE b."is_error" = false
     GROUP BY CAST((xpath('/nva:Data/nva:Реквизиты/nva:DocumentObject.Продажи/nva:Ref/text()', msg::xml, var_xmlns ))[1]::text as uuid);
@@ -1677,7 +1664,7 @@ DECLARE
     par_rowcount := var_rowcount;
 
     IF var_rowcount = 0 THEN
-        return;
+        RETURN;
     END IF;
 
     DROP TABLE IF EXISTS "FACT_Продажи_tmp2";
@@ -1699,15 +1686,10 @@ DECLARE
 
     INSERT INTO "FACT_Продажи_tmp2"
      (
-/*
-SELECT ARRAY[ARRAY['nva', 'http://v8.1c.ru/8.1/data/enterprise/current-config']] into my;
-RAISE NOTICE 'CREATE PROCEDURE odins."load_DIM_Клиенты"';
-SELECT  xpath('//nva:ПолноеИмя/text()', msg::xml, my) AS status INTO par
-*/
     SELECT
         CAST(md5(CONVERT(
                 CAST((xpath('/nva:Data/nva:Реквизиты/nva:DocumentObject.Продажи/nva:Ref/text()', msg::xml, var_xmlns ))[1] as VARCHAR)                
-                ::bytea,'UTF8','UHC')) AS UUID) AS  nkey,
+                ::bytea,'UTF8','UHC')) AS UUID) AS "nkey",
 
         (xpath('/nva:Data/nva:Реквизиты/nva:DocumentObject.Продажи/nva:FACT_Продажи.Товары/text()', msg::xml, var_xmlns ))[1]::xml  AS "FACT_Продажи_Товары",
         CAST((xpath('/nva:Data/nva:Реквизиты/nva:DocumentObject.Продажи/nva:Ref/text()', msg::xml, var_xmlns ))[1]::text as uuid)  AS "RefID",
@@ -1738,8 +1720,7 @@ SELECT  xpath('//nva:ПолноеИмя/text()', msg::xml, my) AS status INTO pa
         "ПримерСоставногоТипа" = src."ПримерСоставногоТипа",
         "ПримерСоставногоТипа_ТипЗначения" = src."ПримерСоставногоТипа_ТипЗначения",
         dt_update = now()
-    FROM  
-        "FACT_Продажи_tmp2" AS src 
+    FROM "FACT_Продажи_tmp2" AS src 
     WHERE org."nkey" = src."nkey" ;
     INSERT INTO "odins"."FACT_Продажи" (
         "nkey" ,
@@ -1768,17 +1749,14 @@ SELECT  xpath('//nva:ПолноеИмя/text()', msg::xml, my) AS status INTO pa
         src."ТипДоставки",
         src."ПримерСоставногоТипа",
         src."ПримерСоставногоТипа_ТипЗначения",
-        src.dt_update
-          FROM "FACT_Продажи_tmp2" AS src 
+        src."dt_update"
+     FROM "FACT_Продажи_tmp2" AS src 
         LEFT JOIN "odins"."FACT_Продажи" AS org ON org."nkey" = src."nkey" 
      WHERE org."RefID" IS NULL ;
      
 
-
     DELETE FROM "odins"."FACT_Продажи_buffer" AS b 
     WHERE EXISTS (SELECT 1 FROM "FACT_Продажи_tmp1" AS t WHERE CAST((xpath('/nva:Data/nva:Реквизиты/nva:DocumentObject.Продажи/nva:Ref/text()', msg::xml, var_xmlns ))[1]::text as uuid) = t."RefID" AND b.buffer_id <= t.buffer_id );
-
-
 
 END;
 

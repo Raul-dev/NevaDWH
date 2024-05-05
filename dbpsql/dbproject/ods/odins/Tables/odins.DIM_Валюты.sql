@@ -25,3 +25,4 @@ CREATE TABLE IF NOT EXISTS odins."DIM_Валюты" (
 
 COMMENT ON TABLE "odins"."DIM_Валюты" IS '{"Description":"DIM_Валюты"}';
 
+CREATE UNIQUE INDEX IF NOT EXISTS "IDX_odins_DIM_Валюты" ON odins."DIM_Валюты" (nkey);

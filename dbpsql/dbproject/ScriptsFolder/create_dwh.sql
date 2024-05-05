@@ -1,5 +1,6 @@
 CREATE SCHEMA IF NOT EXISTS bulk;
 CREATE SCHEMA IF NOT EXISTS fdw;
+CREATE SCHEMA IF NOT EXISTS ods;
 CREATE SCHEMA IF NOT EXISTS staging;
 CREATE SCHEMA IF NOT EXISTS target;
 
@@ -242,6 +243,228 @@ CREATE FOREIGN TABLE IF NOT EXISTS fdw."odins_FACT_Продажи_Товары" 
 )
 SERVER client_ods OPTIONS (schema_name 'odins' , table_name 'FACT_Продажи_Товары_history');
 COMMENT ON FOREIGN TABLE fdw."odins_FACT_Продажи_Товары" IS '{"Description":"FACT_Продажи.Товары_history"}';
+
+do
+$$
+BEGIN
+RAISE NOTICE 'Create foreign table ods.odins_DIM_Валюты';
+END;
+$$;
+
+CREATE FOREIGN TABLE IF NOT EXISTS ods."odins_DIM_Валюты" (
+    ods_id    bigint,
+    nkey              uuid NOT NULL,
+    "RefID"        uuid  ,
+    "DeletionMark"        boolean  ,
+    "Code"        varchar(128)  ,
+    "Description"        varchar(128)  ,
+    "ЗагружаетсяИзИнтернета"        boolean  ,
+    "НаименованиеПолное"        varchar(50)  ,
+    "Наценка"        decimal(10, 2)  ,
+    "ОсновнаяВалюта"        varchar(36)  ,
+    "ПараметрыПрописи"        varchar(200)  ,
+    "ФормулаРасчетаКурса"        varchar(100)  ,
+    "СпособУстановкиКурса"        varchar(500)  ,
+    dt_update        timestamp without time zone, 
+    dt_create        timestamp without time zone 
+)
+SERVER client_ods OPTIONS (schema_name 'odins' , table_name 'DIM_Валюты');
+COMMENT ON FOREIGN TABLE ods."odins_DIM_Валюты" IS '{"Description":"DIM_Валюты"}';
+
+do
+$$
+BEGIN
+RAISE NOTICE 'Create foreign table ods.odins_DIM_Клиенты';
+END;
+$$;
+
+CREATE FOREIGN TABLE IF NOT EXISTS ods."odins_DIM_Клиенты" (
+    ods_id    bigint,
+    nkey              uuid NOT NULL,
+    "RefID"        uuid  ,
+    "DeletionMark"        boolean  ,
+    "Code"        varchar(128)  ,
+    "Description"        varchar(128)  ,
+    "Контакт"        varchar(500)  ,
+    dt_update        timestamp without time zone, 
+    dt_create        timestamp without time zone 
+)
+SERVER client_ods OPTIONS (schema_name 'odins' , table_name 'DIM_Клиенты');
+COMMENT ON FOREIGN TABLE ods."odins_DIM_Клиенты" IS '{"Description":"DIM_Клиенты"}';
+
+do
+$$
+BEGIN
+RAISE NOTICE 'Create foreign table ods.odins_DIM_Товары';
+END;
+$$;
+
+CREATE FOREIGN TABLE IF NOT EXISTS ods."odins_DIM_Товары" (
+    ods_id    bigint,
+    nkey              uuid NOT NULL,
+    "RefID"        uuid  ,
+    "DeletionMark"        boolean  ,
+    "Code"        varchar(128)  ,
+    "Description"        varchar(128)  ,
+    "Описание"        varchar(255)  ,
+    dt_update        timestamp without time zone, 
+    dt_create        timestamp without time zone 
+)
+SERVER client_ods OPTIONS (schema_name 'odins' , table_name 'DIM_Товары');
+COMMENT ON FOREIGN TABLE ods."odins_DIM_Товары" IS '{"Description":"DIM_Товары"}';
+
+do
+$$
+BEGIN
+RAISE NOTICE 'Create foreign table ods.odins_FACT_Продажи';
+END;
+$$;
+
+CREATE FOREIGN TABLE IF NOT EXISTS ods."odins_FACT_Продажи" (
+    ods_id    bigint,
+    nkey              uuid NOT NULL,
+    "RefID"        uuid  ,
+    "DeletionMark"        boolean  ,
+    "Number"        integer  ,
+    "Posted"        boolean  ,
+    "Date"        timestamp  ,
+    "ДатаОтгрузки"        timestamp  ,
+    "Клиент"        varchar(36)  ,
+    "ТипДоставки"        varchar(500)  ,
+    "ПримерСоставногоТипа"        varchar(36)  ,
+    "ПримерСоставногоТипа_ТипЗначения"        varchar(128)  ,
+    dt_update        timestamp without time zone, 
+    dt_create        timestamp without time zone 
+)
+SERVER client_ods OPTIONS (schema_name 'odins' , table_name 'FACT_Продажи');
+COMMENT ON FOREIGN TABLE ods."odins_FACT_Продажи" IS '{"Description":"FACT_Продажи"}';
+
+do
+$$
+BEGIN
+RAISE NOTICE 'Create view ods.DIM_Валюты';
+END;
+$$;
+
+DROP VIEW IF EXISTS ods."v_DIM_Валюты";
+
+CREATE VIEW ods."v_DIM_Валюты" 
+AS
+SELECT
+    -1 * ods_id::bigint AS id,
+	0::bigint session_id,
+	'ods1c'::varchar(128) AS source_name,
+	nkey,
+	NULL::uuid AS vkey,
+	now()::timestamp without time zone AS start_date,
+    public."fn_GetMaxDate"()::timestamp without time zone AS end_date,
+    "RefID",
+    "DeletionMark",
+    "Code",
+    "Description",
+    "ЗагружаетсяИзИнтернета",
+    "НаименованиеПолное",
+    "Наценка",
+    "ОсновнаяВалюта",
+    "ПараметрыПрописи",
+    "ФормулаРасчетаКурса",
+    "СпособУстановкиКурса",
+    0::bigint AS session_id_update,
+    dt_update::timestamp without time zone,
+    dt_create::timestamp without time zone
+FROM ods."odins_DIM_Валюты";
+
+do
+$$
+BEGIN
+RAISE NOTICE 'Create view ods.DIM_Клиенты';
+END;
+$$;
+
+DROP VIEW IF EXISTS ods."v_DIM_Клиенты";
+
+CREATE VIEW ods."v_DIM_Клиенты" 
+AS
+SELECT
+    -1 * ods_id::bigint AS id,
+	0::bigint session_id,
+	'ods1c'::varchar(128) AS source_name,
+	nkey,
+	NULL::uuid AS vkey,
+	now()::timestamp without time zone AS start_date,
+    public."fn_GetMaxDate"()::timestamp without time zone AS end_date,
+    "RefID",
+    "DeletionMark",
+    "Code",
+    "Description",
+    "Контакт",
+    0::bigint AS session_id_update,
+    dt_update::timestamp without time zone,
+    dt_create::timestamp without time zone
+FROM ods."odins_DIM_Клиенты";
+
+do
+$$
+BEGIN
+RAISE NOTICE 'Create view ods.DIM_Товары';
+END;
+$$;
+
+DROP VIEW IF EXISTS ods."v_DIM_Товары";
+
+CREATE VIEW ods."v_DIM_Товары" 
+AS
+SELECT
+    -1 * ods_id::bigint AS id,
+	0::bigint session_id,
+	'ods1c'::varchar(128) AS source_name,
+	nkey,
+	NULL::uuid AS vkey,
+	now()::timestamp without time zone AS start_date,
+    public."fn_GetMaxDate"()::timestamp without time zone AS end_date,
+    "RefID",
+    "DeletionMark",
+    "Code",
+    "Description",
+    "Описание",
+    0::bigint AS session_id_update,
+    dt_update::timestamp without time zone,
+    dt_create::timestamp without time zone
+FROM ods."odins_DIM_Товары";
+
+do
+$$
+BEGIN
+RAISE NOTICE 'Create view ods.FACT_Продажи';
+END;
+$$;
+
+DROP VIEW IF EXISTS ods."v_FACT_Продажи";
+
+CREATE VIEW ods."v_FACT_Продажи" 
+AS
+SELECT
+    -1 * ods_id::bigint AS id,
+	0::bigint session_id,
+	'ods1c'::varchar(128) AS source_name,
+	nkey,
+	NULL::uuid AS vkey,
+	now()::timestamp without time zone AS start_date,
+    public."fn_GetMaxDate"()::timestamp without time zone AS end_date,
+    "RefID",
+    "DeletionMark",
+    "Number",
+    "Posted",
+    "Date",
+    "ДатаОтгрузки",
+    "Клиент",
+    "ТипДоставки",
+    "ПримерСоставногоТипа",
+    "ПримерСоставногоТипа_ТипЗначения",
+    0::bigint AS session_id_update,
+    dt_update::timestamp without time zone,
+    dt_create::timestamp without time zone
+FROM ods."odins_FACT_Продажи";
 
 do
 $$
@@ -1569,6 +1792,7 @@ CREATE TABLE IF NOT EXISTS target."DIM_Валюты" (
     dt_update     timestamp without time zone NOT NULL default now(),
     dt_create     timestamp without time zone NOT NULL default now()
 );
+CREATE UNIQUE INDEX IF NOT EXISTS "IDX_target_DIM_Валюты" ON target."DIM_Валюты" (nkey);
 do
 $$
 BEGIN
@@ -1591,6 +1815,7 @@ CREATE TABLE IF NOT EXISTS target."DIM_Валюты_Представления" 
     dt_update     timestamp without time zone NOT NULL default now(),
     dt_create     timestamp without time zone NOT NULL default now()
 );
+CREATE UNIQUE INDEX IF NOT EXISTS "IDX_target_DIM_Валюты_Представления" ON target."DIM_Валюты_Представления" (nkey);
 do
 $$
 BEGIN
@@ -1615,6 +1840,7 @@ CREATE TABLE IF NOT EXISTS target."DIM_Клиенты" (
     dt_update     timestamp without time zone NOT NULL default now(),
     dt_create     timestamp without time zone NOT NULL default now()
 );
+CREATE UNIQUE INDEX IF NOT EXISTS "IDX_target_DIM_Клиенты" ON target."DIM_Клиенты" (nkey);
 do
 $$
 BEGIN
@@ -1639,6 +1865,7 @@ CREATE TABLE IF NOT EXISTS target."DIM_Товары" (
     dt_update     timestamp without time zone NOT NULL default now(),
     dt_create     timestamp without time zone NOT NULL default now()
 );
+CREATE UNIQUE INDEX IF NOT EXISTS "IDX_target_DIM_Товары" ON target."DIM_Товары" (nkey);
 do
 $$
 BEGIN
@@ -1668,6 +1895,7 @@ CREATE TABLE IF NOT EXISTS target."FACT_Продажи" (
     dt_update     timestamp without time zone NOT NULL default now(),
     dt_create     timestamp without time zone NOT NULL default now()
 );
+CREATE UNIQUE INDEX IF NOT EXISTS "IDX_target_FACT_Продажи" ON target."FACT_Продажи" (nkey);
 do
 $$
 BEGIN
@@ -1692,3 +1920,4 @@ CREATE TABLE IF NOT EXISTS target."FACT_Продажи_Товары" (
     dt_update     timestamp without time zone NOT NULL default now(),
     dt_create     timestamp without time zone NOT NULL default now()
 );
+CREATE UNIQUE INDEX IF NOT EXISTS "IDX_target_FACT_Продажи_Товары" ON target."FACT_Продажи_Товары" (nkey);

@@ -27,3 +27,4 @@ CREATE TABLE IF NOT EXISTS target."FACT_Продажи" (
     dt_update     timestamp without time zone NOT NULL default now(),
     dt_create     timestamp without time zone NOT NULL default now()
 );
+CREATE UNIQUE INDEX IF NOT EXISTS "IDX_target_FACT_Продажи" ON target."FACT_Продажи" (nkey);
