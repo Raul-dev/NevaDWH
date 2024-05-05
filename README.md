@@ -6,12 +6,22 @@ For start run ./start.ps1 batch on PowerShell 7.4 in Admin mode.
 
 ![text for image](./doc/forweb.png)
 
-Результат генерации DWH из метаданных 1С
+Результат генерации DWH из xml метаданных 1С, которые можно получить запустив 1cv8.exe /DumpConfigToFiles
 
-[http://localhost:8100]()     - Панел управления
+## Панел управления
+
+[http://localhost:8100]()  
+
+![1714896554284](doc/Admin.png)
+
+Порядок тестирования:
+
+1) Включить чекбоксы для обработки сообщений из RabbitMQ сервисом ODS. Если выключить все чекбоксы, то сообщения будут поступать в таблицу наобработанных сообщений msgqueue.
+2) Перезапустить сервис ODS обрабатывающий сообщения из RabbitMQ кнопкой "Reset ODS RabbitMQ service"
+3) Отправить сообщения из таблицы необработанных сообщений msgqueue в RasbbitMQ кнопкой "Send unresolved messages to RabbitMQ"
 
 Rabbit
-[http://localhost::15672]()
+[http://localhost:15672]()
 admin
 admin
 
@@ -22,6 +32,19 @@ airflow
 airflow
 ![ETL image](./doc/airflow.png)
 
+4. Запустить в Airflow DAG dwh_etl_start, который архивирует накопленные данные в базе ODS и переносит их в DWH. В зависимости от интенсивности поступающих данных автоматический запуск ETL можно настроить на исполнение 1 раз в сутки, месяц или 5-20 мин.
+5. Проверить в базе загруженные данные
+
+![1714898512266](./doc/dwh.png)
+
+Для версии MSSQL все то же самое, за исключением того, что контейнер с сервером MSSQL не строится. Предполагается использование локального MS SQL Server 19 или 22. Batch файл start.ps1 компилирует проект dbproject.sln  Visual Studio 2022  созданный генератором и деплоит его на сервер создавая 3 базы. В версии MSSQL реализована обработка выгружаемых данных из 1с адаптером NevaDWH в вайлы xml. Что позволяет оперативно перегружать любые обьемы данных не нагружая RabbitMQ. Для этих целей в batch файле start.ps1 создается File Share UPLOAD на которую нужно настроить адаптер NewaDWH.
+
+![1714900362600](./doc/odinc.png)
+
+Управление сервисами ODS и Landing:
+
 [http://localhost:8090/swagger]()
 
 [http://localhost:8092/swagger]()
+
+Для связи и предложений по развитию проекта [newlogin396@gmail.com](mailto:newlogin396@gmail.com)

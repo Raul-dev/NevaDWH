@@ -45,7 +45,8 @@ services:
       - ./040_dictionaries_dwh.sql:/docker-entrypoint-initdb.d/040_dictionaries_dwh.sql
       - ./050_create_landing.sql:/docker-entrypoint-initdb.d/050_create_landing.sql
       - ./060_dictionaries_landing.sql:/docker-entrypoint-initdb.d/060_dictionaries_landing.sql
-
+      - ./070_msgqueue.sql:/docker-entrypoint-initdb.d/070_msgqueue.sql
+      
     env_file:
       - .env
 
