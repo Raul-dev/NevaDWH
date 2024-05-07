@@ -19,5 +19,5 @@ CREATE TABLE IF NOT EXISTS staging."FACT_Продажи_Товары" (
     "Колличество"            decimal(12, 0)  NULL,
     "Цена"            decimal(16, 4)  NULL,
     session_id_update bigint NOT NULL,
-    dt_update              timestamp without time zone        NULL
+    dt_update         timestamp without time zone        NULL
 );

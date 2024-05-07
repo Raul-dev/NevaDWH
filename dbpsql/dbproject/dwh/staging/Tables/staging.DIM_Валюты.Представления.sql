@@ -17,5 +17,5 @@ CREATE TABLE IF NOT EXISTS staging."DIM_Валюты_Представления"
     "КодЯзыка"            varchar(10)  NULL,
     "ПараметрыПрописи"            varchar(200)  NULL,
     session_id_update bigint NOT NULL,
-    dt_update              timestamp without time zone        NULL
+    dt_update         timestamp without time zone        NULL
 );

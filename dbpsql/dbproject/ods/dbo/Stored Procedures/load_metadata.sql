@@ -6,12 +6,12 @@ END;
 $$;
 -- CALL load_metadata(NULL,NULL);
 CREATE OR REPLACE PROCEDURE "load_metadata" (
-    par_session_id IN BIGINT  DEFAULT NULL, 
-    par_rowcount inout INT DEFAULT NULL 
+    par_session_id in bigint  DEFAULT NULL, 
+    par_rowcount inout int DEFAULT NULL 
 )
 AS $BODY$
 DECLARE
-    var_RowCount INTEGER;
+    var_RowCount int;
 BEGIN
 
     DROP TABLE IF EXISTS "metadata_tmp1";
@@ -77,8 +77,7 @@ BEGIN
     DELETE 
     FROM metadata_buffer as trg
     USING metadata_tmp1 AS tmp
-    WHERE 
-        trg.buffer_id = tmp.buffer_id;
+    WHERE trg.buffer_id = tmp.buffer_id;
 
 END;
 

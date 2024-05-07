@@ -2,7 +2,7 @@
 CREATE TABLE IF NOT EXISTS public.codegen_dwh_table
 (
 
-    codegen_dwh_table_id integer           NOT NULL,
+    codegen_dwh_table_id  integer           NOT NULL,
     codegen_id            integer           NOT NULL,
     table_name            character varying(128) COLLATE pg_catalog."default" NOT NULL,
     is_root               boolean           NOT NULL,

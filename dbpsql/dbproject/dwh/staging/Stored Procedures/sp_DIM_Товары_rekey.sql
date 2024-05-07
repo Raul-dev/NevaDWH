@@ -6,12 +6,12 @@ END;
 $$;
 
 CREATE OR REPLACE PROCEDURE staging."sp_DIM_Товары_r" (
-    par_session_id IN INT DEFAULT NULL, 
-    par_RowCount inout INT DEFAULT NULL 
+    par_session_id in int DEFAULT NULL, 
+    par_RowCount inout int DEFAULT NULL 
 )
 AS $BODY$
 DECLARE
-    var_RowCount INTEGER;
+    var_RowCount int;
     val_start_date timestamp without time zone;
     val_LocalCount bigint;
 BEGIN

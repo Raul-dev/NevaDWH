@@ -19,5 +19,5 @@ CREATE TABLE IF NOT EXISTS staging."DIM_Товары" (
     "Description"            varchar(128)  NULL,
     "Описание"            varchar(255)  NULL,
     session_id_update bigint NOT NULL,
-    dt_update              timestamp without time zone        NULL
+    dt_update         timestamp without time zone        NULL
 );

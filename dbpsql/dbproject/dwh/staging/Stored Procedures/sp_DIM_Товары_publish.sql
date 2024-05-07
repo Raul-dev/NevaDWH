@@ -6,16 +6,16 @@ END;
 $$;
 
 CREATE OR REPLACE PROCEDURE staging."sp_DIM_Товары_p" (
-    par_session_id IN INT DEFAULT NULL, 
-    par_RowCount inout INT DEFAULT NULL 
+    par_session_id in int DEFAULT NULL, 
+    par_RowCount inout int DEFAULT NULL 
 )
 AS $BODY$
 DECLARE
     var_RowCount INTEGER;
 BEGIN
 
-UPDATE target."DIM_Товары" AS trg 
-SET        session_id = stg.session_id,
+    UPDATE target."DIM_Товары" AS trg SET
+        session_id = stg.session_id,
         start_date = stg.start_date,
         end_date = stg.end_date,
         session_id_update = stg.session_id_update,
@@ -28,7 +28,7 @@ SET        session_id = stg.session_id,
     FROM staging."DIM_Товары" stg
     WHERE stg.id = trg.id;
 
-INSERT INTO target."DIM_Товары" (
+    INSERT INTO target."DIM_Товары" (
         id,
         session_id,
         source_name,

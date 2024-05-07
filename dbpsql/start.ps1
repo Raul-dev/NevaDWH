@@ -12,14 +12,6 @@ function Test-Administrator
     }
 }
 
-if(-not $IsUpdate) {
-	if(-not (Test-Administrator))
-	{
-		# TODO: define proper exit codes for the given errors 
-		Write-Error "This script must be executed as Administrator.";
-		exit 1;
-	}
-}
 
 $ErrorActionPreference = "Stop";
 $CurrentPath = Get-Location
@@ -107,26 +99,6 @@ if($IsUpdate -eq $true){
 	} catch {
 	}
 	exit
-}
-
-$Shares = Get-SMBShare -name "Upload" -erroraction 'silentlycontinue'
-if($Shares){
-	Remove-SmbShare -name "Upload" -Force
-}
-$serverName = 'HOMEST'
-$sharePath = 'Upload' # you can append more paths here
-if( Test-Connection $serverName 2> $null ){
-  if( -not (Test-Path "\\${serverName}\${sharePath}")){
-		$everyoneSID = [System.Security.Principal.SecurityIdentifier]::new('S-1-1-0')
-		$everyoneName = $everyoneSID.Translate([System.Security.Principal.NTAccount]).Value
-		Write-Host $everyoneName
-		$SharetPath = Join-Path -Path $CurrentPath -ChildPath  "Upload"
-		Write-Host $SharetPath
-		if( -not (Test-Path $SharetPath)){
-			New-Item -Path $CurrentPath -Name "Upload" -ItemType "directory"
-		}
-		New-SmbShare -Name "Upload" -Path $SharetPath -FullAccess $everyoneName
-  }
 }
 
 Set-Location $CurrentPath

@@ -14,15 +14,15 @@ UNION ALL SELECT 5, 'JsonXml'
 ) WHERE NOT EXISTS( SELECT 1 FROM metaadapter WHERE metaadapter_id = 5);
 CREATE TEMPORARY TABLE IF NOT EXISTS tmp_metamap 
 (
-    metamap_id           SMALLINT       NOT NULL,
-    msg_key             VARCHAR(256)    NOT NULL,
-    table_name          VARCHAR(128)    NOT NULL,
+    metamap_id          smallint        NOT NULL,
+    msg_key             varchar(256)    NOT NULL,
+    table_name          varchar(128)    NOT NULL,
     metaadapter_id      smallint        NULL,
-    namespace           VARCHAR (256)   NULL,
-    namespace_ver       VARCHAR (256)   NULL,
-    etl_query           VARCHAR (256)   NULL,
-    import_query        VARCHAR (256)   NULL,
-    is_enable            boolean NULL
+    namespace           varchar (256)   NULL,
+    namespace_ver       varchar (256)   NULL,
+    etl_query           varchar (256)   NULL,
+    import_query        varchar (256)   NULL,
+    is_enable           boolean         NULL
 );
 
 INSERT INTO tmp_metamap (metamap_id, msg_key, table_name, metaadapter_id, namespace, namespace_ver, etl_query, import_query, is_enable)

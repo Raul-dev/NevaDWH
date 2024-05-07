@@ -52,11 +52,11 @@ INSERT INTO codegen_dwh_table (codegen_dwh_table_id, codegen_id, table_name, is_
 (SELECT     cast( null as int) as codegen_dwh_table_id ,       cast( null as int) as codegen_id,       cast( null as varchar(128)) as table_name,       cast( null as boolean) as is_root,       cast( null as boolean) as is_enable,       cast( null as varchar(128)) as dwh_table_name,    cast( null as boolean) as is_vkey_session,       cast( null as boolean) as is_vkey_sourcename,    cast( null as boolean) as is_historical
 FROM (VALUES ('Z')) t1 (col1) LIMIT 0)
 UNION SELECT 1, 1, 'DIM_Валюты', true, true ,  'DIM_Валюты', false, false, false
-  UNION SELECT 2, 1, 'DIM_Валюты.Представления', false, true, 'DIM_Валюты.Представления', false, false, false
+UNION SELECT 2, 1, 'DIM_Валюты.Представления', false, true, 'DIM_Валюты.Представления', false, false, false
 UNION SELECT 3, 2, 'DIM_Клиенты', true, true ,  'DIM_Клиенты', false, false, true
-  UNION SELECT 4, 3, 'DIM_Товары', true, true ,  'DIM_Товары', false, false, true
-  UNION SELECT 5, 4, 'FACT_Продажи', true, true ,  'FACT_Продажи', false, false, false
-  UNION SELECT 6, 1, 'FACT_Продажи.Товары', false, true, 'FACT_Продажи.Товары', false, false, false
+UNION SELECT 4, 3, 'DIM_Товары', true, true ,  'DIM_Товары', false, false, true
+UNION SELECT 5, 4, 'FACT_Продажи', true, true ,  'FACT_Продажи', false, false, false
+UNION SELECT 6, 1, 'FACT_Продажи.Товары', false, true, 'FACT_Продажи.Товары', false, false, false
 ;
 INSERT INTO codegen_dwh_column(codegen_dwh_column_id, codegen_dwh_table_id, column_name, data_type, text_length, precision, scale, is_enable, is_versionkey, is_nulable, null_value)
 (SELECT cast( null as int) as codegen_dwh_column_id,   cast( null as int) as codegen_dwh_table_id,   cast( null as varchar(128)) as column_name,   cast( null as varchar(128)) as data_type,   cast( null as integer) as text_length ,   cast( null as integer) as precision ,   cast( null as integer) as scale ,   cast( null as boolean) as is_enable,cast( null as boolean) as is_versionkey,cast( null as boolean) as is_nulable,cast( null as varchar(128)) as null_value 

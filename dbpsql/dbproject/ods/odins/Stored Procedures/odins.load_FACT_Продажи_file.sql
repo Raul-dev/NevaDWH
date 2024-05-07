@@ -6,12 +6,12 @@ END;
 $$;
 
 CREATE OR REPLACE PROCEDURE odins."load_FACT_Продажи_file" (
-    par_session_id IN bigint DEFAULT NULL, 
+    par_session_id in bigint DEFAULT NULL, 
     par_rowcount inout int DEFAULT NULL 
 )
 AS $BODY$
 DECLARE
-    var_rowcount INTEGER;
+    var_rowcount int;
 BEGIN
 
     DROP TABLE IF EXISTS "FACT_Продажи_tmp1";

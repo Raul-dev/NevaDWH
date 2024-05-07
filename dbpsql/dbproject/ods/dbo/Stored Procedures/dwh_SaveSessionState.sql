@@ -11,14 +11,14 @@ call public."dwh_SaveSessionState" (1::bigint, 1::smallint, 1::smallint, 'ok'::v
 SELECT * FROM dwh_session
 */
 CREATE OR REPLACE PROCEDURE "dwh_SaveSessionState" (
-    par_dwh_session_id INOUT BIGINT DEFAULT NULL, 
-    par_data_source_id IN smallint DEFAULT NULL, 
-    par_dwh_session_state_id IN smallint DEFAULT NULL, 
-    par_error_message IN varchar(4000) DEFAULT NULL 
+    par_dwh_session_id inout bigint DEFAULT NULL, 
+    par_data_source_id in smallint DEFAULT NULL, 
+    par_dwh_session_state_id in smallint DEFAULT NULL, 
+    par_error_message in varchar(4000) DEFAULT NULL 
 )
 AS $BODY$
 DECLARE
-    var_RowCount INTEGER;
+    var_RowCount int;
 BEGIN
 
     IF par_dwh_session_id IS NULL THEN
@@ -36,8 +36,7 @@ BEGIN
     
     ELSE
     
-        UPDATE dwh_session
-            SET 
+        UPDATE dwh_session SET 
                 dwh_session_state_id = par_dwh_session_state_id,    
                 error_message = par_error_message,
                 create_session = CASE WHEN par_dwh_session_state_id = 2 THEN now() ELSE create_session END,

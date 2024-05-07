@@ -25,5 +25,5 @@ CREATE TABLE IF NOT EXISTS staging."DIM_Валюты" (
     "ФормулаРасчетаКурса"            varchar(100)  NULL,
     "СпособУстановкиКурса"            varchar(500)  NULL,
     session_id_update bigint NOT NULL,
-    dt_update              timestamp without time zone        NULL
+    dt_update         timestamp without time zone        NULL
 );

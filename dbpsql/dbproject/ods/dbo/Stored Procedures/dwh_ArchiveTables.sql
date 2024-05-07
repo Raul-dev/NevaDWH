@@ -10,8 +10,8 @@ CREATE OR REPLACE PROCEDURE "dwh_ArchiveTables" (
 )
 AS $BODY$
 DECLARE
-    var_RowCount INTEGER;
-    var_LocalRowCount  INTEGER;
+    var_RowCount int;
+    var_LocalRowCount  int;
 BEGIN
 
     DELETE FROM odins.DIM_Валюты WHERE dwh_session_id = pat_dwh_session_id;
@@ -26,10 +26,10 @@ BEGIN
 
     DELETE FROM odins.FACT_Продажи_Товары WHERE dwh_session_id = par_dwh_session_id;
 
-    
-        UPDATE dwh_session SET dwh_session_state_id = 6
+
+    UPDATE dwh_session SET dwh_session_state_id = 6
     WHERE dwh_session_id = par_dwh_session_id;
-    
+
 END;
 
 $BODY$

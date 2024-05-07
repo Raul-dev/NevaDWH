@@ -6,16 +6,16 @@ END;
 $$;
 
 CREATE OR REPLACE PROCEDURE staging."sp_DIM_Валюты_p" (
-    par_session_id IN INT DEFAULT NULL, 
-    par_RowCount inout INT DEFAULT NULL 
+    par_session_id in int DEFAULT NULL, 
+    par_RowCount inout int DEFAULT NULL 
 )
 AS $BODY$
 DECLARE
     var_RowCount INTEGER;
 BEGIN
 
-UPDATE target."DIM_Валюты" AS trg 
-SET        session_id = stg.session_id,
+    UPDATE target."DIM_Валюты" AS trg SET
+        session_id = stg.session_id,
         start_date = stg.start_date,
         end_date = stg.end_date,
         session_id_update = stg.session_id_update,
@@ -34,7 +34,7 @@ SET        session_id = stg.session_id,
     FROM staging."DIM_Валюты" stg
     WHERE stg.id = trg.id;
 
-INSERT INTO target."DIM_Валюты" (
+    INSERT INTO target."DIM_Валюты" (
         id,
         session_id,
         source_name,
@@ -81,8 +81,8 @@ INSERT INTO target."DIM_Валюты" (
         "СпособУстановкиКурса"
     FROM staging."DIM_Валюты"
     WHERE staging_id = id;
-UPDATE target."DIM_Валюты_Представления" AS trg 
-SET        session_id = stg.session_id,
+    UPDATE target."DIM_Валюты_Представления" AS trg SET
+        session_id = stg.session_id,
         start_date = stg.start_date,
         end_date = stg.end_date,
         session_id_update = stg.session_id_update,
@@ -93,7 +93,7 @@ SET        session_id = stg.session_id,
     FROM staging."DIM_Валюты_Представления" stg
     WHERE stg.id = trg.id;
 
-INSERT INTO target."DIM_Валюты_Представления" (
+    INSERT INTO target."DIM_Валюты_Представления" (
         id,
         session_id,
         source_name,

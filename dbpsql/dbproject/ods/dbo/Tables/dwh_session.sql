@@ -3,7 +3,7 @@
     data_source_id       smallint         NOT NULL,
     dwh_session_state_id smallint         NOT NULL,
     create_session       timestamp with time zone,
-    error_message        VARCHAR (4000) NULL,
+    error_message        varchar(4000) NULL,
     dt_update            timestamp with time zone NOT NULL default now(),
     dt_create            timestamp with time zone NOT NULL default now()
     

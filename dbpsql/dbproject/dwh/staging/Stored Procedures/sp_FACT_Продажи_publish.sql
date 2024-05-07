@@ -6,16 +6,16 @@ END;
 $$;
 
 CREATE OR REPLACE PROCEDURE staging."sp_FACT_Продажи_p" (
-    par_session_id IN INT DEFAULT NULL, 
-    par_RowCount inout INT DEFAULT NULL 
+    par_session_id in int DEFAULT NULL, 
+    par_RowCount inout int DEFAULT NULL 
 )
 AS $BODY$
 DECLARE
     var_RowCount INTEGER;
 BEGIN
 
-UPDATE target."FACT_Продажи" AS trg 
-SET        session_id = stg.session_id,
+    UPDATE target."FACT_Продажи" AS trg SET
+        session_id = stg.session_id,
         start_date = stg.start_date,
         end_date = stg.end_date,
         session_id_update = stg.session_id_update,
@@ -33,7 +33,7 @@ SET        session_id = stg.session_id,
     FROM staging."FACT_Продажи" stg
     WHERE stg.id = trg.id;
 
-INSERT INTO target."FACT_Продажи" (
+    INSERT INTO target."FACT_Продажи" (
         id,
         session_id,
         source_name,
@@ -78,8 +78,8 @@ INSERT INTO target."FACT_Продажи" (
         "ПримерСоставногоТипа_ТипЗначения"
     FROM staging."FACT_Продажи"
     WHERE staging_id = id;
-UPDATE target."FACT_Продажи_Товары" AS trg 
-SET        session_id = stg.session_id,
+    UPDATE target."FACT_Продажи_Товары" AS trg SET
+        session_id = stg.session_id,
         start_date = stg.start_date,
         end_date = stg.end_date,
         session_id_update = stg.session_id_update,
@@ -92,7 +92,7 @@ SET        session_id = stg.session_id,
     FROM staging."FACT_Продажи_Товары" stg
     WHERE stg.id = trg.id;
 
-INSERT INTO target."FACT_Продажи_Товары" (
+    INSERT INTO target."FACT_Продажи_Товары" (
         id,
         session_id,
         source_name,

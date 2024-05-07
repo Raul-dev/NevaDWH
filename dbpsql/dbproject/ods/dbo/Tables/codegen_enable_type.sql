@@ -1,7 +1,7 @@
 
 CREATE TABLE IF NOT EXISTS public.codegen_enable_type
 (
-    codegen_enable_type_id  SMALLINT            NOT NULL,
+    codegen_enable_type_id  smallint NOT NULL,
     description   character varying(256) COLLATE pg_catalog."default" NOT NULL,
     CONSTRAINT "PK_codegen_enable_type" PRIMARY KEY (codegen_enable_type_id)
 )

@@ -6,7 +6,7 @@ END;
 $$;
 
 CREATE OR REPLACE PROCEDURE odins."load_DIM_Товары" (
-    par_session_id IN bigint DEFAULT NULL, 
+    par_session_id in bigint DEFAULT NULL, 
     par_rowcount inout int DEFAULT NULL 
 )
 AS $BODY$
