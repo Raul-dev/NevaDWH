@@ -28,6 +28,12 @@ services:
     build:
       context: ./../images/postgresdb  
     container_name: client-postgresdb16
+    command:
+      - "postgres"
+      - "-c"
+      - "max_connections=500"
+      - "-c"
+      - "shared_buffers=1GB"     
     healthcheck:
       test: ["CMD", "pg_isready", "-U", "postgres"]
       interval: 5s
@@ -162,6 +168,7 @@ services:
 #    build:
 #      context: ./../../../services/dwhmanager
 #      dockerfile: NevaDWH/Dockerfile
+    restart: always
     environment:
       - ASPNETCORE_ENVIRONMENT=Development
       #- ASPNETCORE_URLS=https://+:443;http://+:80
