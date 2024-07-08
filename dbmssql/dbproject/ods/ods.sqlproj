@@ -1,0 +1,160 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Project DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003" ToolsVersion="4.0">
+  <PropertyGroup>
+    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
+    <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
+    <Name>ods</Name>
+    <SchemaVersion>2.0</SchemaVersion>
+    <ProjectVersion>4.1</ProjectVersion>
+    <ProjectGuid>{622e77ef-2e99-4fb8-aa03-f84361b27f07}</ProjectGuid>
+    <DSP>Microsoft.Data.Tools.Schema.Sql.Sql150DatabaseSchemaProvider</DSP>
+    <OutputType>Database</OutputType>
+    <RootPath>
+    </RootPath>
+    <RootNamespace>ods</RootNamespace>
+    <AssemblyName>ods</AssemblyName>
+    <ModelCollation>1033, CI</ModelCollation>
+    <DefaultFileStructure>BySchemaAndSchemaType</DefaultFileStructure>
+    <DeployToDatabase>True</DeployToDatabase>
+    <TargetFrameworkVersion>v4.8</TargetFrameworkVersion>
+    <TargetLanguage>CS</TargetLanguage>
+    <AppDesignerFolder>Properties</AppDesignerFolder>
+    <SqlServerVerification>False</SqlServerVerification>
+    <IncludeCompositeObjects>True</IncludeCompositeObjects>
+    <TargetDatabaseSet>True</TargetDatabaseSet>
+    <DefaultCollation>Cyrillic_General_CI_AS</DefaultCollation>
+    <AllowSnapshotIsolation>True</AllowSnapshotIsolation>
+    <ReadCommittedSnapshot>True</ReadCommittedSnapshot>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
+    <OutputPath>bin\Release\</OutputPath>
+    <BuildScriptName>$(MSBuildProjectName).sql</BuildScriptName>
+    <TreatWarningsAsErrors>False</TreatWarningsAsErrors>
+    <DebugType>pdbonly</DebugType>
+    <Optimize>true</Optimize>
+    <DefineDebug>false</DefineDebug>
+    <DefineTrace>true</DefineTrace>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
+    <OutputPath>bin\Debug\</OutputPath>
+    <BuildScriptName>$(MSBuildProjectName).sql</BuildScriptName>
+    <TreatWarningsAsErrors>false</TreatWarningsAsErrors>
+    <DebugSymbols>true</DebugSymbols>
+    <DebugType>full</DebugType>
+    <Optimize>false</Optimize>
+    <DefineDebug>true</DefineDebug>
+    <DefineTrace>true</DefineTrace>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+  </PropertyGroup>
+  <PropertyGroup>
+    <VisualStudioVersion Condition="'$(VisualStudioVersion)' == ''">11.0</VisualStudioVersion>
+    <!-- Default to the v11.0 targets path if the targets file for the current VS version is not found -->
+    <SSDTExists Condition="Exists('$(MSBuildExtensionsPath)\Microsoft\VisualStudio\v$(VisualStudioVersion)\SSDT\Microsoft.Data.Tools.Schema.SqlTasks.targets')">True</SSDTExists>
+    <VisualStudioVersion Condition="'$(SSDTExists)' == ''">11.0</VisualStudioVersion>
+  </PropertyGroup>
+  <Import Condition="'$(SQLDBExtensionsRefPath)' != ''" Project="$(SQLDBExtensionsRefPath)\Microsoft.Data.Tools.Schema.SqlTasks.targets" />
+  <Import Condition="'$(SQLDBExtensionsRefPath)' == ''" Project="$(MSBuildExtensionsPath)\Microsoft\VisualStudio\v$(VisualStudioVersion)\SSDT\Microsoft.Data.Tools.Schema.SqlTasks.targets" />
+  <ItemGroup>
+    <Folder Include="Properties" />
+    <Folder Include="dbo\" />
+    <Folder Include="dbo\Tables\" />
+    <Folder Include="dbo\Stored Procedures\" />
+    <Folder Include="Security\" />
+    <Folder Include="audit\" />    <Folder Include="audit\Stored Procedures\" />    <Folder Include="odins\" />
+    <Folder Include="odins\Stored Procedures\" />
+    <Folder Include="odins\Tables\" />
+    <Folder Include="Dictionaries" />
+  </ItemGroup>
+  <ItemGroup>
+    <Build Include="dbo\Tables\session_state.sql" />
+    <Build Include="dbo\Tables\session_log.sql" />
+    <Build Include="dbo\Tables\session.sql" />
+    <Build Include="dbo\Tables\msgqueue.sql" />
+    <Build Include="dbo\Tables\metamap.sql" />
+    <Build Include="dbo\Tables\metadata_buffer.sql" />
+    <Build Include="dbo\Tables\metadata.sql" />
+    <Build Include="dbo\Tables\data_source.sql" />
+    <Build Include="dbo\Tables\codegen_dwh_table.sql" />
+    <Build Include="dbo\Tables\codegen_dwh_column.sql" />
+    <Build Include="dbo\Tables\codegen.sql" />
+    <Build Include="dbo\Tables\codegen_enable_type.sql" />
+    <Build Include="dbo\Stored Procedures\rb_GetMappingSetup.sql" />
+    <Build Include="dbo\Stored Procedures\rb_SaveSessionState.sql" />
+    <Build Include="dbo\Tables\dwh_session_state.sql" />
+    <Build Include="dbo\Tables\dwh_session_log.sql"/>
+    <Build Include="dbo\Tables\dwh_session.sql"/>
+    <Build Include="dbo\Tables\dwh_processing_details.sql" />
+    <None Include="Dictionaries\dwh_session_state.sql" />
+    <Build Include="dbo\Stored Procedures\dwh_SaveSessionState.sql" />
+    <Build Include="dbo\Stored Procedures\dwh_ArchiveTables.sql" />
+    <Build Include="dbo\Stored Procedures\dwh_AssignSessionID.sql"/>
+    <Build Include="dbo\Stored Procedures\load_metadata.sql" />
+    <Build Include="Security\staging.sql" />
+    <Build Include="dbo\Tables\Setting.sql" />
+    <Build Include="dbo\Tables\msgtype.sql" />
+    <Build Include="dbo\Tables\filequeue.sql" />
+    <Build Include="dbo\Functions\fn_GetSettingValue.sql" />
+    <Build Include="dbo\Functions\fn_GetSettingInt.sql" />
+    <Build Include="dbo\Functions\fn_GetRef.sql" />
+    <Build Include="dbo\Tables\metaadapter.sql" />
+    <Build Include="Storage\InMemory.sql" />
+    <Build Include="Storage\fn_filequeueRange.sql" />
+    <Build Include="Storage\filequeueRange.sql" />
+    <Build Include="audit\Stored Procedures\sp_Print.sql">
+      <QuotedIdentifier>Off</QuotedIdentifier>
+    </Build>
+    <Build Include="Security\audit.sql" />
+     <Build Include="Security\odins.sql" />
+    <Build Include="odins\Stored Procedures\odins.load_DIM_Валюты.sql" />
+    <Build Include="odins\Stored Procedures\odins.load_DIM_Валюты_file.sql" />
+    <Build Include="odins\Stored Procedures\odins.load_DIM_Валюты_staging.sql" />
+    <Build Include="odins\Tables\odins.DIM_Валюты_buffer.sql" />
+    <Build Include="odins\Tables\odins.DIM_Валюты.sql" />
+    <Build Include="odins\Tables\odins.DIM_Валюты_history.sql" />
+    <Build Include="staging\Tables\staging.DIM_Валюты.sql" />
+    <Build Include="odins\Tables\odins.DIM_Валюты.Представления.sql" />
+    <Build Include="odins\Tables\odins.DIM_Валюты.Представления_history.sql" />
+    <Build Include="odins\Stored Procedures\odins.load_DIM_Клиенты.sql" />
+    <Build Include="odins\Stored Procedures\odins.load_DIM_Клиенты_file.sql" />
+    <Build Include="odins\Stored Procedures\odins.load_DIM_Клиенты_staging.sql" />
+    <Build Include="odins\Tables\odins.DIM_Клиенты_buffer.sql" />
+    <Build Include="odins\Tables\odins.DIM_Клиенты.sql" />
+    <Build Include="odins\Tables\odins.DIM_Клиенты_history.sql" />
+    <Build Include="staging\Tables\staging.DIM_Клиенты.sql" />
+    <Build Include="odins\Stored Procedures\odins.load_DIM_Товары.sql" />
+    <Build Include="odins\Stored Procedures\odins.load_DIM_Товары_file.sql" />
+    <Build Include="odins\Stored Procedures\odins.load_DIM_Товары_staging.sql" />
+    <Build Include="odins\Tables\odins.DIM_Товары_buffer.sql" />
+    <Build Include="odins\Tables\odins.DIM_Товары.sql" />
+    <Build Include="odins\Tables\odins.DIM_Товары_history.sql" />
+    <Build Include="staging\Tables\staging.DIM_Товары.sql" />
+    <Build Include="odins\Stored Procedures\odins.load_FACT_Продажи.sql" />
+    <Build Include="odins\Stored Procedures\odins.load_FACT_Продажи_file.sql" />
+    <Build Include="odins\Stored Procedures\odins.load_FACT_Продажи_staging.sql" />
+    <Build Include="odins\Tables\odins.FACT_Продажи_buffer.sql" />
+    <Build Include="odins\Tables\odins.FACT_Продажи.sql" />
+    <Build Include="odins\Tables\odins.FACT_Продажи_history.sql" />
+    <Build Include="staging\Tables\staging.FACT_Продажи.sql" />
+    <Build Include="odins\Tables\odins.FACT_Продажи.Товары.sql" />
+    <Build Include="odins\Tables\odins.FACT_Продажи.Товары_history.sql" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Dictionaries\codegen_enable_type.sql" />
+    <None Include="Dictionaries\session_state.sql" />
+    <None Include="Dictionaries\metamap.sql" />
+    <None Include="Dictionaries\codegen.sql" />
+  </ItemGroup>
+  <ItemGroup>
+    <PostDeploy Include="Dictionaries\Script.PostDeployment.sql" />
+  </ItemGroup>
+  <ItemGroup>
+    <ArtifactReference Include="$(DacPacRootPath)\Extensions\Microsoft\SQLDB\Extensions\SqlServer\150\SqlSchemas\master.dacpac">
+      <HintPath>$(DacPacRootPath)\Extensions\Microsoft\SQLDB\Extensions\SqlServer\150\SqlSchemas\master.dacpac</HintPath>
+      <SuppressMissingDependenciesErrors>False</SuppressMissingDependenciesErrors>
+      <DatabaseVariableLiteralValue>master</DatabaseVariableLiteralValue>
+    </ArtifactReference>
+  </ItemGroup>
+</Project>

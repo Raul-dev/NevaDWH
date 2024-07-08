@@ -1,0 +1,21 @@
+do
+$$
+BEGIN
+RAISE NOTICE 'Create table fdw.DIM_Клиенты';
+END;
+$$;
+DROP FOREIGN TABLE IF EXISTS fdw."odins_DIM_Клиенты";
+
+CREATE FOREIGN TABLE IF NOT EXISTS fdw."odins_DIM_Клиенты" (
+    dwh_session_id    bigint,
+    nkey              uuid NOT NULL,
+    "RefID"        uuid,
+    "DeletionMark"        boolean,
+    "Code"        varchar(128),
+    "Description"        varchar(128),
+    "Контакт"        varchar(500),
+    dt_create        timestamp without time zone default now()
+)
+SERVER client_ods OPTIONS (schema_name 'odins', table_name 'DIM_Клиенты_history');
+COMMENT ON FOREIGN TABLE fdw."odins_DIM_Клиенты" IS '{"Description":"DIM_Клиенты_history"}';
+
