@@ -5,30 +5,30 @@ RAISE NOTICE 'CREATE PROCEDURE odins."load_DIM_Валюты"';
 END;
 $$;
 
--- CALL odins."load_DIM_Валюты"(NULL::bigint, 1::smallint, NULL::integer, NULL::varchar(4000))
+--CALL odins."load_DIM_Валюты"(NULL::bigint, 1::smallint, NULL::integer, NULL::varchar(4000))
 CREATE OR REPLACE PROCEDURE odins."load_DIM_Валюты" (
     IN par_session_id bigint DEFAULT NULL,
-	IN par_buffer_history_mode smallint DEFAULT 2::smallint,  -- 0 - Do not delete the buffering history.
+    IN par_buffer_history_mode smallint DEFAULT 2::smallint,  -- 0 - Do not delete the buffering history.
                                                               -- 1 - Delete the buffering history.
                                                               -- 2 - Keep the buffering history for 10 days.
                                                               -- 3 - Keep the buffering history for a month.
-	INOUT par_rowcount integer DEFAULT NULL::integer,
-	INOUT par_errmessage varchar(4000) DEFAULT NULL::varchar(4000)
+    INOUT par_rowcount integer DEFAULT NULL::integer,
+    INOUT par_errmessage varchar(4000) DEFAULT NULL::varchar(4000)
 )
 AS $BODY$
 DECLARE
     var_rowcount integer;
     var_xmlns text ARRAY;
     var_mindate timestamp without time zone;
-	var_updatedate timestamp without time zone;
-	var_bufferhistorydays int;
-	var_err_session_id bigint;
+    var_updatedate timestamp without time zone;
+    var_bufferhistorydays int;
+    var_err_session_id bigint;
     var_buffer_history_mode smallint;
 BEGIN
     var_buffer_history_mode := CASE WHEN par_buffer_history_mode IS NULL OR par_buffer_history_mode > 2 THEN 2 ELSE par_buffer_history_mode END;
     SELECT now() INTO var_updatedate;
-	SELECT to_date('19000101', 'YYYYMMDD') INTO var_mindate;
-	SELECT (CASE WHEN (par_buffer_history_mode = 2) THEN 10 ELSE 30 END) INTO var_bufferhistorydays;
+    SELECT to_date('19000101', 'YYYYMMDD') INTO var_mindate;
+    SELECT (CASE WHEN (par_buffer_history_mode = 2) THEN 10 ELSE 30 END) INTO var_bufferhistorydays;
 
     SELECT ARRAY[ARRAY['nva', 'http://v8.1c.ru/8.1/data/enterprise/current-config'], ARRAY['xsi', 'http://www.w3.org/2001/XMLSchema-instance'], ARRAY['xs', 'http://www.w3.org/2001/XMLSchema']] into var_xmlns;
 
@@ -58,11 +58,11 @@ BEGIN
     END IF;
 
     BEGIN
-		INSERT INTO "DIM_Валюты_tmp1" (buffer_id, "RefID")
-		SELECT MAX(buffer_id) AS buffer_id,
-			"RefID"
-		FROM "DIM_Валюты_lock" b
-		GROUP BY "RefID";
+        INSERT INTO "DIM_Валюты_tmp1" (buffer_id, "RefID")
+        SELECT MAX(buffer_id) AS buffer_id,
+            "RefID"
+        FROM "DIM_Валюты_lock" b
+        GROUP BY "RefID";
 
         GET DIAGNOSTICS var_rowcount = ROW_COUNT;
         par_rowcount := var_rowcount;
@@ -160,45 +160,45 @@ BEGIN
          WHERE org."RefID" IS NULL ;
 
 
-		-- Clear buffer table
-		IF var_buffer_history_mode = 1 AND NOT EXISTS (SELECT 1 FROM "odins"."DIM_Валюты_buffer" WHERE is_error = true) THEN
+        -- Clear buffer table
+        IF var_buffer_history_mode = 1 AND NOT EXISTS (SELECT 1 FROM "odins"."DIM_Валюты_buffer" WHERE is_error = true) THEN
 
-			DELETE FROM "odins"."DIM_Валюты_buffer" AS org
-				USING "DIM_Валюты_lock" AS src
-			WHERE org."buffer_id" = src."buffer_id";
+            DELETE FROM "odins"."DIM_Валюты_buffer" AS org
+                USING "DIM_Валюты_lock" AS src
+            WHERE org."buffer_id" = src."buffer_id";
 
-		ELSE
+        ELSE
 
-			UPDATE "odins"."DIM_Валюты_buffer" AS org SET
-				dt_update = var_updatedate
-			FROM "DIM_Валюты_lock" AS src
-			WHERE org."buffer_id" = src."buffer_id";
+            UPDATE "odins"."DIM_Валюты_buffer" AS org SET
+                dt_update = var_updatedate
+            FROM "DIM_Валюты_lock" AS src
+            WHERE org."buffer_id" = src."buffer_id";
 
-			IF var_buffer_history_mode >= 2 AND NOT EXISTS (SELECT 1 FROM "odins"."DIM_Валюты_buffer" WHERE is_error = true) THEN
-				DELETE
-				FROM "odins"."DIM_Валюты_buffer" AS b
-				WHERE EXTRACT(DAY FROM var_updatedate::timestamp - dt_update::timestamp) > var_bufferhistorydays;
-			END IF;
-		END	IF;
+            IF var_buffer_history_mode >= 2 AND NOT EXISTS (SELECT 1 FROM "odins"."DIM_Валюты_buffer" WHERE is_error = true) THEN
+                DELETE
+                FROM "odins"."DIM_Валюты_buffer" AS b
+                WHERE EXTRACT(DAY FROM var_updatedate::timestamp - dt_update::timestamp) > var_bufferhistorydays;
+            END IF;
+        END    IF;
 
-	EXCEPTION WHEN OTHERS
-	THEN
-		GET STACKED DIAGNOSTICS
-		par_errmessage = MESSAGE_TEXT;
+    EXCEPTION WHEN OTHERS
+    THEN
+        GET STACKED DIAGNOSTICS
+        par_errmessage = MESSAGE_TEXT;
 
-		SELECT COALESCE(par_session_id, 0) INTO var_err_session_id;
-		INSERT INTO session_log (session_id, session_state_id, error_message)
-		SELECT var_err_session_id,
-			3 AS session_state_id,
-			'Table odins.DIM_Валюты. Error: ' || par_errmessage AS error_message;
+        SELECT COALESCE(par_session_id, 0) INTO var_err_session_id;
+        INSERT INTO session_log (session_id, session_state_id, error_message)
+        SELECT var_err_session_id,
+            3 AS session_state_id,
+            'Table odins.DIM_Валюты. Error: ' || par_errmessage AS error_message;
 
-		UPDATE "odins"."DIM_Валюты_buffer" AS org SET
-			is_error  = true,
-			dt_update = var_updatedate
-		FROM "DIM_Валюты_lock" AS src
-		WHERE org."buffer_id" = src."buffer_id";
+        UPDATE "odins"."DIM_Валюты_buffer" AS org SET
+            is_error  = true,
+            dt_update = var_updatedate
+        FROM "DIM_Валюты_lock" AS src
+        WHERE org."buffer_id" = src."buffer_id";
 
-	END;
+    END;
 END;
 
 $BODY$

@@ -6,26 +6,26 @@ END;
 $$;
 -- CALL load_metadata(NULL,NULL);
 CREATE OR REPLACE PROCEDURE "load_metadata" (
-	IN par_session_id bigint DEFAULT NULL::bigint,
-	IN par_buffer_history_mode smallint DEFAULT (0)::smallint,
-	INOUT par_rowcount integer DEFAULT NULL::integer,
-	INOUT par_errmessage character varying DEFAULT NULL::character varying(4000)
+    IN par_session_id bigint DEFAULT NULL::bigint,
+    IN par_buffer_history_mode smallint DEFAULT (0)::smallint,
+    INOUT par_rowcount integer DEFAULT NULL::integer,
+    INOUT par_errmessage character varying DEFAULT NULL::character varying(4000)
 )
 AS $BODY$
 DECLARE
     var_RowCount int;
-	var_mindate timestamp without time zone;
-	var_updatedate timestamp without time zone;
-	var_bufferhistorydays int;
-	var_err_session_id bigint;
+    var_mindate timestamp without time zone;
+    var_updatedate timestamp without time zone;
+    var_bufferhistorydays int;
+    var_err_session_id bigint;
     var_buffer_history_mode smallint;
 
 BEGIN
     var_buffer_history_mode := CASE WHEN par_buffer_history_mode IS NULL OR par_buffer_history_mode > 2 THEN 2 ELSE par_buffer_history_mode END;
     SELECT now() INTO var_updatedate;
     SELECT now() INTO var_updatedate;
-	SELECT to_date('19000101', 'YYYYMMDD') INTO var_mindate;
-	SELECT (CASE WHEN (par_buffer_history_mode = 2) THEN 10 ELSE 30 END) INTO var_bufferhistorydays;
+    SELECT to_date('19000101', 'YYYYMMDD') INTO var_mindate;
+    SELECT (CASE WHEN (par_buffer_history_mode = 2) THEN 10 ELSE 30 END) INTO var_bufferhistorydays;
 
     DROP TABLE IF EXISTS "metadata_tmp1";
     CREATE TEMPORARY TABLE "metadata_tmp1" (
@@ -92,45 +92,45 @@ BEGIN
         USING metadata_tmp1 AS tmp
         WHERE trg.buffer_id = tmp.buffer_id;
 
-    		-- Clear buffer table
-		IF var_buffer_history_mode = 1 AND NOT EXISTS (SELECT 1 FROM metadata_buffer WHERE is_error = true) THEN
+            -- Clear buffer table
+        IF var_buffer_history_mode = 1 AND NOT EXISTS (SELECT 1 FROM metadata_buffer WHERE is_error = true) THEN
     
-			DELETE FROM metadata_buffer AS org 
-				USING "metadata_tmp1" AS src
-			WHERE org."buffer_id" = src."buffer_id";
+            DELETE FROM metadata_buffer AS org 
+                USING "metadata_tmp1" AS src
+            WHERE org."buffer_id" = src."buffer_id";
     
-		ELSE
-    		
-			UPDATE metadata_buffer AS org SET
-				dt_update = var_updatedate
-			FROM "metadata_tmp1" AS src 
-			WHERE org."buffer_id" = src."buffer_id" ;
-		
-			IF var_buffer_history_mode >= 2 AND NOT EXISTS (SELECT 1 FROM metadata_buffer WHERE is_error = true) THEN
-				DELETE 
-				FROM metadata_buffer AS b
-				WHERE EXTRACT(DAY FROM  var_updatedate::timestamp - dt_update::timestamp) > var_bufferhistorydays;
-			END IF;
-		END	IF;
+        ELSE
+            
+            UPDATE metadata_buffer AS org SET
+                dt_update = var_updatedate
+            FROM "metadata_tmp1" AS src 
+            WHERE org."buffer_id" = src."buffer_id" ;
+        
+            IF var_buffer_history_mode >= 2 AND NOT EXISTS (SELECT 1 FROM metadata_buffer WHERE is_error = true) THEN
+                DELETE 
+                FROM metadata_buffer AS b
+                WHERE EXTRACT(DAY FROM  var_updatedate::timestamp - dt_update::timestamp) > var_bufferhistorydays;
+            END IF;
+        END    IF;
 
-	EXCEPTION WHEN OTHERS -- аналог catch  
-	THEN
-		GET STACKED DIAGNOSTICS
-		par_errmessage = MESSAGE_TEXT;
-	
-		SELECT COALESCE(par_session_id, 0) INTO var_err_session_id;
-		INSERT INTO session_log (session_id, session_state_id, error_message)
-		SELECT var_err_session_id,
-			3 AS session_state_id,
-			'Table metadata_buffer. Error: ' || par_errmessage AS error_message;
+    EXCEPTION WHEN OTHERS -- аналог catch  
+    THEN
+        GET STACKED DIAGNOSTICS
+        par_errmessage = MESSAGE_TEXT;
+    
+        SELECT COALESCE(par_session_id, 0) INTO var_err_session_id;
+        INSERT INTO session_log (session_id, session_state_id, error_message)
+        SELECT var_err_session_id,
+            3 AS session_state_id,
+            'Table metadata_buffer. Error: ' || par_errmessage AS error_message;
 
-		UPDATE metadata_buffer AS org SET
-			is_error  = true,
-			dt_update = var_updatedate
-		FROM "metadata_tmp1" AS src 
-		WHERE org."buffer_id" = src."buffer_id" ;
-	
-	END;
+        UPDATE metadata_buffer AS org SET
+            is_error  = true,
+            dt_update = var_updatedate
+        FROM "metadata_tmp1" AS src 
+        WHERE org."buffer_id" = src."buffer_id" ;
+    
+    END;
 END;
 
 $BODY$
