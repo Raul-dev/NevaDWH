@@ -60,7 +60,7 @@ UNION SELECT 6, 1, 'FACT_Продажи.Товары', false, true, 'FACT_Про
 ;
 INSERT INTO codegen_dwh_column(codegen_dwh_column_id, codegen_dwh_table_id, column_name, data_type, text_length, precision, scale, is_enable, is_versionkey, is_nulable, null_value)
 (SELECT cast( null as int) as codegen_dwh_column_id,   cast( null as int) as codegen_dwh_table_id,   cast( null as varchar(128)) as column_name,   cast( null as varchar(128)) as data_type,   cast( null as integer) as text_length ,   cast( null as integer) as precision ,   cast( null as integer) as scale ,   cast( null as boolean) as is_enable,cast( null as boolean) as is_versionkey,cast( null as boolean) as is_nulable,cast( null as varchar(128)) as null_value 
-   FROM (VALUES ('Z')) t1 (col1) LIMIT 0)
+  FROM (VALUES ('Z')) t1 (col1) LIMIT 0)
 UNION SELECT 1, 1, 'RefID', 'uuid', NULL, NULL, NULL, true, false, true, NULL
 UNION SELECT 2, 1, 'DeletionMark', 'boolean', NULL, NULL, NULL, true, false, true, NULL
 UNION SELECT 3, 1, 'Code', 'varchar', '128', NULL, NULL, true, false, true, NULL

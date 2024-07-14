@@ -1,5 +1,9 @@
 ﻿CREATE PROCEDURE [dbo].[load_metadata]
     @session_id INT = NULL,
+    @BufferHistoryMode tinyint         = 0,  -- 0 - Do not delete the buffering history.
+                                             -- 1 - Delete the buffering history.
+                                             -- 2 - Keep the buffering history for 10 days.
+                                             -- 3 - Keep the buffering history for a month.
     @RowCount INT = NULL OUTPUT,
     @ErrMessage nvarchar(4000) = NULL OUTPUT
 AS
@@ -7,7 +11,11 @@ BEGIN
 SET XACT_ABORT OFF
 SET CONCAT_NULL_YIELDS_NULL ON
 SET NOCOUNT ON
+DECLARE @MinDate datetime2(4) = DATEFROMPARTS(1900, 01, 01),
+    @UpdateDate datetime2(4),
+    @BufferHistoryDays int
 
+SET @BufferHistoryDays = IIF(@BufferHistoryMode = 2, 10, 30)
 
 BEGIN TRY
 BEGIN TRANSACTION
@@ -77,9 +85,26 @@ BEGIN TRANSACTION
                 ) 
         ) p ON m.[namespace_ver] = p.[namespace_ver]
 
+    -- Clear buffer table
+    IF @BufferHistoryMode = 1 AND NOT EXISTS (SELECT 1 FROM metadata_buffer WHERE [is_error] = 1)
+    BEGIN
+            DELETE b
+            FROM metadata_buffer b
+            INNER JOIN @tmp_metadata t ON b.buffer_id = t.buffer_id
+    END
+    ELSE
+    BEGIN
+        UPDATE b SET
+            dt_update = @UpdateDate
+        FROM metadata_buffer AS b
+            INNER JOIN @tmp_metadata l ON l.buffer_id = b.buffer_id
 
-    DELETE b FROM metadata_buffer b
-        INNER JOIN @tmp_metadata t ON b.buffer_id = t.buffer_id
+        IF @BufferHistoryMode >= 2 AND NOT EXISTS (SELECT 1 FROM metadata_buffer WHERE [is_error] = 1)
+            DELETE b
+            FROM metadata_buffer b
+            WHERE DATEDIFF(DD, @UpdateDate, dt_update) > @BufferHistoryDays
+    END
+
     
 COMMIT TRANSACTION
 END TRY

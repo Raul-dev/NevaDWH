@@ -5,7 +5,8 @@
     msg_id      character varying(36) COLLATE pg_catalog."default",
     msg         text COLLATE pg_catalog."default",
     is_error    boolean       CONSTRAINT DF_metadata_buffer_is_error_DEFAULT DEFAULT ((false)) NOT NULL,
-    dt_create   timestamp with time zone NOT NULL default now()
+    dt_create   timestamp with time zone NOT NULL default now(),
+    dt_update   timestamp without time zone NOT NULL DEFAULT to_date('19000101', 'YYYYMMDD')
 )
 
 TABLESPACE pg_default;

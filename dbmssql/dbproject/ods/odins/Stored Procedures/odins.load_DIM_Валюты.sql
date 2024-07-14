@@ -15,7 +15,7 @@ SET NOCOUNT ON
 SET TRANSACTION ISOLATION LEVEL READ COMMITTED
 SET DEADLOCK_PRIORITY LOW
 DECLARE @MinDate datetime2(4) = DATEFROMPARTS(1900, 01, 01),
-    @UpdateDate datetime2(4),
+    @UpdateDate datetime2(4) = GetDate(),
     @BufferHistoryDays int
 
 SET @BufferHistoryDays = IIF(@BufferHistoryMode = 2, 10, 30)
