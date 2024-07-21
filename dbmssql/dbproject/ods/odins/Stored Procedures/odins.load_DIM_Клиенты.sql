@@ -1,27 +1,41 @@
 CREATE PROCEDURE [odins].[load_DIM_Клиенты]
     @session_id         bigint         = NULL,
-    @BufferHistoryMode tinyint         = 0,  -- 0 - Do not delete the buffering history.
+    @BufferHistoryMode  tinyint        = 0,  -- 0 - Do not delete the buffering history.
                                              -- 1 - Delete the buffering history.
                                              -- 2 - Keep the buffering history for 10 days.
                                              -- 3 - Keep the buffering history for a month.
     @RowCount           int            = NULL OUTPUT,
-    @ErrMessage         nvarchar(4000) = NULL OUTPUT
+    @ErrorMessage       varchar(4000)  = NULL OUTPUT
 AS
 BEGIN
-SET XACT_ABORT OFF
 SET CONCAT_NULL_YIELDS_NULL ON
+DECLARE @LogID int, @ProcedureName varchar(510), @ProcedureParams varchar(max), @ProcedureInfo varchar(max), @AuditProcEnable nvarchar(256)
+SET @AuditProcEnable = [dbo].[fn_GetSettingValue]('AuditProcAll')
+IF @AuditProcEnable IS NOT NULL 
+BEGIN
+    IF OBJECT_ID('tempdb..#LogProc') IS NULL
+        CREATE TABLE #LogProc(LogID int Primary Key NOT NULL)
+    SET @ProcedureName = '[' + OBJECT_SCHEMA_NAME(@@PROCID)+'].['+OBJECT_NAME(@@PROCID)+']'
+    SET @ProcedureParams =
+        '@session_id=' + ISNULL(LTRIM(STR(@session_id)),'NULL') + ', ' +
+        '@BufferHistoryMode=' + ISNULL(LTRIM(STR(@BufferHistoryMode)),'NULL')
+END
+SET XACT_ABORT OFF
 SET NOCOUNT ON
 
 SET TRANSACTION ISOLATION LEVEL READ COMMITTED
 SET DEADLOCK_PRIORITY LOW
 DECLARE @MinDate datetime2(4) = DATEFROMPARTS(1900, 01, 01),
-    @UpdateDate datetime2(4) = GetDate(),
+    @UpdateDate datetime2(4)  = GetDate(),
     @BufferHistoryDays int
 
 SET @BufferHistoryDays = IIF(@BufferHistoryMode = 2, 10, 30)
 
 BEGIN TRY
 BEGIN TRANSACTION
+
+    IF @AuditProcEnable IS NOT NULL 
+        EXEC [audit].[sp_log_Start] @AuditProcEnable = @AuditProcEnable, @ProcedureName = @ProcedureName, @ProcedureParams = @ProcedureParams, @LogID = @LogID OUTPUT
 
     DECLARE @LockedList AS TABLE(
         [buffer_id] bigint Primary key,
@@ -47,6 +61,7 @@ BEGIN TRANSACTION
     IF @RowCount = 0 
     BEGIN
     
+        EXEC [audit].[sp_log_Finish] @LogID = @LogID, @RowCount = 0, @ProcedureInfo = 'Empty buffer'
         COMMIT TRANSACTION
         RETURN 0
     END
@@ -75,9 +90,11 @@ BEGIN TRANSACTION
         DECLARE @FileQueueID bigint, @res int
         SELECT @FileQueueID = MIN(filequeue_id) FROM dbo.filequeue f WHERE f.msg_key = 'CatalogObject.Клиенты' AND state_id in (1,3)
         COMMIT TRANSACTION
-        EXEC @res = [odins].[load_DIM_Клиенты_file] @FileQueueID = @FileQueueID, @ErrMessage = @ErrMessage OUTPUT
-        if @res <> 0
+        EXEC @res = [odins].[load_DIM_Клиенты_file] @FileQueueID = @FileQueueID, @ErrorMessage = @ErrorMessage OUTPUT
+        IF @res <> 0 BEGIN
+            EXEC [audit].[sp_log_Finish] @LogID = @LogID, @RowCount = 0, @ProcedureInfo = 'load_file @res<>0'
             RETURN
+        END
         BEGIN TRANSACTION
     END
 
@@ -132,12 +149,12 @@ BEGIN TRANSACTION
             FROM [odins].[DIM_Клиенты_buffer] b
             WHERE DATEDIFF(DD, @UpdateDate, dt_update) > @BufferHistoryDays
     END
-
+    EXEC [audit].[sp_log_Finish] @LogID = @LogID, @RowCount = @RowCount
 
 COMMIT TRANSACTION
 END TRY
 BEGIN CATCH
-    SELECT @ErrMessage = ERROR_MESSAGE()
+    SET @ErrorMessage = ERROR_MESSAGE()
     IF XACT_STATE() <> 0 AND @@TRANCOUNT > 0 
     BEGIN
          ROLLBACK TRANSACTION
@@ -148,9 +165,9 @@ BEGIN CATCH
     INSERT [dbo].[session_log] ( session_id, [session_state_id], [error_message])
     SELECT session_id = @err_session_id,
         [session_state_id] = 3,
-        [error_message] = 'Table [odins].[DIM_Клиенты_buffer]. Error: ' +@ErrMessage
+        [error_message] = 'Table [odins].[DIM_Клиенты_buffer]. Error: ' +@ErrorMessage
 
-    IF NOT @ErrMessage LIKE '%deadlock%'
+    IF NOT @ErrorMessage LIKE '%deadlock%'
         UPDATE b SET 
             [session_id] = @err_session_id,            [is_error]   = 1,
             [dt_update]  = ISNULL(@UpdateDate, GetDate())
@@ -158,7 +175,8 @@ BEGIN CATCH
             INNER JOIN @LockedList l ON b.[buffer_id] = l.[buffer_id]
         WHERE [is_error] = 0
 
-    PRINT @ErrMessage
+    EXEC [audit].[sp_log_Finish] @LogID = @LogID, @RowCount = @RowCount, @ErrorMessage = @ErrorMessage
+    EXEC [audit].[sp_Print] @StrPrint = @ErrorMessage
     RETURN -1
 END CATCH
 

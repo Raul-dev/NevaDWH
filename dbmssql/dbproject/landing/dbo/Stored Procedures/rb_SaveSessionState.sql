@@ -3,12 +3,12 @@ CREATE PROCEDURE [dbo].[rb_SaveSessionState]
     @session_id       bigint = NULL,
     @data_source_id   tinyint = 1,
     @session_state_id tinyint = 1,
-    @error_message    nvarchar(4000) = NULL
+    @error_message    varchar(4000) = NULL
 AS
     IF(@session_id IS NULL)
     BEGIN
         DECLARE @IdentityOutput table ( [session_id] bigint )
-        INSERT [session] ([data_source_id],    [session_state_id],    [error_message])
+        INSERT [session] ([data_source_id], [session_state_id], [error_message])
         OUTPUT inserted.[session_id] into @IdentityOutput
         VALUES(@data_source_id, @session_state_id, @error_message)
         SELECT * FROM @IdentityOutput

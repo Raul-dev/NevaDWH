@@ -8,11 +8,13 @@ Param (
     [parameter(Mandatory=$false)][bool]$IsRebuild=$false,
     [parameter(Mandatory=$false)][string]$SqlPassword=""
   )
-
 Import-Module -Name './MSqlDeploymentFunc.psm1' -Verbose  
 $Projectpath = Convert-Path ..
 $ExitCode = 0
 $VSProjectName = "ods"
+$LinkSRVLogLanding = "LinkSRVLogLanding"
+$LinkSRVLanding = "LinkSRVLanding"
+$LinkSRVOds = "LinkSRVOds"
 try{
 
     $IsVS2019only = $false
@@ -57,11 +59,10 @@ try{
         if (!(Test-Path $sourceFile) -or !($PublishOnly) -or ($IsRebuild)) {
 
             Write-Host "Start BUILD "$VSProjectName
-            Write-Host " -t:rebuild -p:WarningLevel=0 -p:NoWarn='71502, 71558' -p:Configuration=Release "$Project
+            Write-Host " -t:rebuild -p:WarningLevel=0 -p:NoWarn=SQL71562 -p:Configuration=Release "$Project
 
-            #-p:NoWarn='71502 71558' did not work
-            & "$msbuildLocation" -t:rebuild -p:WarningLevel=0 -p:Configuration=Release $Project
-    
+            & "$msbuildLocation" -t:rebuild -p:WarningLevel=0 -p:NoWarn=SQL71562 -p:Configuration=Release $Project
+
             IF ($LASTEXITCODE -ne 0){
                 throw "Build failed."
             }
@@ -94,19 +95,21 @@ try{
                 $SqlPackagePath = "$vsLocation\Common7\IDE\Extensions\Microsoft\SQLDB\DAC\sqlpackage.exe"
             }
         }
-        Write-Host $SqlPackagePath
-        Write-Host "/Action:Publish /SourceFile:$($sourceFile) /TargetServerName:$($TargetServerName) /TargetDatabaseName:$($TargetDBname) /p:BlockOnPossibleDataLoss=False /p:IgnorePermissions=True"
-        if($VSProjectName -eq "ods"){
-               & $SqlPackagePath /Action:Publish /SourceFile:$sourceFile /TargetServerName:$TargetServerName /TargetDatabaseName:$TargetDBname /TargetEncryptConnection:False /p:BlockOnPossibleDataLoss=False /p:IgnorePermissions=True 
+
+        if($VSProjectName -eq "dwh"){
+            Write-Host "$SqlPackagePath /Action:Publish /SourceFile:$sourceFile /TargetServerName:$TargetServerName /TargetDatabaseName:$TargetDBname /TargetEncryptConnection:False /p:BlockOnPossibleDataLoss=False /p:IgnorePermissions=True /v:LinkSRVLogLanding=$LinkSRVLogLanding /v:landing=$TargetLandingDBname /v:LinkSRVLanding=$LinkSRVLanding /v:LinkSRVOds=$LinkSRVOds /v:ods=$TargetODSDBname"
+			& $SqlPackagePath /Action:Publish /SourceFile:$sourceFile /TargetServerName:$TargetServerName /TargetDatabaseName:$TargetDBname /TargetEncryptConnection:False /p:BlockOnPossibleDataLoss=False /p:IgnorePermissions=True /v:LinkSRVLogLanding=$LinkSRVLogLanding /v:landing=$TargetLandingDBname /v:LinkSRVLanding=$LinkSRVLanding /v:LinkSRVOds=$LinkSRVOds /v:ods=$TargetODSDBname
         } else {
-               & $SqlPackagePath /Action:Publish /SourceFile:$sourceFile /TargetServerName:$TargetServerName /TargetDatabaseName:$TargetDBname /TargetEncryptConnection:False /p:BlockOnPossibleDataLoss=False /p:IgnorePermissions=True /v:ods=$TargetODSDBname
+            Write-Host "$SqlPackagePath /Action:Publish /SourceFile:$sourceFile /TargetServerName:$TargetServerName /TargetDatabaseName:$TargetDBname /TargetEncryptConnection:False /p:BlockOnPossibleDataLoss=False /p:IgnorePermissions=True /v:LinkSRVLogLanding=$LinkSRVLogLanding /v:landing=$TargetLandingDBname"
+			& $SqlPackagePath /Action:Publish /SourceFile:$sourceFile /TargetServerName:$TargetServerName /TargetDatabaseName:$TargetDBname /TargetEncryptConnection:False /p:BlockOnPossibleDataLoss=False /p:IgnorePermissions=True /v:LinkSRVLogLanding=$LinkSRVLogLanding /v:landing=$TargetLandingDBname       
         }
         IF ($LASTEXITCODE -ne 0){
             throw "Publish failed."
         }
     
         $ExitCode = 0
-        Write-Host $VSProjectName
+        
+        Write-Host "Publish project "$VSProjectName" successfully"
         if($VSProjectName -eq "dwh"){
             break
         } elseif($VSProjectName -eq "ods"){
@@ -114,7 +117,7 @@ try{
         } elseif($VSProjectName -eq "landing"){
             $VSProjectName = "dwh"
         }
-        Write-Host "Finish project "$VSProjectName
+
         #Write-Host -NoNewLine 'Press any key to continue...';
         #$null = $Host.UI.RawUI.ReadKey('NoEcho,IncludeKeyDown');
 
@@ -122,11 +125,11 @@ try{
 }
 catch {
   
-  Write-Host "An error occurred:" -fore red
-  Write-Host $_ -fore red
-  Write-Host "Stack:"
-  Write-Host $_.ScriptStackTrace
-  $ExitCode = -1
+    Write-Host "An error occurred:" -fore red
+    Write-Host $_ -fore red
+    Write-Host "Stack:"
+    Write-Host $_.ScriptStackTrace
+    $ExitCode = -1
 }
 $Projectpath = $Projectpath +"\ScriptsFolder"
 Set-Location -Path $Projectpath

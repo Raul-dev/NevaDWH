@@ -1,9 +1,22 @@
 CREATE PROCEDURE [odins].[load_FACT_Продажи_file]
     @FileQueueID  bigint = NULL,
     @FileOverride nvarchar(4000) = NULL,
-    @ErrMessage   varchar(4000) = NULL OUTPUT
+    @ErrorMessage varchar(4000) = NULL OUTPUT
 AS
 BEGIN
+DECLARE @LogID int, @ProcedureName varchar(510), @ProcedureParams varchar(max), @ProcedureInfo varchar(max), @AuditProcEnable nvarchar(256), @RowCount int
+SET @AuditProcEnable = [dbo].[fn_GetSettingValue]('AuditProcAll')
+IF @AuditProcEnable IS NOT NULL 
+BEGIN
+    IF OBJECT_ID('tempdb..#LogProc') IS NULL
+        CREATE TABLE #LogProc(LogID int Primary Key NOT NULL)
+    SET @ProcedureName = '[' + OBJECT_SCHEMA_NAME(@@PROCID)+'].['+OBJECT_NAME(@@PROCID)+']'
+    SET @ProcedureParams =
+        '@FileQueueID=' + ISNULL(LTRIM(STR(@FileQueueID)),'NULL') + ', ' +
+        '@FileOverride=' + ISNULL('''' +CAST(@FileOverride AS varchar(19) ) + '''','NULL')
+
+    EXEC [audit].[sp_log_Start] @AuditProcEnable = @AuditProcEnable, @ProcedureName = @ProcedureName, @ProcedureParams = @ProcedureParams, @LogID = @LogID OUTPUT
+END
 SET XACT_ABORT OFF
 SET CONCAT_NULL_YIELDS_NULL ON
 SET NOCOUNT ON
@@ -25,9 +38,9 @@ BEGIN TRY
                 SET @FileQueueID = 0
             ELSE
             BEGIN
-                SELECT @ErrMessage = error_msg, @IdError = filequeue_id FROM [dbo].[filequeue] WHERE state_id = 3
+                SELECT @ErrorMessage = error_msg, @IdError = filequeue_id FROM [dbo].[filequeue] WHERE state_id = 3
                 IF @IdError <> 0
-                    RAISERROR( N'Загрузка FileQueueID=[%d], Вызвала ошибку [%s]. Дальнейшие загрузки остановлены.', 16, 1, @IdError, @ErrMessage)
+                    RAISERROR( N'Загрузка FileQueueID=[%d], Вызвала ошибку [%s]. Дальнейшие загрузки остановлены.', 16, 1, @IdError, @ErrorMessage)
             END
         END
         ELSE
@@ -35,7 +48,10 @@ BEGIN TRY
             SET @FileQueueID = 0
             IF NOT EXISTS(SELECT TOP 1 filequeue_id FROM [dbo].[filequeue]
                 WHERE msg_key = @MsgKey AND NOT [filename] IS NULL AND state_id = 1 AND (state_id >= @FileQueueID ))
+            BEGIN 
+                EXEC [audit].[sp_log_Finish] @LogID = @LogID, @RowCount = 0, @ProcedureInfo = 'Not exists filequeue_id'
                 RETURN 0
+            END
         END
 
         WHILE (NOT @FileQueueID IS NULL )
@@ -99,19 +115,25 @@ BEGIN TRY
             IF @IsSingleFile = 1
                 BREAK
         END
+    SET @RowCount = @@ROWCOUNT
+    EXEC [audit].[sp_log_Finish] @LogID = @LogID, @RowCount = @RowCount
+
 END TRY
 BEGIN CATCH
-    SELECT @ErrMessage = ERROR_MESSAGE()
+    SELECT @ErrorMessage = ERROR_MESSAGE()
     IF XACT_STATE() <> 0 AND @@TRANCOUNT > 0 
     BEGIN
          ROLLBACK TRANSACTION
     END
 
     IF @IdError = 0
-        UPDATE [dbo].[filequeue] SET state_id = 3, [error_msg] = @ErrMessage, [dt_update] = GetDate()
+        UPDATE [dbo].[filequeue] SET state_id = 3, [error_msg] = @ErrorMessage, [dt_update] = GetDate()
         WHERE [filequeue_id] = @FileQueueID
 
-    RAISERROR( N'Error: [%s].', 16, 1, @ErrMessage)
+    SET @RowCount = @@ROWCOUNT
+    EXEC [audit].[sp_log_Finish] @LogID = @LogID, @RowCount = @RowCount, @ErrorMessage = @ErrorMessage
+
+    RAISERROR( N'Error: [%s].', 16, 1, @ErrorMessage)
     RETURN -1
 END CATCH
 

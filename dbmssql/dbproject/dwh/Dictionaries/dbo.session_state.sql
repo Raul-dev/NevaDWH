@@ -26,3 +26,6 @@ WHEN MATCHED THEN UPDATE SET
 WHEN NOT MATCHED BY TARGET THEN 
     INSERT ([session_state_id] , [name]) VALUES (src.[session_state_id] , src.[name])
 WHEN NOT MATCHED BY SOURCE THEN DELETE;
+
+IF NOT EXISTS(SELECT 1 FROM [dbo].[Setting] WHERE SettingID = 'AuditProcAll' )
+    INSERT INTO [dbo].[Setting] (SettingID, StrValue) values('AuditProcAll', N'AuditProcAll')

@@ -58,6 +58,7 @@
     <Folder Include="Properties" />
     <Folder Include="audit" />
     <Folder Include="audit\Stored Procedures" />
+    <Folder Include="audit\Tables" />
     <Folder Include="dbo" />
     <Folder Include="dbo\Functions" />
     <Folder Include="dbo\Stored Procedures" />
@@ -74,7 +75,6 @@
     <Build Include="dbo\Stored Procedures\dwh_ArchiveTables.sql" />
     <Build Include="dbo\Stored Procedures\dwh_AssignSessionID.sql" />
     <Build Include="dbo\Stored Procedures\dwh_SaveSessionState.sql" />
-    <Build Include="dbo\Stored Procedures\load_metadata.sql" />
     <Build Include="dbo\Stored Procedures\rb_GetMappingSetup.sql" />
     <Build Include="dbo\Stored Procedures\rb_SaveSessionState.sql" />
     <Build Include="dbo\Tables\codegen.sql" />
@@ -100,7 +100,14 @@
     <Build Include="dbo\Tables\metadata_sql.sql" />
     <Build Include="Storage\InMemory.sql" />
     <Build Include="Security\audit.sql" />
-        <Build Include="Security\odins.sql" />
+    <Build Include="audit\Tables\LogProcedures.sql" />
+    <Build Include="audit\Stored Procedures\sp_lnk_Insert.sql" />
+    <Build Include="audit\Stored Procedures\sp_lnk_Update.sql" />
+    <Build Include="audit\Stored Procedures\sp_log_Error.sql" />
+    <Build Include="audit\Stored Procedures\sp_log_Finish.sql" />
+    <Build Include="audit\Stored Procedures\sp_log_Info.sql" />
+    <Build Include="audit\Stored Procedures\sp_log_Start.sql" />
+    <Build Include="Security\odins.sql" />
     <None Include="Dictionaries\codegen.sql">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>
@@ -131,5 +138,15 @@
     <PostDeploy Include="Dictionaries\Script.PostDeployment.sql">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </PostDeploy>
+  </ItemGroup>
+  <ItemGroup>
+    <SqlCmdVariable Include="landing">
+      <DefaultValue>landing</DefaultValue>
+      <Value>$(SqlCmdVar__2)</Value>
+    </SqlCmdVariable>
+    <SqlCmdVariable Include="LinkSRVLogLanding">
+      <DefaultValue>LinkSRVLogLanding</DefaultValue>
+      <Value>$(SqlCmdVar__3)</Value>
+    </SqlCmdVariable>
   </ItemGroup>
 </Project>

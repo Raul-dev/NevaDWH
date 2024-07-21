@@ -1,9 +1,21 @@
  CREATE PROCEDURE dwh_ArchiveTables( 
     @dwh_session_id bigint = NULL,
-    @ErrMessage     varchar(4000) = NULL OUTPUT
+    @ErrorMessage   varchar(4000) = NULL OUTPUT
 )
 AS
 BEGIN
+DECLARE @LogID int, @ProcedureName varchar(510), @ProcedureParams varchar(max), @ProcedureInfo varchar(max), @AuditProcEnable nvarchar(256), @RowCount int
+SET @AuditProcEnable = [dbo].[fn_GetSettingValue]('AuditProcAll')
+IF @AuditProcEnable IS NOT NULL 
+BEGIN
+    IF OBJECT_ID('tempdb..#LogProc') IS NULL
+        CREATE TABLE #LogProc(LogID int Primary Key NOT NULL)
+    SET @ProcedureName = '[' + OBJECT_SCHEMA_NAME(@@PROCID)+'].['+OBJECT_NAME(@@PROCID)+']'
+    SET @ProcedureParams =
+        '@dwh_session_id=' + ISNULL(LTRIM(STR(@dwh_session_id)),'NULL')
+
+    EXEC [audit].[sp_log_Start] @AuditProcEnable = @AuditProcEnable, @ProcedureName = @ProcedureName, @ProcedureParams = @ProcedureParams, @LogID = @LogID OUTPUT
+END
 BEGIN TRY
 
     BEGIN TRANSACTION
@@ -24,10 +36,10 @@ BEGIN TRY
     UPDATE [dwh_session] SET dwh_session_state_id = 6
     WHERE dwh_session_id = @dwh_session_id
     COMMIT TRANSACTION
-    IF @ErrMessage IS NULL SET @ErrMessage = ''
+    IF @ErrorMessage IS NULL SET @ErrorMessage = ''
 END TRY
 BEGIN CATCH
-    SELECT @ErrMessage = ERROR_MESSAGE()
+    SELECT @ErrorMessage = ERROR_MESSAGE()
 
     IF XACT_STATE() <> 0 AND @@TRANCOUNT > 0 
     BEGIN
@@ -37,13 +49,10 @@ BEGIN CATCH
     INSERT [dwh_session_log] ( dwh_session_id, [dwh_session_state_id], [error_message])
     SELECT dwh_session_id = @dwh_session_id,
         [dwh_session_state_id] = 3,
-        [error_message] = 'ArchiveTables Error: ' +@ErrMessage
-    IF XACT_STATE() != -1 
-      BEGIN
-        IF (@@TRANCOUNT > 0 ) ROLLBACK TRANSACTION
-      END
+        [error_message] = 'ArchiveTables Error: ' + @ErrorMessage
+    EXEC [audit].[sp_log_Finish] @LogID = @LogID, @RowCount = @RowCount, @ErrorMessage = @ErrorMessage
 
-    RAISERROR( N'Error: [%s].', 16, 1, @ErrMessage)
+    RAISERROR( N'Error: [%s].', 16, 1, @ErrorMessage)
     RETURN -1
 END CATCH
 END

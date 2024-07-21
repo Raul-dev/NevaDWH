@@ -6,8 +6,20 @@ BEGIN
 SET XACT_ABORT OFF
 SET CONCAT_NULL_YIELDS_NULL ON
 SET NOCOUNT ON
+DECLARE @LogID int, @ProcedureName varchar(510), @ProcedureParams varchar(max), @ProcedureInfo varchar(max), @AuditProcEnable nvarchar(256)
+SET @AuditProcEnable = [dbo].[fn_GetSettingValue]('AuditProcAll')
+IF @AuditProcEnable IS NOT NULL 
+BEGIN
+    IF OBJECT_ID('tempdb..#LogProc') IS NULL
+        CREATE TABLE #LogProc(LogID int Primary Key NOT NULL)
+    SET @ProcedureName = '[' + OBJECT_SCHEMA_NAME(@@PROCID)+'].['+OBJECT_NAME(@@PROCID)+']'
+    SET @ProcedureParams =
+        '@session_id=' + ISNULL(LTRIM(STR(@session_id)),'NULL')
 
-DECLARE @ErrMessage nvarchar(4000)
+    EXEC [audit].[sp_log_Start] @AuditProcEnable = @AuditProcEnable, @ProcedureName = @ProcedureName, @ProcedureParams = @ProcedureParams, @LogID = @LogID OUTPUT
+END
+
+DECLARE @ErrorMessage varchar(4000)
 BEGIN TRY
 DECLARE @start_date datetime
 DECLARE @LocalCount bigint
@@ -64,20 +76,23 @@ DECLARE @LocalCount bigint
         ) a
     SET @LocalCount= ROWCOUNT_BIG ( ) 
     SELECT @RowCount = @RowCount + @LocalCount
+    EXEC [audit].[sp_log_Finish] @LogID = @LogID, @RowCount = @RowCount
 END TRY
 BEGIN CATCH
-    SELECT @ErrMessage = ERROR_MESSAGE()
+    SELECT @ErrorMessage = ERROR_MESSAGE()
     IF XACT_STATE() <> 0 AND @@TRANCOUNT > 0 
     BEGIN
          ROLLBACK TRANSACTION
     END
 
+    EXEC [audit].[sp_log_Finish] @LogID = @LogID, @RowCount = @RowCount, @ErrorMessage = @ErrorMessage
+
     INSERT [dbo].[session_log] ( session_id, [session_state_id], [error_message])
     SELECT session_id = @session_id,
         [session_state_id] = 3,
-        [error_message] = 'ETL rekey [odins_DIM_Товары]. Error: ' +@ErrMessage
+        [error_message] = 'ETL rekey [odins_DIM_Товары]. Error: ' +@ErrorMessage
 
-    RAISERROR( N'Error: [%s].', 16, 1, @ErrMessage)
+    RAISERROR( N'Error: [%s].', 16, 1, @ErrorMessage)
     RETURN -1
 END CATCH
 

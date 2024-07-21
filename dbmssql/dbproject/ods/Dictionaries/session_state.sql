@@ -42,3 +42,23 @@ BEGIN
     SELECT 0,1,5,NULL
     SET IDENTITY_INSERT [session] OFF
 END
+
+IF NOT EXISTS(SELECT 1 FROM [dbo].[Setting] WHERE SettingID = 'AuditProcAll' )
+INSERT INTO [dbo].[Setting] (SettingID, StrValue) values('AuditProcAll', N'AuditProcAll')
+
+IF EXISTS (SELECT * FROM sys.servers WHERE NAME = N'LinkSRVOds' )    
+    EXECUTE sp_dropserver @server = 'LinkSRVOds'
+
+IF NOT EXISTS (SELECT * FROM sys.servers WHERE NAME = N'LinkSRVOds' )
+BEGIN
+    DECLARE @database VARCHAR(200) = DB_NAME();
+
+    EXECUTE sp_addlinkedserver @server = 'LinkSRVOds',  
+                               @srvproduct = ' ',
+                               @provider = 'SQLNCLI', 
+                               @datasrc = @@SERVERNAME, 
+                               @catalog = @database
+END
+
+EXEC sp_serveroption LinkSRVOds, 'RPC OUT', 'TRUE'
+EXEC sp_serveroption LinkSRVOds, 'remote proc transaction promotion', 'FALSE'

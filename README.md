@@ -43,6 +43,10 @@ airflow
 
 ![1714900362600](./doc/odinc.png)
 
+В версии MSSQL есть отключаемый лог процедур для отладки процессов загрузки данных, который через Linked server LinkSRVLogLanding c опцией remote proc transaction promotion =false со всех 3х баз (Ods, Dwh, Landing)) сохраняется в общей таблице [nevadwh_landing].[audit].[LogProcedures]. Лог позволяет видеть подчиненые вызовы процедур, а так же их параметры для отладки.
+
+![Proc log](./doc/log.png)
+
 Управление сервисами ODS и Landing:
 
 [http://localhost:8090/swagger]()

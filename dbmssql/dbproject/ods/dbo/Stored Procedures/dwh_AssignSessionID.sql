@@ -1,9 +1,21 @@
 CREATE PROCEDURE dwh_AssignSessionID
     @dwh_session_id bigint = NULL OUTPUT, -- @dwh_session_id = -1 create new package
     @RowCount       int = NULL OUTPUT,
-    @ErrMessage     varchar(MAX) = NULL OUTPUT
+    @ErrorMessage   varchar(MAX) = NULL OUTPUT
 AS
 BEGIN
+DECLARE @LogID int, @ProcedureName varchar(510), @ProcedureParams varchar(max), @ProcedureInfo varchar(max), @AuditProcEnable nvarchar(256)
+SET @AuditProcEnable = [dbo].[fn_GetSettingValue]('AuditProcAll')
+IF @AuditProcEnable IS NOT NULL 
+BEGIN
+    IF OBJECT_ID('tempdb..#LogProc') IS NULL
+        CREATE TABLE #LogProc(LogID int Primary Key NOT NULL)
+    SET @ProcedureName = '[' + OBJECT_SCHEMA_NAME(@@PROCID)+'].['+OBJECT_NAME(@@PROCID)+']'
+    SET @ProcedureParams =
+         '@dwh_session_id=' + ISNULL(LTRIM(STR(@dwh_session_id)),'NULL')
+
+    EXEC [audit].[sp_log_Start] @AuditProcEnable = @AuditProcEnable, @ProcedureName = @ProcedureName, @ProcedureParams = @ProcedureParams, @LogID = @LogID OUTPUT
+END
 SET XACT_ABORT OFF
 SET CONCAT_NULL_YIELDS_NULL ON
 SET NOCOUNT ON
@@ -18,11 +30,12 @@ BEGIN TRY
     IF NOT @dwh_session_id IS NULL AND @dwh_session_id != -1
     BEGIN
 
-        SELECT s.dwh_session_id, sum(row_count) as row_count, @ErrMessage AS ErrMessage,         MAX(s.create_session) AS create_session
+        SELECT s.dwh_session_id, sum(row_count) as row_count, @ErrorMessage AS ErrMessage,         MAX(s.create_session) AS create_session
         FROM dwh_session s
             INNER JOIN [dbo].[dwh_processing_details] p ON p.dwh_session_id = s.dwh_session_id
         WHERE dwh_session_state_id = 2 AND s.dwh_session_id = @dwh_session_id
         GROUP BY s.dwh_session_id
+        EXEC [audit].[sp_log_Finish] @LogID = @LogID, @RowCount = 1, @ProcedureInfo = 'RETURN Line 39'
         RETURN 0;
     END
     IF @dwh_session_id IS NULL OR @dwh_session_id = -1
@@ -30,7 +43,7 @@ BEGIN TRY
         SELECT @dwh_session_id = min(dwh_session_id) FROM dwh_session WHERE ISNULL(@dwh_session_id, 0) != -1 AND dwh_session_state_id = 2
         IF NOT @dwh_session_id IS NULL
         BEGIN
-            SELECT dwh_session_id, sum(row_count) as row_count, @ErrMessage AS ErrMessage, (SELECT create_session FROM dwh_session WHERE dwh_session_id = @dwh_session_id) as create_session FROM [dbo].[dwh_processing_details] WHERE dwh_session_id = @dwh_session_id
+            SELECT dwh_session_id, sum(row_count) as row_count, @ErrorMessage AS ErrMessage, (SELECT create_session FROM dwh_session WHERE dwh_session_id = @dwh_session_id) as create_session FROM [dbo].[dwh_processing_details] WHERE dwh_session_id = @dwh_session_id
             GROUP BY dwh_session_id
             RETURN;
         END
@@ -298,12 +311,14 @@ COMMIT TRANSACTION
     COMMIT TRANSACTION
     END
 
-    SELECT @dwh_session_id AS dwh_session_id, @RowCount AS row_count, @ErrMessage AS ErrMessage, (SELECT create_session FROM dwh_session WHERE dwh_session_id = @dwh_session_id) as create_session
+    EXEC [audit].[sp_log_Finish] @LogID = @LogID, @RowCount = @LocalRowCount
+
+    SELECT @dwh_session_id AS dwh_session_id, @RowCount AS row_count, @ErrorMessage AS ErrMessage, (SELECT create_session FROM dwh_session WHERE dwh_session_id = @dwh_session_id) as create_session
 
 RETURN 0
 END TRY
 BEGIN CATCH
-    SELECT @ErrMessage = ERROR_MESSAGE()
+    SELECT @ErrorMessage = ERROR_MESSAGE()
     IF XACT_STATE() <> 0 AND @@TRANCOUNT > 0 
     BEGIN
         ROLLBACK TRANSACTION
@@ -314,10 +329,11 @@ BEGIN CATCH
     INSERT [dwh_session_log] ([dwh_session_id], [dwh_session_state_id], [error_message])
     SELECT [dwh_session_id]    = @dwh_session_id,
         [dwh_session_state_id] = 3,
-        [dwh_error_message]    = 'AssignSessionID Error: ' + @ErrMessage
+        [dwh_error_message]    = 'AssignSessionID Error: ' + @ErrorMessage
+    SET @RowCount = @@ROWCOUNT
+    EXEC [audit].[sp_log_Finish] @LogID = @LogID, @RowCount = @RowCount, @ErrorMessage = @ErrorMessage
 
-    --RAISERROR( N'Error: [%s].', 16, 1, @ErrMessage)
-    SELECT @dwh_session_id, -1 as row_count, @ErrMessage AS ErrMessage
+    SELECT @dwh_session_id, -1 as row_count, @ErrorMessage AS ErrMessage
     RETURN -1
 END CATCH
 

@@ -6,8 +6,20 @@ BEGIN
 SET XACT_ABORT OFF
 SET CONCAT_NULL_YIELDS_NULL ON
 SET NOCOUNT ON
+DECLARE @LogID int, @ProcedureName varchar(510), @ProcedureParams varchar(max), @ProcedureInfo varchar(max), @AuditProcEnable nvarchar(256)
+SET @AuditProcEnable = [dbo].[fn_GetSettingValue]('AuditProcAll')
+IF @AuditProcEnable IS NOT NULL 
+BEGIN
+    IF OBJECT_ID('tempdb..#LogProc') IS NULL
+        CREATE TABLE #LogProc(LogID int Primary Key NOT NULL)
+    SET @ProcedureName = '[' + OBJECT_SCHEMA_NAME(@@PROCID)+'].['+OBJECT_NAME(@@PROCID)+']'
+    SET @ProcedureParams =
+        '@session_id=' + ISNULL(LTRIM(STR(@session_id)),'NULL')
 
-DECLARE @ErrMessage nvarchar(4000)
+    EXEC [audit].[sp_log_Start] @AuditProcEnable = @AuditProcEnable, @ProcedureName = @ProcedureName, @ProcedureParams = @ProcedureParams, @LogID = @LogID OUTPUT
+END
+
+DECLARE @ErrorMessage varchar(4000)
 BEGIN TRY
 
     UPDATE trg SET
@@ -57,9 +69,10 @@ BEGIN TRY
         [Контакт]
     FROM [staging].[DIM_Клиенты]
     WHERE staging_id = id
+    EXEC [audit].[sp_log_Finish] @LogID = @LogID, @RowCount = @RowCount
 END TRY
 BEGIN CATCH
-    SELECT @ErrMessage = ERROR_MESSAGE()
+    SELECT @ErrorMessage = ERROR_MESSAGE()
     IF XACT_STATE() <> 0 AND @@TRANCOUNT > 0 
     BEGIN
          ROLLBACK TRANSACTION
@@ -68,9 +81,11 @@ BEGIN CATCH
     INSERT [dbo].[session_log] ( session_id, [session_state_id], [error_message])
     SELECT session_id = @session_id,
         [session_state_id] = 3,
-        [error_message] = 'Table [bulk].[odins_DIM_Клиенты]. Error: ' +@ErrMessage
+        [error_message] = 'Table [bulk].[odins_DIM_Клиенты]. Error: ' + @ErrorMessage
 
-    RAISERROR( N'Error: [%s].', 16, 1, @ErrMessage)
+    EXEC [audit].[sp_log_Finish] @LogID = @LogID, @RowCount = @RowCount, @ErrorMessage = @ErrorMessage
+
+    RAISERROR( N'Error: [%s].', 16, 1, @ErrorMessage)
     RETURN -1
 END CATCH
 

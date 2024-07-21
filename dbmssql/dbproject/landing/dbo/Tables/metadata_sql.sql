@@ -1,7 +1,7 @@
 ﻿CREATE TABLE [dbo].[metadata_sql]
 (
     [id] [bigint] NOT NULL PRIMARY KEY,
-     [guid] [uniqueidentifier] NULL,
+    [guid] [uniqueidentifier] NULL,
     [column_order] int not null,
     [s_schema_type] nvarchar(128)  NOT NULL,
     [s_table_name] nvarchar(128)  NOT NULL,

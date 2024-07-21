@@ -5,6 +5,20 @@ CREATE PROCEDURE [dbo].[dwh_SaveSessionState]
     @dwh_session_state_id tinyint = 1,
     @error_message        varchar(4000) = NULL
 AS
+    SET CONCAT_NULL_YIELDS_NULL ON
+    DECLARE @LogID int, @ProcedureName varchar(510), @ProcedureParams varchar(max), @ProcedureInfo varchar(max), @AuditProcEnable nvarchar(256), @RowCount int
+    SET @AuditProcEnable = [dbo].[fn_GetSettingValue]('AuditProcAll')
+    IF @AuditProcEnable IS NOT NULL 
+    BEGIN
+        IF OBJECT_ID('tempdb..#LogProc') IS NULL
+            CREATE TABLE #LogProc(LogID int Primary Key NOT NULL)
+        SET @ProcedureName = '[' + OBJECT_SCHEMA_NAME(@@PROCID)+'].['+OBJECT_NAME(@@PROCID)+']'                        
+        SET @ProcedureParams =
+            '@dwh_session_id='+ISNULL(LTRIM(STR(@dwh_session_id)),'NULL')  + ', ' +
+            '@data_source_id='+ISNULL(LTRIM(STR(@data_source_id)),'NULL') + ', ' +
+            '@dwh_session_state_id='+ISNULL(LTRIM(STR(@dwh_session_state_id)),'NULL')
+        EXEC [audit].[sp_log_Start] @AuditProcEnable = @AuditProcEnable, @ProcedureName = @ProcedureName, @ProcedureParams = @ProcedureParams, @LogID = @LogID OUTPUT
+    END
 
     IF(@dwh_session_id IS NULL)
     BEGIN
@@ -32,3 +46,6 @@ AS
                 [dt_update]            = GetDate()
         WHERE dwh_session_id = @dwh_session_id
     END
+
+    SET @RowCount = @@TRANCOUNT
+    EXEC [audit].[sp_log_Finish] @LogID = @LogID, @RowCount = @RowCount

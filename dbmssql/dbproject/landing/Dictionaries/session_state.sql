@@ -42,3 +42,42 @@ BEGIN
     SELECT 0,1,5,NULL
     SET IDENTITY_INSERT [session] OFF
 END
+
+IF NOT EXISTS(SELECT 1 FROM [dbo].[Setting] WHERE SettingID = 'AuditProcAll' )
+    INSERT INTO [dbo].[Setting] (SettingID, StrValue) values('AuditProcAll', N'AuditProcAll')
+
+
+IF EXISTS (SELECT * FROM sys.servers WHERE NAME = N'LinkSRVLogLanding' )    
+    EXECUTE sp_dropserver @server = 'LinkSRVLogLanding'
+
+DECLARE @database VARCHAR(200) = DB_NAME();
+IF NOT EXISTS (SELECT * FROM sys.servers WHERE NAME = N'LinkSRVLogLanding' )
+BEGIN
+    
+    EXECUTE sp_addlinkedserver @server = 'LinkSRVLogLanding',  
+                               @srvproduct = ' ',
+                               @provider = 'SQLNCLI', 
+                               @datasrc = @@SERVERNAME, 
+                               @catalog = @database
+    
+END
+
+EXEC sp_serveroption LinkSRVLogLanding, 'RPC OUT', 'TRUE'
+EXEC sp_serveroption LinkSRVLogLanding, 'remote proc transaction promotion', 'FALSE'
+
+IF EXISTS (SELECT * FROM sys.servers WHERE NAME = N'LinkSRVLanding' )    
+    EXECUTE sp_dropserver @server = 'LinkSRVLanding'
+
+IF NOT EXISTS (SELECT * FROM sys.servers WHERE NAME = N'LinkSRVLanding' )
+BEGIN
+    
+    EXECUTE sp_addlinkedserver @server = 'LinkSRVLanding',  
+                               @srvproduct = ' ',
+                               @provider = 'SQLNCLI', 
+                               @datasrc = @@SERVERNAME, 
+                               @catalog = @database
+    
+END
+
+EXEC sp_serveroption LinkSRVLanding, 'RPC OUT', 'TRUE'
+EXEC sp_serveroption LinkSRVLanding, 'remote proc transaction promotion', 'FALSE'

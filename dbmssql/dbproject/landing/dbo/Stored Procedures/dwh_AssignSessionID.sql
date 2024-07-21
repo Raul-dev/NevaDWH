@@ -1,7 +1,7 @@
 CREATE PROCEDURE dwh_AssignSessionID
     @dwh_session_id bigint = NULL OUTPUT, -- @dwh_session_id = -1 create new package
     @RowCount       int = NULL OUTPUT,
-    @ErrMessage     varchar(4000) = NULL OUTPUT
+    @ErrorMessage   varchar(4000) = NULL OUTPUT
 AS
 BEGIN
 SET XACT_ABORT OFF
@@ -18,7 +18,7 @@ BEGIN TRY
 RETURN 0
 END TRY
 BEGIN CATCH
-    SELECT @ErrMessage = ERROR_MESSAGE()
+    SELECT @ErrorMessage = ERROR_MESSAGE()
     IF XACT_STATE() <> 0 AND @@TRANCOUNT > 0 
     BEGIN
          ROLLBACK TRANSACTION
@@ -29,10 +29,10 @@ BEGIN CATCH
     INSERT [dwh_session_log] ( dwh_session_id, [dwh_session_state_id], [error_message])
     SELECT dwh_session_id = @dwh_session_id,
         [dwh_session_state_id] = 3,
-        [dwh_error_message] = 'AssignSessionID Error: ' +@ErrMessage
+        [dwh_error_message] = 'AssignSessionID Error: ' + @ErrorMessage
 
-    --RAISERROR( N'Error: [%s].', 16, 1, @ErrMessage)
-    SELECT @dwh_session_id, -1 as row_count, @ErrMessage AS ErrMessage
+    --RAISERROR( N'Error: [%s].', 16, 1, @ErrorMessage)
+    SELECT @dwh_session_id, -1 as row_count, @ErrorMessage AS ErrMessage
     RETURN -1
 END CATCH
 

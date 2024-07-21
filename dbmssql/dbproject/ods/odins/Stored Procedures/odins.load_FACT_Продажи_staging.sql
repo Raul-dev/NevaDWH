@@ -1,6 +1,17 @@
 CREATE PROCEDURE [odins].[load_FACT_Продажи_staging]
 AS
 BEGIN
+DECLARE @LogID int, @ProcedureName varchar(510), @ProcedureParams varchar(max), @ProcedureInfo varchar(max), @AuditProcEnable nvarchar(256), @RowCount int
+SET @AuditProcEnable = [dbo].[fn_GetSettingValue]('AuditProcAll')
+IF @AuditProcEnable IS NOT NULL 
+BEGIN
+    IF OBJECT_ID('tempdb..#LogProc') IS NULL
+        CREATE TABLE #LogProc(LogID int Primary Key NOT NULL)
+    SET @ProcedureName = '[' + OBJECT_SCHEMA_NAME(@@PROCID)+'].['+OBJECT_NAME(@@PROCID)+']'
+    SET @ProcedureParams =''
+
+    EXEC [audit].[sp_log_Start] @AuditProcEnable = @AuditProcEnable, @ProcedureName = @ProcedureName, @ProcedureParams = @ProcedureParams, @LogID = @LogID OUTPUT
+END
 
     MERGE INTO [odins].[FACT_Продажи] trg
     USING 
@@ -71,6 +82,8 @@ BEGIN
     [dt_update]
     FROM staging.[FACT_Продажи] b
     CROSS APPLY b.[FACT_Продажи.Товары].nodes('/Товары') AS X(C);
+SET @RowCount = @@ROWCOUNT
+EXEC [audit].[sp_log_Finish] @LogID = @LogID, @RowCount = @RowCount
 END
 
 GO

@@ -6,8 +6,20 @@ BEGIN
 SET XACT_ABORT OFF
 SET CONCAT_NULL_YIELDS_NULL ON
 SET NOCOUNT ON
+DECLARE @LogID int, @ProcedureName varchar(510), @ProcedureParams varchar(max), @ProcedureInfo varchar(max), @AuditProcEnable nvarchar(256)
+SET @AuditProcEnable = [dbo].[fn_GetSettingValue]('AuditProcAll')
+IF @AuditProcEnable IS NOT NULL 
+BEGIN
+    IF OBJECT_ID('tempdb..#LogProc') IS NULL
+        CREATE TABLE #LogProc(LogID int Primary Key NOT NULL)
+    SET @ProcedureName = '[' + OBJECT_SCHEMA_NAME(@@PROCID)+'].['+OBJECT_NAME(@@PROCID)+']'
+    SET @ProcedureParams =
+        '@session_id=' + ISNULL(LTRIM(STR(@session_id)),'NULL')
 
-DECLARE @ErrMessage nvarchar(4000)
+    EXEC [audit].[sp_log_Start] @AuditProcEnable = @AuditProcEnable, @ProcedureName = @ProcedureName, @ProcedureParams = @ProcedureParams, @LogID = @LogID OUTPUT
+END
+
+DECLARE @ErrorMessage varchar(4000)
 BEGIN TRY
     DECLARE @start_date datetime
     DECLARE @dwh_session_id bigint, @LastTargetID bigint, @LocalCount bigint
@@ -20,6 +32,7 @@ BEGIN TRY
         SET @LastTargetID = @LastTargetID + 1
         DBCC CHECKIDENT('[staging].[DIM_Товары]', RESEED, @LastTargetID) WITH NO_INFOMSGS
     END
+
     SELECT @start_date = [create_session],
         @dwh_session_id = [dwh_session_id],
         @source_name = (SELECT [name] FROM [dbo].[data_source] d WHERE d.data_source_id =  s.data_source_id)
@@ -54,14 +67,15 @@ BEGIN TRY
         [Описание],
         @session_id AS [session_id_update],
         @start_date AS [dt_update]
-    FROM [$(ods)].[odins].[DIM_Товары_history] tmp
+    FROM [$(LinkSRVOds)].[$(ods)].[odins].[DIM_Товары_history] tmp
     WHERE [dwh_session_id] = @dwh_session_id
     SET @LocalCount= ROWCOUNT_BIG ( ) 
     SELECT @RowCount = @RowCount + @LocalCount
 
+    EXEC [audit].[sp_log_Finish] @LogID = @LogID, @RowCount = @RowCount
 END TRY
 BEGIN CATCH
-    SELECT @ErrMessage = ERROR_MESSAGE()
+    SELECT @ErrorMessage = ERROR_MESSAGE()
     IF XACT_STATE() <> 0 AND @@TRANCOUNT > 0 
     BEGIN
          ROLLBACK TRANSACTION
@@ -70,9 +84,11 @@ BEGIN CATCH
     INSERT [dbo].[session_log] ([session_id], [session_state_id], [error_message])
     SELECT [session_id] = @session_id,
         [session_state_id] = 3,
-        [error_message] = 'ETL transfer [odins_DIM_Товары]. Error: ' +@ErrMessage
+        [error_message] = 'ETL transfer [odins_DIM_Товары]. Error: ' +@ErrorMessage
 
-    RAISERROR( N'Error: [%s].', 16, 1, @ErrMessage)
+    EXEC [audit].[sp_log_Finish] @LogID = @LogID, @RowCount = @RowCount, @ErrorMessage = @ErrorMessage
+
+    RAISERROR( N'Error: [%s].', 16, 1, @ErrorMessage)
     RETURN -1
 END CATCH
 

@@ -1,7 +1,7 @@
 ﻿CREATE PROCEDURE [dbo].[load_metadata]
-    @session_id INT = NULL,
-    @RowCount INT = NULL OUTPUT,
-    @ErrMessage nvarchar(4000) = NULL OUTPUT
+    @session_id   int = NULL,
+    @RowCount     int = NULL OUTPUT,
+    @ErrorMessage varchar(4000) = NULL OUTPUT
 AS
 BEGIN
 SET XACT_ABORT OFF
@@ -80,7 +80,7 @@ BEGIN TRANSACTION
 COMMIT TRANSACTION
 END TRY
 BEGIN CATCH
-    SELECT @ErrMessage = ERROR_MESSAGE()
+    SELECT @ErrorMessage = ERROR_MESSAGE()
     
     IF XACT_STATE() <> 0  AND @@TRANCOUNT > 0 
     BEGIN
@@ -89,15 +89,15 @@ BEGIN CATCH
     INSERT session_log ( [session_id], [session_state_id], [error_message], [dt_create])
     SELECT COALESCE(@session_id,(SELECT MAX([session_id]) as [session_id] FROM [session] )) as [session_id],
         4 as session_state_id,
-        'Table metadata_buffer. Error: ' + @ErrMessage as [error_message],
+        'Table metadata_buffer. Error: ' + @ErrorMessage as [error_message],
         GetDate() as dt_create
         
-    IF NOT @ErrMessage like '%deadlock%' 
+    IF NOT @ErrorMessage like '%deadlock%' 
         UPDATE b SET [is_error] = 1
         FROM metadata_buffer b
             INNER JOIN @tmp_metadata t ON b.buffer_id = t.buffer_id
 
-    print @ErrMessage
+    print @ErrorMessage
     RETURN -1
 END CATCH
 END

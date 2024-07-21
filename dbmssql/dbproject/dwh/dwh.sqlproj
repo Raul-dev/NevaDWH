@@ -71,6 +71,9 @@
     <Folder Include="target\Stored Procedures\" />
     <Folder Include="target\Tables\" />
     <Folder Include="Dictionaries" />
+    <Folder Include="audit" />
+    <Folder Include="audit\Stored Procedures" />
+    <Folder Include="audit\Tables" />
   </ItemGroup>
 <ItemGroup>
     <Build Include="dbo\Tables\session_state.sql" />
@@ -80,11 +83,21 @@
     <Build Include="Security\bulk.sql" />
     <Build Include="Security\staging.sql" />
     <Build Include="Security\target.sql" />
+    <Build Include="Security\audit.sql" />
     <Build Include="dbo\Tables\dim_date.sql" />
     <Build Include="dbo\Stored Procedures\sp_FillDimDate.sql" />
     <None Include="Dictionaries\dbo.session_state.sql" />
-    <Build Include="dbo\Stored Procedures\sp_SaveSessionState.sql" />    <Build Include="dbo\Stored Procedures\fn_GetMaxDate.sql" />
+    <Build Include="dbo\Stored Procedures\sp_SaveSessionState.sql" />
+    <Build Include="dbo\Stored Procedures\fn_GetMaxDate.sql" />
     <Build Include="dbo\Stored Procedures\fn_GetMinDate.sql" />
+    <Build Include="dbo\Tables\Setting.sql" />    <Build Include="dbo\Functions\fn_GetSettingValue.sql" />     <Build Include="dbo\Functions\fn_GetSettingInt.sql" />     <Build Include="audit\Tables\LogProcedures.sql" />
+    <Build Include="audit\Stored Procedures\sp_lnk_Insert.sql" />
+    <Build Include="audit\Stored Procedures\sp_lnk_Update.sql" />
+    <Build Include="audit\Stored Procedures\sp_log_Error.sql" />
+    <Build Include="audit\Stored Procedures\sp_log_Finish.sql" />
+    <Build Include="audit\Stored Procedures\sp_log_Info.sql" />
+    <Build Include="audit\Stored Procedures\sp_log_Start.sql" />
+    <Build Include="audit\Stored Procedures\sp_Print.sql" />
     <Build Include="staging\Stored Procedures\sp_DIM_Валюты_rekey.sql" />
     <Build Include="staging\Stored Procedures\sp_DIM_Валюты_transfer.sql" />
     <Build Include="staging\Stored Procedures\sp_DIM_Валюты_publish.sql" />
@@ -110,7 +123,50 @@
     <Build Include="staging\Tables\staging.FACT_Продажи.Товары.sql" />
     <Build Include="target\Tables\target.FACT_Продажи.Товары.sql" />
   </ItemGroup>
-  <ItemGroup>    <PostDeploy Include="Dictionaries\Script.PostDeployment.sql" />  </ItemGroup>  <ItemGroup>    <ProjectReference Include="..\ods\ods.sqlproj">      <Name>ods</Name>      <Project>{622e77ef-2e99-4fb8-aa03-f84361b27f07}</Project>      <Private>True</Private>      <SuppressMissingDependenciesErrors>False</SuppressMissingDependenciesErrors>      <DatabaseSqlCmdVariable>ods</DatabaseSqlCmdVariable>    </ProjectReference>  </ItemGroup>  <ItemGroup>    <SqlCmdVariable Include="ods">      <DefaultValue>ods</DefaultValue>      <Value>$(SqlCmdVar__1)</Value>    </SqlCmdVariable>  </ItemGroup>  <ItemGroup>
+  <ItemGroup>
+    <PostDeploy Include="Dictionaries\Script.PostDeployment.sql" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\landing\landing.sqlproj">
+      <Name>landing</Name>
+      <Project>{c2ebe3c4-9129-4aff-b058-f9a5f7cd5273}</Project>
+      <Private>True</Private>
+      <SuppressMissingDependenciesErrors>False</SuppressMissingDependenciesErrors>
+      <DatabaseSqlCmdVariable>landing</DatabaseSqlCmdVariable>
+      <ServerSqlCmdVariable>LinkSRVLogLanding</ServerSqlCmdVariable>
+    </ProjectReference>
+    <ProjectReference Include="..\ods\ods.sqlproj">
+      <Name>ods</Name>
+      <Project>{622e77ef-2e99-4fb8-aa03-f84361b27f07}</Project>
+      <Private>True</Private>
+      <SuppressMissingDependenciesErrors>False</SuppressMissingDependenciesErrors>
+      <DatabaseSqlCmdVariable>ods</DatabaseSqlCmdVariable>
+      <ServerSqlCmdVariable>LinkSRVOds</ServerSqlCmdVariable>
+    </ProjectReference>
+  </ItemGroup>
+  <ItemGroup>
+    <SqlCmdVariable Include="landing">
+      <DefaultValue>landing</DefaultValue>
+      <Value>$(SqlCmdVar__3)</Value>
+    </SqlCmdVariable>
+    <SqlCmdVariable Include="LinkSRVLogLanding">
+      <DefaultValue>OtherServer</DefaultValue>
+      <Value>$(SqlCmdVar__4)</Value>
+    </SqlCmdVariable>
+    <SqlCmdVariable Include="LinkSRVOds">
+      <DefaultValue>OtherServer</DefaultValue>
+      <Value>$(SqlCmdVar__6)</Value>
+    </SqlCmdVariable>
+    <SqlCmdVariable Include="ods">
+      <DefaultValue>ods</DefaultValue>
+      <Value>$(SqlCmdVar__5)</Value>
+    </SqlCmdVariable>
+    <SqlCmdVariable Include="LinkSRVLanding">
+      <DefaultValue>OtherServer</DefaultValue>
+      <Value>$(SqlCmdVar__7)</Value>
+    </SqlCmdVariable>
+  </ItemGroup>
+  <ItemGroup>
     <ArtifactReference Include="$(DacPacRootPath)\Extensions\Microsoft\SQLDB\Extensions\SqlServer\150\SqlSchemas\master.dacpac">
       <HintPath>$(DacPacRootPath)\Extensions\Microsoft\SQLDB\Extensions\SqlServer\150\SqlSchemas\master.dacpac</HintPath>
       <SuppressMissingDependenciesErrors>False</SuppressMissingDependenciesErrors>

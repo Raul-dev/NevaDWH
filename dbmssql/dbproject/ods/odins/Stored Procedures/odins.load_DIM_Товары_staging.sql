@@ -1,6 +1,17 @@
 CREATE PROCEDURE [odins].[load_DIM_Товары_staging]
 AS
 BEGIN
+DECLARE @LogID int, @ProcedureName varchar(510), @ProcedureParams varchar(max), @ProcedureInfo varchar(max), @AuditProcEnable nvarchar(256), @RowCount int
+SET @AuditProcEnable = [dbo].[fn_GetSettingValue]('AuditProcAll')
+IF @AuditProcEnable IS NOT NULL 
+BEGIN
+    IF OBJECT_ID('tempdb..#LogProc') IS NULL
+        CREATE TABLE #LogProc(LogID int Primary Key NOT NULL)
+    SET @ProcedureName = '[' + OBJECT_SCHEMA_NAME(@@PROCID)+'].['+OBJECT_NAME(@@PROCID)+']'
+    SET @ProcedureParams =''
+
+    EXEC [audit].[sp_log_Start] @AuditProcEnable = @AuditProcEnable, @ProcedureName = @ProcedureName, @ProcedureParams = @ProcedureParams, @LogID = @LogID OUTPUT
+END
 
     MERGE INTO [odins].[DIM_Товары] trg
     USING 
@@ -41,6 +52,8 @@ BEGIN
 
 
 --Sub table
+SET @RowCount = @@ROWCOUNT
+EXEC [audit].[sp_log_Finish] @LogID = @LogID, @RowCount = @RowCount
 END
 
 GO

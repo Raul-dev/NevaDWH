@@ -63,7 +63,11 @@
     <Folder Include="dbo\Tables\" />
     <Folder Include="dbo\Stored Procedures\" />
     <Folder Include="Security\" />
-    <Folder Include="audit\" />    <Folder Include="audit\Stored Procedures\" />    <Folder Include="odins\" />
+    <Folder Include="audit\" />
+    <Folder Include="audit\Stored Procedures\" />
+    <Folder Include="Storage\" />
+    <Folder Include="audit\Tables" />
+	    <Folder Include="odins\" />
     <Folder Include="odins\Stored Procedures\" />
     <Folder Include="odins\Tables\" />
     <Folder Include="Dictionaries" />
@@ -103,6 +107,13 @@
     <Build Include="Storage\InMemory.sql" />
     <Build Include="Storage\fn_filequeueRange.sql" />
     <Build Include="Storage\filequeueRange.sql" />
+    <Build Include="audit\Tables\LogProcedures.sql" />
+    <Build Include="audit\Stored Procedures\sp_lnk_Insert.sql" />
+    <Build Include="audit\Stored Procedures\sp_lnk_Update.sql" />
+    <Build Include="audit\Stored Procedures\sp_log_Error.sql" />
+    <Build Include="audit\Stored Procedures\sp_log_Finish.sql" />
+    <Build Include="audit\Stored Procedures\sp_log_Info.sql" />
+    <Build Include="audit\Stored Procedures\sp_log_Start.sql" />
     <Build Include="audit\Stored Procedures\sp_Print.sql">
       <QuotedIdentifier>Off</QuotedIdentifier>
     </Build>
@@ -153,8 +164,28 @@
   <ItemGroup>
     <ArtifactReference Include="$(DacPacRootPath)\Extensions\Microsoft\SQLDB\Extensions\SqlServer\150\SqlSchemas\master.dacpac">
       <HintPath>$(DacPacRootPath)\Extensions\Microsoft\SQLDB\Extensions\SqlServer\150\SqlSchemas\master.dacpac</HintPath>
-      <SuppressMissingDependenciesErrors>False</SuppressMissingDependenciesErrors>
+      <SuppressMissingDependenciesErrors>True</SuppressMissingDependenciesErrors>
       <DatabaseVariableLiteralValue>master</DatabaseVariableLiteralValue>
     </ArtifactReference>
+  </ItemGroup>
+  <ItemGroup>
+    <SqlCmdVariable Include="landing">
+      <DefaultValue>landing</DefaultValue>
+      <Value>$(SqlCmdVar__2)</Value>
+    </SqlCmdVariable>
+    <SqlCmdVariable Include="LinkSRVLogLanding">
+      <DefaultValue>OtherServer</DefaultValue>
+      <Value>$(SqlCmdVar__3)</Value>
+    </SqlCmdVariable>
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\landing\landing.sqlproj">
+      <Name>landing</Name>
+      <Project>{c2ebe3c4-9129-4aff-b058-f9a5f7cd5273}</Project>
+      <Private>True</Private>
+      <SuppressMissingDependenciesErrors>False</SuppressMissingDependenciesErrors>
+      <DatabaseSqlCmdVariable>landing</DatabaseSqlCmdVariable>
+      <ServerSqlCmdVariable>LinkSRVLogLanding</ServerSqlCmdVariable>
+    </ProjectReference>
   </ItemGroup>
 </Project>
