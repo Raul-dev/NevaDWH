@@ -9,7 +9,7 @@ BEGIN
         WHERE session_id = @@SPID AND transaction_isolation_level = 5)
         --SNAPSHOT ISOLATION LEVEL Remote access is not supported for transaction isolation level "SNAPSHOT".
 
-        EXEC [$(LinkSRVLogLanding)].[$(landing)].[audit].sp_lnk_Update
+        EXEC [audit].sp_lnk_Update
             @LogID         = @LogID,
             @ErrorMessage  = @ErrorMessage
     ELSE
