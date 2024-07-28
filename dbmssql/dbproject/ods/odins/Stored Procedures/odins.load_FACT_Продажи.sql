@@ -23,7 +23,7 @@ END
 SET XACT_ABORT OFF
 SET NOCOUNT ON
 
-SET TRANSACTION ISOLATION LEVEL READ COMMITTED
+SET TRANSACTION ISOLATION LEVEL READ UNCOMMITTED
 SET DEADLOCK_PRIORITY LOW
 DECLARE @MinDate datetime2(4) = DATEFROMPARTS(1900, 01, 01),
     @UpdateDate datetime2(4)  = GetDate(),
@@ -31,32 +31,27 @@ DECLARE @MinDate datetime2(4) = DATEFROMPARTS(1900, 01, 01),
 
 SET @BufferHistoryDays = IIF(@BufferHistoryMode = 2, 10, 30)
 
+DECLARE @LockedList AS TABLE(
+    [buffer_id] bigint Primary key,
+    [msg_id] uniqueidentifier,
+    [RefID] uniqueidentifier,
+    [msgtype_id] tinyint
+)
+DECLARE @LockedListUniq AS TABLE(
+    [buffer_id] bigint Primary key,
+    [RefID] uniqueidentifier
+)
+
 BEGIN TRY
 BEGIN TRANSACTION
 
     IF @AuditProcEnable IS NOT NULL 
         EXEC [audit].[sp_log_Start] @AuditProcEnable = @AuditProcEnable, @ProcedureName = @ProcedureName, @ProcedureParams = @ProcedureParams, @LogID = @LogID OUTPUT
-
-    DECLARE @LockedList AS TABLE(
-        [buffer_id] bigint Primary key,
-        [msg_id] uniqueidentifier,
-        [RefID] uniqueidentifier,
-        [msgtype_id] tinyint
-    )
-    DECLARE @LockedListUniq AS TABLE(
-        [buffer_id] bigint Primary key,
-        [RefID] uniqueidentifier
-    )
-    DECLARE @LockedListTarget AS TABLE(
-        [ods_id] bigint,
-        [RefID] uniqueidentifier
-    )
-
     INSERT INTO @LockedList
     SELECT buffer_id, msg_id, [RefID], msgtype_id
-    FROM [odins].[FACT_Продажи_buffer] b WITH(XLOCK)
+    FROM [odins].[FACT_Продажи_buffer] b 
     WHERE b.[dt_update] = @MinDate
-    SET @RowCount = @@ROWCOUNT;
+    ORDER BY buffer_id    SET @RowCount = @@ROWCOUNT;
 
     IF @RowCount = 0 
     BEGIN
@@ -105,9 +100,8 @@ BEGIN TRANSACTION
     GROUP BY [RefID]
     SET @RowCount = @@ROWCOUNT;
 
-    INSERT INTO @LockedListTarget
-    SELECT [ods_id], b.[RefID]
-    FROM [odins].[FACT_Продажи] b WITH(XLOCK)
+    SELECT DISTINCT tmp = 1 INTO #tmpFACT_Продажи
+    FROM [odins].[FACT_Продажи] b WITH(ROWLOCK,XLOCK)
         INNER JOIN @LockedListUniq ll ON b.[RefID] = ll.[RefID];
 
 

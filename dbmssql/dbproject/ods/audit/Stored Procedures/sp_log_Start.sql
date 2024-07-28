@@ -42,19 +42,36 @@ BEGIN
         
     SET @ProcedureName = LEFT(REPLICATE('  ', @CountIds) + LTRIM(RTRIM(@ProcedureName)), 512)
 
-    EXEC [$(LinkSRVLogLanding)].[$(landing)].[audit].sp_lnk_Insert
-        @MainID           = @MainID,
-        @ParentID         = @ParentID,
-        @StartTime        = @StartTime,
-        @SysUserName      = @SysUserName,
-        @SysHostName      = @SysHostName,
-        @SysDbName        = @SysDbName,
-        @SysAppName       = @SysAppName,
-        @SPID             = @@SPID,
-        @ProcedureName    = @ProcedureName,
-        @ProcedureParams  = @ProcedureParams,
-        @TransactionCount = @@TRANCOUNT,
-        @LogID            = @LogID OUTPUT
+    IF EXISTS ( SELECT 1 FROM sys.dm_exec_sessions WITH(nolock)
+        WHERE session_id = @@SPID AND transaction_isolation_level = 5)
+        --SNAPSHOT ISOLATION LEVEL Remote access is not supported for transaction isolation level "SNAPSHOT".
+        EXEC [audit].sp_lnk_Insert
+            @MainID           = @MainID,
+            @ParentID         = @ParentID,
+            @StartTime        = @StartTime,
+            @SysUserName      = @SysUserName,
+            @SysHostName      = @SysHostName,
+            @SysDbName        = @SysDbName,
+            @SysAppName       = @SysAppName,
+            @SPID             = @@SPID,
+            @ProcedureName    = @ProcedureName,
+            @ProcedureParams  = @ProcedureParams,
+            @TransactionCount = @@TRANCOUNT,
+            @LogID            = @LogID OUTPUT
+    ELSE
+        EXEC [$(LinkSRVLogLanding)].[$(landing)].[audit].sp_lnk_Insert
+            @MainID           = @MainID,
+            @ParentID         = @ParentID,
+            @StartTime        = @StartTime,
+            @SysUserName      = @SysUserName,
+            @SysHostName      = @SysHostName,
+            @SysDbName        = @SysDbName,
+            @SysAppName       = @SysAppName,
+            @SPID             = @@SPID,
+            @ProcedureName    = @ProcedureName,
+            @ProcedureParams  = @ProcedureParams,
+            @TransactionCount = @@TRANCOUNT,
+            @LogID            = @LogID OUTPUT
 
     IF @ParentID IS NULL OR @ParentID < @LogID 
         INSERT #LogProc(LogID) VALUES(@LogID)   

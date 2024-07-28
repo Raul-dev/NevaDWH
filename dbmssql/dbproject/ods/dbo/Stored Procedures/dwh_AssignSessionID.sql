@@ -45,13 +45,16 @@ BEGIN TRY
         BEGIN
             SELECT dwh_session_id, sum(row_count) as row_count, @ErrorMessage AS ErrMessage, (SELECT create_session FROM dwh_session WHERE dwh_session_id = @dwh_session_id) as create_session FROM [dbo].[dwh_processing_details] WHERE dwh_session_id = @dwh_session_id
             GROUP BY dwh_session_id
-            RETURN;
+            EXEC [audit].[sp_log_Finish] @LogID = @LogID, @RowCount = 1, @ProcedureInfo = 'RETURN Line 49'
+            RETURN 0;
         END
         INSERT @T EXEC [dbo].[dwh_SaveSessionState]
         SELECT @dwh_session_id = dwh_session_id FROM @T t
+        SET @ProcedureInfo = 'Create @dwh_session_id='+LTRIM(STR(@dwh_session_id))
+        EXEC [audit].[sp_log_Info] @LogID = @LogID, @ProcedureInfo = @ProcedureInfo
     END
 
-    DECLARE @LocalRowCount INT
+    DECLARE @LocalRowCount int
 BEGIN TRANSACTION
     CREATE TABLE #DIM_Валюты(
         [ods_id] bigint Primary Key,
