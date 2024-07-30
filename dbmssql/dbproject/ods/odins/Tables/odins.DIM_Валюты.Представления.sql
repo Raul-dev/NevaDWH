@@ -1,11 +1,11 @@
 CREATE TABLE [odins].[DIM_Валюты.Представления] (
-    [ods_id]   bigint IDENTITY(1,1) Primary key,
-    [nkey]              uniqueidentifier NOT NULL,
-    [DIM_ВалютыRefID]                            uniqueidentifier,
-    [КодЯзыка]                                 varchar(10),
-    [ПараметрыПрописи]                                varchar(200),
-    [dt_update]     datetime2(4) NOT NULL CONSTRAINT [DF_odins_DIM_Валюты.Представления_target_dt_udate_DEFAULT] DEFAULT (getdate()),
-    [dt_create]     datetime2(4) NOT NULL CONSTRAINT [DF_odins_DIM_Валюты.Представления_target_dt_create_DEFAULT] DEFAULT (getdate())
+    [ods_id]  bigint IDENTITY(1,1) Primary key,
+    [nkey]  uniqueidentifier NOT NULL,
+    [DIM_ВалютыRefID]  uniqueidentifier,
+    [КодЯзыка]  varchar(10),
+    [ПараметрыПрописи]  varchar(200),
+    [dt_update]  datetime2(4) NOT NULL CONSTRAINT [DF_odins_DIM_Валюты.Представления_target_dt_udate_DEFAULT] DEFAULT (getdate()),
+    [dt_create]  datetime2(4) NOT NULL CONSTRAINT [DF_odins_DIM_Валюты.Представления_target_dt_create_DEFAULT] DEFAULT (getdate())
 );
 GO
 CREATE NONCLUSTERED INDEX [idx_DIM_Валюты.Представления_target] ON [odins].[DIM_Валюты.Представления]

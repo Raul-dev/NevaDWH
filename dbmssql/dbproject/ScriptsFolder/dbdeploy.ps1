@@ -11,7 +11,7 @@ Param (
 Import-Module -Name './MSqlDeploymentFunc.psm1' -Verbose  
 $Projectpath = Convert-Path ..
 $ExitCode = 0
-$VSProjectName = "ods"
+$VSProjectName = "landing"
 $LinkSRVLogLanding = "LinkSRVLogLanding"
 $LinkSRVLanding = "LinkSRVLanding"
 $LinkSRVOds = "LinkSRVOds"
@@ -113,9 +113,9 @@ try{
         if($VSProjectName -eq "dwh"){
             break
         } elseif($VSProjectName -eq "ods"){
-            $VSProjectName = "landing"
-        } elseif($VSProjectName -eq "landing"){
             $VSProjectName = "dwh"
+        } elseif($VSProjectName -eq "landing"){
+            $VSProjectName = "ods"
         }
 
         #Write-Host -NoNewLine 'Press any key to continue...';

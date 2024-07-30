@@ -75,20 +75,22 @@ BEGIN TRY
                 TRUNCATE TABLE staging.FACT_Продажи
 
                 SELECT @SqlCmd = N';WITH XMLNAMESPACES (DEFAULT ''http://v8.1c.ru/8.1/data/enterprise/current-config'', ''http://www.w3.org/2001/XMLSchema-instance'' as xsi)
-                INSERT staging.FACT_Продажи(nkey, [FACT_Продажи.Товары], [RefID], [DeletionMark], [Number], [Posted], [Date], [ДатаОтгрузки], [Клиент], [ТипДоставки], [ПримерСоставногоТипа], [ПримерСоставногоТипа_ТипЗначения], dt_update)
+                INSERT staging.FACT_Продажи(nkey, [FACT_Продажи.Товары], [RefID], [DeletionMark], [Number], [Posted], [Date], [DateID], [ДатаОтгрузки], [ДатаОтгрузкиID], [Клиент], [ТипДоставки], [ПримерСоставногоТипа], [ПримерСоставногоТипа_ТипЗначения], dt_update)
                 SELECT
                     [nkey] = X.C.value(''(Ref/text())[1]'', ''uniqueidentifier'') ,
                     [FACT_Продажи.Товары] = X.C.query(''declare default element namespace "http://v8.1c.ru/8.1/data/enterprise/current-config";Товары''),
-                    [RefID]  = X.C.value(''(Ref/text())[1]'', ''varchar(200)''),
-                    [DeletionMark]  = X.C.value(''(DeletionMark/text())[1]'', ''varchar(200)''),
-                    [Number]  = X.C.value(''(Number/text())[1]'', ''varchar(200)''),
-                    [Posted]  = X.C.value(''(Posted/text())[1]'', ''varchar(200)''),
-                    [Date]  = X.C.value(''(Date/text())[1]'', ''varchar(200)''),
-                    [ДатаОтгрузки]  = X.C.value(''(ДатаОтгрузки/text())[1]'', ''varchar(200)''),
-                    [Клиент]  = X.C.value(''(Клиент/text())[1]'', ''varchar(200)''),
-                    [ТипДоставки]  = X.C.value(''(ТипДоставки/text())[1]'', ''varchar(200)''),
-                    [ПримерСоставногоТипа]  = X.C.value(''(ПримерСоставногоТипа/text())[1]'', ''varchar(200)''),
-                    [ПримерСоставногоТипа_ТипЗначения]  = X.C.value(''(ПримерСоставногоТипа/@xsi:type)[1]'', ''varchar(200)''),
+                    [RefID] = X.C.value(''(Ref/text())[1]'', ''uniqueidentifier''),
+                    [DeletionMark] = X.C.value(''(DeletionMark/text())[1]'', ''bit''),
+                    [Number] = X.C.value(''(Number/text())[1]'', ''int''),
+                    [Posted] = X.C.value(''(Posted/text())[1]'', ''bit''),
+                    [Date] = X.C.value(''(Date/text())[1]'', ''datetime2(0)''),
+                    [DateID] = CAST(CONVERT(varchar(25), X.C.value(''(Date/text())[1]'', ''datetime2(0)''), 112) as int),
+                    [ДатаОтгрузки] = X.C.value(''(ДатаОтгрузки/text())[1]'', ''datetime2(0)''),
+                    [ДатаОтгрузкиID] = CAST(CONVERT(varchar(25), X.C.value(''(ДатаОтгрузки/text())[1]'', ''datetime2(0)''), 112) as int),
+                    [Клиент] = X.C.value(''(Клиент/text())[1]'', ''varchar(36)''),
+                    [ТипДоставки] = X.C.value(''(ТипДоставки/text())[1]'', ''varchar(500)''),
+                    [ПримерСоставногоТипа] = X.C.value(''(ПримерСоставногоТипа/text())[1]'', ''varchar(36)''),
+                    [ПримерСоставногоТипа_ТипЗначения] = X.C.value(''(ПримерСоставногоТипа/@xsi:type)[1]'', ''varchar(128)''),
                     [dt_update] = GetDate()
                 FROM OPENROWSET(BULK ''' + @FilePath + ''', SINGLE_BLOB, CODEPAGE = ''65001'') AS T(File_xml)
                     CROSS APPLY (VALUES (CAST(T.File_xml AS xml)) ) AS T2(XMLFromFile)

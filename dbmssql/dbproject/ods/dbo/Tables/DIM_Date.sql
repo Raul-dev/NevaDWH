@@ -1,5 +1,5 @@
 
-CREATE TABLE [Dim_date](
+CREATE TABLE [DIM_Date](
     [DateID] int NOT NULL,
     [FullDateAlternateKey] [date] NOT NULL,
     [DayNumberOfYear] smallint NOT NULL,

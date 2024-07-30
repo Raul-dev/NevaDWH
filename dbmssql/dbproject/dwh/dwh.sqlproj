@@ -84,7 +84,7 @@
     <Build Include="Security\staging.sql" />
     <Build Include="Security\target.sql" />
     <Build Include="Security\audit.sql" />
-    <Build Include="dbo\Tables\dim_date.sql" />
+    <Build Include="target\Tables\DIM_Date.sql" />
     <Build Include="dbo\Stored Procedures\sp_FillDimDate.sql" />
     <None Include="Dictionaries\dbo.session_state.sql" />
     <Build Include="dbo\Stored Procedures\sp_SaveSessionState.sql" />

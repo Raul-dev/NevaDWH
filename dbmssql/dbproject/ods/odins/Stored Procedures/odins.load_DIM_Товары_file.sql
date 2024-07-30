@@ -78,11 +78,11 @@ BEGIN TRY
                 INSERT staging.DIM_Товары(nkey, [RefID], [DeletionMark], [Code], [Description], [Описание], dt_update)
                 SELECT
                     [nkey] = X.C.value(''(Ref/text())[1]'', ''uniqueidentifier'') ,
-                    [RefID]  = X.C.value(''(Ref/text())[1]'', ''varchar(200)''),
-                    [DeletionMark]  = X.C.value(''(DeletionMark/text())[1]'', ''varchar(200)''),
-                    [Code]  = X.C.value(''(Code/text())[1]'', ''varchar(200)''),
-                    [Description]  = X.C.value(''(Description/text())[1]'', ''varchar(200)''),
-                    [Описание]  = X.C.value(''(Описание/text())[1]'', ''varchar(200)''),
+                    [RefID] = X.C.value(''(Ref/text())[1]'', ''uniqueidentifier''),
+                    [DeletionMark] = X.C.value(''(DeletionMark/text())[1]'', ''bit''),
+                    [Code] = X.C.value(''(Code/text())[1]'', ''varchar(128)''),
+                    [Description] = X.C.value(''(Description/text())[1]'', ''varchar(128)''),
+                    [Описание] = X.C.value(''(Описание/text())[1]'', ''varchar(255)''),
                     [dt_update] = GetDate()
                 FROM OPENROWSET(BULK ''' + @FilePath + ''', SINGLE_BLOB, CODEPAGE = ''65001'') AS T(File_xml)
                     CROSS APPLY (VALUES (CAST(T.File_xml AS xml)) ) AS T2(XMLFromFile)

@@ -1,6 +1,5 @@
 
 -- SET LANGUAGE English --  Russian
-
 CREATE PROCEDURE [dbo].[sp_FillDimDate]
     @FromDate   datetime, 
     @ToDate     datetime,
@@ -24,6 +23,7 @@ BEGIN
     EXEC [audit].[sp_log_Start] @AuditProcEnable = @AuditProcEnable, @ProcedureName = @ProcedureName, @ProcedureParams = @ProcedureParams, @LogID = @LogID OUTPUT
 END
 
+-- SET @Culture='ru-ru'; -- 'en-US'
 SET NOCOUNT ON;
 WITH Days(DateCalendarValue, ID) AS
 (
@@ -54,10 +54,10 @@ OPTION (MAXRECURSION 0);
 SET @RowCount = @@ROWCOUNT
 
 IF( @TableName is NULL) 
-    INSERT INTO [target].[DIM_Date]([DateID], [FullDateAlternateKey], [DayNumberOfYear], [DayNumberOfMonth], [DayNumberOfQuarter], [MonthNumberOfYear], [MonthNumberOfQuarter], [CalendarQuarter], [CalendarYear], [DayName], [MonthName], [LastOfMonth], [FirstOfQuarter], [LastOfQuarter])
+    INSERT INTO [dbo].[DIM_Date]([DateID], [FullDateAlternateKey], [DayNumberOfYear], [DayNumberOfMonth], [DayNumberOfQuarter], [MonthNumberOfYear], [MonthNumberOfQuarter], [CalendarQuarter], [CalendarYear], [DayName], [MonthName], [LastOfMonth], [FirstOfQuarter], [LastOfQuarter])
     SELECT new.[DateID], new.[FullDateAlternateKey], new.[DayNumberOfYear], new.[DayNumberOfMonth], new.[DayNumberOfQuarter], new.[MonthNumberOfYear], new.[MonthNumberOfQuarter], new.[CalendarQuarter], new.[CalendarYear], new.[DayName], new.[MonthName], new.[LastOfMonth], new.[FirstOfQuarter], new.[LastOfQuarter] 
     FROM #NewDate new 
-    LEFT JOIN [target].[DIM_Date] d ON new.[DateID] = d.[DateID]
+    LEFT JOIN [dbo].[DIM_Date] d ON new.[DateID] = d.[DateID]
     WHERE d.[DateID] is NULL
 
 IF( NOT @TableName is NULL) 

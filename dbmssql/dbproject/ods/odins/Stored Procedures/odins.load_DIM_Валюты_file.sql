@@ -79,17 +79,17 @@ BEGIN TRY
                 SELECT
                     [nkey] = X.C.value(''(Ref/text())[1]'', ''uniqueidentifier'') ,
                     [DIM_Валюты.Представления] = X.C.query(''declare default element namespace "http://v8.1c.ru/8.1/data/enterprise/current-config";Представления''),
-                    [RefID]  = X.C.value(''(Ref/text())[1]'', ''varchar(200)''),
-                    [DeletionMark]  = X.C.value(''(DeletionMark/text())[1]'', ''varchar(200)''),
-                    [Code]  = X.C.value(''(Code/text())[1]'', ''varchar(200)''),
-                    [Description]  = X.C.value(''(Description/text())[1]'', ''varchar(200)''),
-                    [ЗагружаетсяИзИнтернета]  = X.C.value(''(ЗагружаетсяИзИнтернета/text())[1]'', ''varchar(200)''),
-                    [НаименованиеПолное]  = X.C.value(''(НаименованиеПолное/text())[1]'', ''varchar(200)''),
-                    [Наценка]  = X.C.value(''(Наценка/text())[1]'', ''varchar(200)''),
-                    [ОсновнаяВалюта]  = X.C.value(''(ОсновнаяВалюта/text())[1]'', ''varchar(200)''),
-                    [ПараметрыПрописи]  = X.C.value(''(ПараметрыПрописи/text())[1]'', ''varchar(200)''),
-                    [ФормулаРасчетаКурса]  = X.C.value(''(ФормулаРасчетаКурса/text())[1]'', ''varchar(200)''),
-                    [СпособУстановкиКурса]  = X.C.value(''(СпособУстановкиКурса/text())[1]'', ''varchar(200)''),
+                    [RefID] = X.C.value(''(Ref/text())[1]'', ''uniqueidentifier''),
+                    [DeletionMark] = X.C.value(''(DeletionMark/text())[1]'', ''bit''),
+                    [Code] = X.C.value(''(Code/text())[1]'', ''varchar(128)''),
+                    [Description] = X.C.value(''(Description/text())[1]'', ''varchar(128)''),
+                    [ЗагружаетсяИзИнтернета] = X.C.value(''(ЗагружаетсяИзИнтернета/text())[1]'', ''bit''),
+                    [НаименованиеПолное] = X.C.value(''(НаименованиеПолное/text())[1]'', ''varchar(50)''),
+                    [Наценка] = X.C.value(''(Наценка/text())[1]'', ''decimal(10,2)''),
+                    [ОсновнаяВалюта] = X.C.value(''(ОсновнаяВалюта/text())[1]'', ''varchar(36)''),
+                    [ПараметрыПрописи] = X.C.value(''(ПараметрыПрописи/text())[1]'', ''varchar(200)''),
+                    [ФормулаРасчетаКурса] = X.C.value(''(ФормулаРасчетаКурса/text())[1]'', ''varchar(100)''),
+                    [СпособУстановкиКурса] = X.C.value(''(СпособУстановкиКурса/text())[1]'', ''varchar(500)''),
                     [dt_update] = GetDate()
                 FROM OPENROWSET(BULK ''' + @FilePath + ''', SINGLE_BLOB, CODEPAGE = ''65001'') AS T(File_xml)
                     CROSS APPLY (VALUES (CAST(T.File_xml AS xml)) ) AS T2(XMLFromFile)

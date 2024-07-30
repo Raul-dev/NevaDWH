@@ -62,3 +62,5 @@ END
 
 EXEC sp_serveroption LinkSRVOds, 'RPC OUT', 'TRUE'
 EXEC sp_serveroption LinkSRVOds, 'remote proc transaction promotion', 'FALSE'
+
+EXEC [dbo].[sp_FillDimDate] @FromDate = '20240101', @ToDate = '20300101'

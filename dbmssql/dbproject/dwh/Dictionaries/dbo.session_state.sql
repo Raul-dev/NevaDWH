@@ -28,4 +28,6 @@ WHEN NOT MATCHED BY TARGET THEN
 WHEN NOT MATCHED BY SOURCE THEN DELETE;
 
 IF NOT EXISTS(SELECT 1 FROM [dbo].[Setting] WHERE SettingID = 'AuditProcAll' )
-    INSERT INTO [dbo].[Setting] (SettingID, StrValue) values('AuditProcAll', N'AuditProcAll')
+    INSERT INTO [dbo].[Setting] (SettingID, StrValue) VALUES('AuditProcAll', N'AuditProcAll')
+
+EXEC [dbo].[sp_FillDimDate] @FromDate = '20240101', @ToDate = '20300101'

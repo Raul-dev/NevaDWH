@@ -85,6 +85,8 @@
     <Build Include="dbo\Tables\codegen_dwh_column.sql" />
     <Build Include="dbo\Tables\codegen.sql" />
     <Build Include="dbo\Tables\codegen_enable_type.sql" />
+    <Build Include="dbo\Tables\DIM_Date.sql" />
+    <Build Include="dbo\Stored Procedures\sp_FillDimDate.sql" />
     <Build Include="dbo\Stored Procedures\rb_GetMappingSetup.sql" />
     <Build Include="dbo\Stored Procedures\rb_SaveSessionState.sql" />
     <Build Include="dbo\Tables\dwh_session_state.sql" />
