@@ -9,6 +9,7 @@ CREATE PROCEDURE [odins].[load_DIM_Клиенты]
 AS
 BEGIN
 SET CONCAT_NULL_YIELDS_NULL ON
+SET NOCOUNT ON
 DECLARE @LogID int, @ProcedureName varchar(510), @ProcedureParams varchar(max), @ProcedureInfo varchar(max), @AuditProcEnable nvarchar(256)
 SET @AuditProcEnable = [dbo].[fn_GetSettingValue]('AuditProcAll')
 IF @AuditProcEnable IS NOT NULL 
@@ -21,7 +22,6 @@ BEGIN
         '@BufferHistoryMode=' + ISNULL(LTRIM(STR(@BufferHistoryMode)),'NULL')
 END
 SET XACT_ABORT OFF
-SET NOCOUNT ON
 
 SET TRANSACTION ISOLATION LEVEL READ UNCOMMITTED
 SET DEADLOCK_PRIORITY LOW
@@ -51,7 +51,8 @@ BEGIN TRANSACTION
     SELECT buffer_id, msg_id, [RefID], msgtype_id
     FROM [odins].[DIM_Клиенты_buffer] b 
     WHERE b.[dt_update] = @MinDate
-    ORDER BY buffer_id    SET @RowCount = @@ROWCOUNT;
+    ORDER BY buffer_id
+    SET @RowCount = @@ROWCOUNT;
 
     IF @RowCount = 0 
     BEGIN
@@ -79,7 +80,7 @@ BEGIN TRANSACTION
             1 [state_id],
             b.[dt_create]
         FROM [odins].[DIM_Клиенты_buffer] b
-            INNER JOIN @LockedList l ON b.[buffer_id] = l.[buffer_id]
+        INNER JOIN @LockedList l ON b.[buffer_id] = l.[buffer_id]
         WHERE l.[msgtype_id] = 2 AND NOT EXISTS(SELECT 1 FROM dbo.filequeue f WHERE f.[msg_key] = 'CatalogObject.Клиенты' AND f.[msg_id] = l.[msg_id] AND f.[dt_create] = b.[dt_create]);
 
         DECLARE @FileQueueID bigint, @res int
@@ -102,8 +103,7 @@ BEGIN TRANSACTION
 
     SELECT DISTINCT tmp = 1 INTO #tmpDIM_Клиенты
     FROM [odins].[DIM_Клиенты] b WITH(ROWLOCK,XLOCK)
-        INNER JOIN @LockedListUniq ll ON b.[RefID] = ll.[RefID];
-
+    INNER JOIN @LockedListUniq ll ON b.[RefID] = ll.[RefID];
 
     TRUNCATE TABLE staging.DIM_Клиенты;
     SET @UpdateDate = GetDate();
@@ -118,9 +118,8 @@ BEGIN TRANSACTION
         [Контакт] = X.C.value('(Контакт/text())[1]', 'varchar(500)'),
         [dt_update] = @UpdateDate
     FROM [odins].[DIM_Клиенты_buffer] AS b
-        INNER JOIN @LockedListUniq l ON l.buffer_id = b.buffer_id
-        CROSS APPLY b.msg.nodes('/Data/Реквизиты/CatalogObject.Клиенты') AS X(C)
-    ;
+    INNER JOIN @LockedListUniq l ON l.buffer_id = b.buffer_id
+    CROSS APPLY b.msg.nodes('/Data/Реквизиты/CatalogObject.Клиенты') AS X(C);
 
     EXEC [odins].[load_DIM_Клиенты_staging]
 
@@ -136,7 +135,7 @@ BEGIN TRANSACTION
         UPDATE b SET
             dt_update = @UpdateDate
         FROM [odins].[DIM_Клиенты_buffer] AS b
-            INNER JOIN @LockedList l ON l.buffer_id = b.buffer_id
+        INNER JOIN @LockedList l ON l.buffer_id = b.buffer_id
 
         IF @BufferHistoryMode >= 2 AND NOT EXISTS (SELECT 1 FROM [odins].[DIM_Клиенты_buffer] WHERE [is_error] = 1)
             DELETE b
@@ -150,23 +149,23 @@ END TRY
 BEGIN CATCH
     SET @ErrorMessage = ERROR_MESSAGE()
     IF XACT_STATE() <> 0 AND @@TRANCOUNT > 0 
-    BEGIN
-         ROLLBACK TRANSACTION
-    END
+        ROLLBACK TRANSACTION
 
     DECLARE @err_session_id bigint;
-    SELECT @err_session_id = ISNULL( @session_id, 0)
-    INSERT [dbo].[session_log] ( session_id, [session_state_id], [error_message])
-    SELECT session_id = @err_session_id,
+    SET @err_session_id = ISNULL(@session_id, 0)
+    INSERT [dbo].[session_log] (session_id, [session_state_id], [error_message])
+    SELECT
+        [session_id] = @err_session_id,
         [session_state_id] = 3,
         [error_message] = 'Table [odins].[DIM_Клиенты_buffer]. Error: ' +@ErrorMessage
 
     IF NOT @ErrorMessage LIKE '%deadlock%'
         UPDATE b SET 
-            [session_id] = @err_session_id,            [is_error]   = 1,
+            [session_id] = @err_session_id,
+            [is_error]   = 1,
             [dt_update]  = ISNULL(@UpdateDate, GetDate())
         FROM [odins].[DIM_Клиенты_buffer] b
-            INNER JOIN @LockedList l ON b.[buffer_id] = l.[buffer_id]
+        INNER JOIN @LockedList l ON b.[buffer_id] = l.[buffer_id]
         WHERE [is_error] = 0
 
     EXEC [audit].[sp_log_Finish] @LogID = @LogID, @RowCount = @RowCount, @ErrorMessage = @ErrorMessage

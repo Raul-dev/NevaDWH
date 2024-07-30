@@ -106,6 +106,7 @@ services:
       - DataBaseSettings__DataBase=${MQ_DATABASE:-client1_ods}
       - DataBaseSettings__User=${MQ_USER:-postgres}
       - DataBaseSettings__Password=${MQ_PASSWORD:-postgres}
+      - Serilog__MinimumLevel__Default=Information
     ports:
       - "8090:8080"
       - "8091:8081"
