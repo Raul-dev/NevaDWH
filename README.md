@@ -6,7 +6,21 @@ For start run ./start.ps1 batch on PowerShell 7.4 in Admin mode.
 
 ![text for image](./doc/forweb.png)
 
-Результат генерации DWH из xml метаданных 1С, которые можно получить запустив 1cv8.exe /DumpConfigToFiles
+В этом проекте предствален результат генерации DWH из xml метаданных 1С, которые можно получить запустив 1cv8.exe /DumpConfigToFiles
+
+### Prerequisites
+- On Windows 10
+- Install [Docker](https://www.docker.com/)
+- Install [Docker Compose](https://docs.docker.com/compose/install/)
+- Setup powershell in admin mode
+```
+Set-ExecutionPolicy -ExecutionPolicy RemoteSigned -Scope AllUsers
+```
+- For MS-SQL install Server 2019 and Visual Studio Community 2022
+- Install powershell Visual Studio library for deployment script MSqlDeploymentFunc.psm1
+```
+Install-Module VSSetup -Scope AllUsers
+```
 
 ## Панел управления
 
