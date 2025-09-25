@@ -14,7 +14,8 @@ For start run ./start.ps1 batch on PowerShell 7.4 in Admin mode.
 - Install [Docker Compose](https://docs.docker.com/compose/install/)
 - Setup powershell in admin mode
 ```
-Set-ExecutionPolicy -ExecutionPolicy RemoteSigned -Scope LocalMachine
+Set-ExecutionPolicy -ExecutionPolicy ByPass -Scope LocalMachine
+Get-ExecutionPolicy
 ```
 - For MS-SQL install Server 2019 and Visual Studio Community 2022
 - Install powershell Visual Studio library for deployment script MSqlDeploymentFunc.psm1
