@@ -22,7 +22,7 @@ Get-ExecutionPolicy
 ```
 Install-Module VSSetup -Scope AllUsers
 Or
-Save-Module -Name VSsetup
+Save-Module -Name VSsetup -Path "C:\Program Files\WindowsPowerShell\Modules"
 Import-Module VSsetup
 Get-Module -ListAvailable
 ```
