@@ -21,6 +21,10 @@ Get-ExecutionPolicy
 - Install powershell Visual Studio library for deployment script MSqlDeploymentFunc.psm1
 ```
 Install-Module VSSetup -Scope AllUsers
+Or
+Save-Module -Name VSsetup
+Import-Module VSsetup
+Get-Module -ListAvailable
 ```
 
 ## Панел управления
