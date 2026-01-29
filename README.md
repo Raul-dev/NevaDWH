@@ -7,6 +7,7 @@ For start run ./start.ps1 batch on PowerShell 7.4 in Admin mode.
 ![text for image](./doc/forweb.png)
 
 В этом проекте предствален результат генерации DWH из xml метаданных 1С, которые можно получить запустив 1cv8.exe /DumpConfigToFiles
+Целью проекта является минимизация затрат при переходе на новые версии структуры 1С, добавляя новое поле в любой формочке 1С генератор перестраивает автоматически все базы и процессы ETL (SSIS или Airflow) добавляя его в конечные таблицы DWH.
 
 ### Prerequisites
 - On Windows 10
