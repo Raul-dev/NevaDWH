@@ -1,2 +1,2 @@
 CREATE SCHEMA [bulk]
-    AUTHORIZATION [dbo];
+  AUTHORIZATION [dbo];

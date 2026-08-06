@@ -1,2 +1,2 @@
 CREATE SCHEMA [target]
-    AUTHORIZATION [dbo];
+  AUTHORIZATION [dbo];

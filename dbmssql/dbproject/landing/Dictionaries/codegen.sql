@@ -1,38 +1,50 @@
-DELETE [dbo].[codegen_dwh_column]
-DELETE [dbo].[codegen_dwh_table]
+DELETE [etl].[CodeGenDwhColumn]
+DELETE [etl].[CodeGenDwhTable]
 DECLARE @codegen TABLE
 (
-    [codegen_id] int NOT NULL,
-    [namespace] nvarchar(256) COLLATE Cyrillic_General_CI_AS NOT NULL,
-    [schema] nvarchar(128) COLLATE Cyrillic_General_CI_AS NOT NULL,
-    [table_name] nvarchar(128) COLLATE Cyrillic_General_CI_AS NOT NULL,
-    [ods_enable_type] smallint NULL,
-    [dwh_enable_type] smallint NULL
+  [CodeGenId]       int NOT NULL,
+  [Namespace]       nvarchar(256) COLLATE Cyrillic_General_CI_AS NOT NULL,
+  [SchemaName]      nvarchar(128) COLLATE Cyrillic_General_CI_AS NOT NULL,
+  [TableName]       nvarchar(128) COLLATE Cyrillic_General_CI_AS NOT NULL,
+  [OdsEnableType]   smallint NULL,
+  [DwhEnableType]   smallint NULL
 )
 
+INSERT @codegen ([CodeGenId], [Namespace], [SchemaName], [TableName], [OdsEnableType], [DwhEnableType])
+SELECT TOP 0 [CodeGenId] = CAST(NULL AS int), [Namespace] = CAST(NULL AS nvarchar(256)), [SchemaName] = CAST(NULL AS nvarchar(128)), [TableName] = CAST(NULL AS nvarchar(256)), [OdsEnableType] = CAST(NULL AS smallint), [DwhEnableType] = CAST(NULL AS smallint) 
 
+IF EXISTS ( 
+  SELECT 1 FROM [etl].[CodeGen] d 
+  LEFT OUTER JOIN @codegen s ON s.[CodeGenId] = d.[CodeGenId]
+  WHERE s.[CodeGenId] IS NULL) THROW 60000, N'The table [etl].[CodeGen] was change.', 1;
 
-MERGE INTO codegen trg
+MERGE INTO [etl].[CodeGen] trg
 USING 
-@codegen src ON src.[codegen_id] = trg.[codegen_id]
+@codegen src ON src.[CodeGenId] = trg.[CodeGenId]
 WHEN MATCHED THEN UPDATE SET 
-    [codegen_id] = src.[codegen_id],
-    [namespace] = src.[namespace],
-    [schema] = src.[schema],
-    [table_name] = src.[table_name],
-    [ods_enable_type] = src.[ods_enable_type],
-    [dwh_enable_type] = src.[dwh_enable_type]
+  [CodeGenId] = src.[CodeGenId],
+  [Namespace] = src.[Namespace],
+  [SchemaName] = src.[SchemaName],
+  [TableName] = src.[TableName],
+  [OdsEnableType] = src.[OdsEnableType],
+  [DwhEnableType] = src.[DwhEnableType]
 WHEN NOT MATCHED BY TARGET THEN 
-INSERT ([codegen_id], [namespace], [schema], [table_name], [ods_enable_type], [dwh_enable_type])
-    VALUES (
-        src.[codegen_id],
-        src.[namespace],
-        src.[schema],
-        src.[table_name],
-        src.[ods_enable_type],
-        src.[dwh_enable_type]
-    )
+INSERT ([CodeGenId], [Namespace], [SchemaName], [TableName], [OdsEnableType], [DwhEnableType])
+  VALUES (
+    src.[CodeGenId],
+    src.[Namespace],
+    src.[SchemaName],
+    src.[TableName],
+    src.[OdsEnableType],
+    src.[DwhEnableType]
+  )
 WHEN NOT MATCHED BY SOURCE THEN DELETE;
 
---UPDATE [dbo].[codegen_dwh_table] SET [is_enable] = 1
---UPDATE [dbo].[codegen_dwh_column] SET [is_enable] = 1
+--UPDATE [etl].[CodeGenDwhTable] SET [IsEnable] = 1
+--UPDATE [etl].[CodeGenDwhColumn] SET [IsEnable] = 1
+
+INSERT [etl].[CodeGenDwhTable] ([CodeGenDwhTableId], [CodeGenId], [TableName], [IsRoot], [IsEnable], [DwhTableName], [IsVkeySession], [IsVkeySourcename], [IsHistorical])
+SELECT TOP 0 [CodeGenDwhTableId] = CAST( NULL AS int),  [CodeGenId] = CAST( NULL AS int),  [TableName] = CAST( NULL AS varchar(128)),  [IsRoot] = CAST( NULL AS BIT),  [IsEnable] = CAST( NULL AS BIT),  [DwhTableName] = CAST( NULL AS varchar(128)),  [IsVkeySession] = CAST( NULL AS BIT),  [IsVkeySourcename] = CAST( NULL AS BIT),  [IsHistorical] = CAST( NULL AS BIT)
+
+
+

@@ -1,21 +1,22 @@
 CREATE TABLE [odins].[FACT_Продажи] (
-    [ods_id]  bigint IDENTITY(1,1) Primary key,
-    [nkey]  uniqueidentifier NOT NULL,
-    [RefID]  uniqueidentifier,
-    [DeletionMark]  bit,
-    [Number]  int,
-    [Posted]  bit,
-    [Date]  datetime2(0),
-    [DateID]  int,
-    [ДатаОтгрузки]  datetime2(0),
-    [ДатаОтгрузкиID]  int,
-    [Клиент]  varchar(36),
-    [ТипДоставки]  varchar(500),
-    [ПримерСоставногоТипа]  varchar(36),
-    [ПримерСоставногоТипа_ТипЗначения]  varchar(128),
-    [dt_update]  datetime2(4) NOT NULL CONSTRAINT [DF_odins_FACT_Продажи_target_dt_udate_DEFAULT] DEFAULT (getdate()),
-    [dt_create]  datetime2(4) NOT NULL CONSTRAINT [DF_odins_FACT_Продажи_target_dt_create_DEFAULT] DEFAULT (getdate())
+    [OdsId]                       bigint IDENTITY(1,1) Primary key,
+    [NKey]                        uniqueidentifier NOT NULL,
+    [RefID]                       uniqueidentifier,
+    [DeletionMark]                bit,
+    [Number]                      int,
+    [Posted]                      bit,
+    [Date]                        datetime2(0),
+    [DateID]                      int,
+    [ДатаОтгрузки]                datetime2(0),
+    [ДатаОтгрузкиID]              int,
+    [Клиент]                      varchar(36),
+    [ТипДоставки]                 varchar(500),
+    [ПримерСоставногоТипа]        varchar(36),
+    [ПримерСоставногоТипа_ТипЗначения]varchar(128),
+    [UpdatedAt]                   datetime2(4) NOT NULL CONSTRAINT [DF_odins_FACT_Продажи_UpdatedAt] DEFAULT (GetDate()),
+    [CreatedAt]                   datetime2(4) NOT NULL CONSTRAINT [DF_odins_FACT_Продажи_CreatedAt] DEFAULT (GetDate())
 );
+
 GO
 CREATE NONCLUSTERED INDEX [idx_FACT_Продажи_target] ON [odins].[FACT_Продажи]
 (

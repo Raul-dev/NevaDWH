@@ -1,17 +1,39 @@
 version: '3.4'
 
+# Paths are relative to this folder: src/dwhclients/newadwh/dbmssql
+# App images expect Release publish output under images/<service>/publish
+# Prepare them:  .\build-images.ps1
+
+x-host-mssql:
+  &host-mssql
+  extra_hosts:
+    - "host.docker.internal:host-gateway"
+
 x-common:
   &common
   build:
-    context: ./../
-    dockerfile: images/airflow/Dockerfile
+    context: ./images
+    dockerfile: airflow/Dockerfile
   user: "${AIRFLOW_UID}:0"
-  env_file: 
+  env_file:
     - .env
+  environment:
+    # Airflow 3 SimpleAuth (FAB _AIRFLOW_WWW_USER_* ignored). Login: airflow/airflow
+    AIRFLOW__CORE__SIMPLE_AUTH_MANAGER_USERS: airflow:admin,admin:admin
+    AIRFLOW__CORE__SIMPLE_AUTH_MANAGER_PASSWORDS_FILE: /opt/airflow/config/simple_auth_manager_passwords.json
+    # LocalExecutor workers must call Execution API in api-server container (not localhost)
+    AIRFLOW__CORE__EXECUTION_API_SERVER_URL: http://api-server:8080/execution/
+    # Must be identical on scheduler + api-server; >=64 bytes for HS512
+    AIRFLOW__API_AUTH__JWT_SECRET: NevaDWH-local-dev-jwt-secret-key-must-be-at-least-64-bytes-long!!!!
+    AIRFLOW__API_AUTH__JWT_ISSUER: airflow
+    AIRFLOW__API__SECRET_KEY: NevaDWH-local-dev-api-secret-key-must-be-at-least-64-bytes-long!!!!
+  extra_hosts:
+    - "host.docker.internal:host-gateway"
   volumes:
     - ./ETLAirflow/dags:/opt/airflow/dags
     - ./ETLAirflow/logs:/opt/airflow/logs
     - ./ETLAirflow/plugins:/opt/airflow/plugins
+    - ./ETLAirflow/config:/opt/airflow/config
     - /var/run/docker.sock:/var/run/docker.sock
 
 x-depends-on:
@@ -24,8 +46,8 @@ x-depends-on:
 
 services:
   postgresdb:
-    image: postgres:14-alpine
-    container_name: client-postgresdb14
+    image: postgres:17.2-alpine
+    container_name: client-postgresdb17
     healthcheck:
       test: ["CMD", "pg_isready", "-U", "postgres"]
       interval: 5s
@@ -38,27 +60,27 @@ services:
       - postgres-clientdata:/var/lib/postgresql
       - ./005_create_db.sql:/docker-entrypoint-initdb.d/005_create_db.sql
       - ./070_msgqueue.sql:/docker-entrypoint-initdb.d/070_msgqueue.sql
-            
+                
     env_file:
       - .env
 
   rabbit:
     build:
-      context: ./../images/Rabbit  
+      context: ./images/Rabbit
     healthcheck:
       test: rabbitmq-diagnostics -q ping
       start_period: 5s
       interval: 10s
       timeout: 10s
       retries: 5
-    restart: unless-stopped      
+    restart: unless-stopped
     environment:
       RABBITMQ_DEFAULT_USER: admin
       RABBITMQ_DEFAULT_PASS: admin
     ports:
       - '5672:5672'
       - '15672:15672'
-      
+
   scheduler:
     <<: [*common, *depends-on]
     container_name: airflow-scheduler
@@ -66,54 +88,97 @@ services:
     restart: on-failure
     ports:
       - "8793:8793"
+    depends_on:
+      postgresdb:
+        condition: service_healthy
+      airflow-init:
+        condition: service_completed_successfully
+      api-server:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", 'airflow jobs check --job-type SchedulerJob --hostname "$${HOSTNAME}"']
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 30s
 
-  webserver:
+  api-server:
     <<: [*common, *depends-on]
-    container_name: airflow-webserver
+    container_name: airflow-api-server
     restart: always
-    command: webserver
+    command: api-server
     ports:
       - "8080:8080"
     healthcheck:
-      test: ["CMD", "curl", "--fail", "http://localhost:8080/health"]
+      test: ["CMD", "curl", "--fail", "http://localhost:8080/api/v2/monitor/health"]
       interval: 30s
       timeout: 30s
       retries: 5
-  
+      start_period: 30s
+
+  dag-processor:
+    <<: [*common, *depends-on]
+    container_name: airflow-dag-processor
+    restart: on-failure
+    command: dag-processor
+    depends_on:
+      postgresdb:
+        condition: service_healthy
+      airflow-init:
+        condition: service_completed_successfully
+      api-server:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", 'airflow jobs check --job-type DagProcessorJob --hostname "$${HOSTNAME}"']
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 30s
+
   airflow-init:
     <<: *common
     container_name: airflow-init
     entrypoint: /bin/bash
+    user: "0:0"
     command:
       - -c
       - |
-        mkdir -p /sources/logs /sources/dags /sources/plugins
-        chown -R "${AIRFLOW_UID}:0" /sources/{logs,dags,plugins}
+        mkdir -p /opt/airflow/logs /opt/airflow/dags /opt/airflow/plugins /opt/airflow/config
+        chown -R "${AIRFLOW_UID:-0}:0" /opt/airflow/{logs,dags,plugins,config}
         exec /entrypoint airflow version
 
   mq.webservice:
-    image: raulamailru/nevadwh-mq:0.0.1
-#    build:
-#      context: ./../../../services/mq
-#      dockerfile: MQ.WebService/Dockerfile
+    <<: *host-mssql
+    image: ${DOCKER_REGISTRY-}mqmswebservice
+    build:
+      context: ./images/mq.webservice
+      dockerfile: Dockerfile
     environment:
       - ASPNETCORE_ENVIRONMENT=Development
-      #- ASPNETCORE_URLS=https://+:443;http://+:80
       - ASPNETCORE_HTTP_PORTS=8080
       - ASPNETCORE_HTTPS_PORTS=8081
-      - DataBaseSettings__ServerType=mssql 
+      - DataBaseSettings__ServerName=host.docker.internal
+      - DataBaseSettings__ServerType=mssql
+      - DataBaseSettings__Port=1433
+      - DataBaseSettings__SessionMode=${MQ_SESSION_MODE:-FullMode}
       - DataBaseSettings__ClientName=${MQ_CLIENTNAME:-client1}
       - DataBaseSettings__DataBase=${MQ_DATABASE:-client1_ods}
       - DataBaseSettings__User=${MQ_USER:-postgres}
       - DataBaseSettings__Password=${MQ_PASSWORD:-postgres}
-      - Serilog__MinimumLevel__Default=Information
+      - RabbitMQSettings__Host=rabbit
+      - RabbitMQSettings__Port=5672
+      - RabbitMQSettings__VirtualHost=${RABBITMQ_VIRTUAL_HOST:-/}
+      - RabbitMQSettings__Exchange=${RABBITMQ_EXCHANGE:-amq.fanout}
+      - RabbitMQSettings__UserName=${RABBITMQ_USER:-admin}
+      - RabbitMQSettings__UserPassword=${RABBITMQ_PASSWORD:-admin}
+      - RabbitMQSettings__DefaultQueue=${RABBITMQ_DEFAULT_QUEUE:-InfoBase}
     ports:
       - "8090:8080"
       - "8091:8081"
     volumes:
       - ${APPDATA}/Microsoft/UserSecrets:/home/app/.microsoft/usersecrets:ro
       - ${APPDATA}/ASP.NET/Https:/home/app/.aspnet/https:ro
-      - ./logs:/logs   
+      - ./logs:/logs
     depends_on:
       postgresdb:
         condition: service_healthy
@@ -121,16 +186,16 @@ services:
         condition: service_healthy
 
   landing.webservice:
-    image: raulamailru/nevadwh-landing:0.0.1
-#    build:
-#      context: ./../../../services/dwhmanager
-#      dockerfile: Landing.WebService/Dockerfile
+    <<: *host-mssql
+    image: ${DOCKER_REGISTRY-}landinwebservice
+    build:
+      context: ./images/landing.webservice
+      dockerfile: Dockerfile
     environment:
       - ASPNETCORE_ENVIRONMENT=Development
-#     - ASPNETCORE_URLS=https://+:443;http://+:80
       - ASPNETCORE_HTTP_PORTS=8080
-#      - ASPNETCORE_HTTPS_PORTS=8081
-      - DataBaseSettings__ServerType=mssql 
+      - DataBaseSettings__ServerName=host.docker.internal
+      - DataBaseSettings__ServerType=mssql
       - DataBaseSettings__ClientName=${MQ_CLIENTNAME:-client1}
       - DataBaseSettings__DataBase=${LANDING_DATABASE:-client1_landing}
       - DataBaseSettings__User=${LANDING_USER:-postgres}
@@ -141,38 +206,67 @@ services:
     volumes:
       - ${APPDATA}/Microsoft/UserSecrets:/home/app/.microsoft/usersecrets:ro
       - ${APPDATA}/ASP.NET/Https:/home/app/.aspnet/https:ro
-      - ./logs:/logs   
+      - ./logs:/logs
     depends_on:
       postgresdb:
         condition: service_healthy
       rabbit:
         condition: service_healthy
 
-  nevadwh:
-    image: raulamailru/nevadwh-admin:0.0.1
-#    build:
-#      context: ./../../../services/dwhmanager
-#      dockerfile: NevaDWH/Dockerfile
+  generator.api:
+    <<: *host-mssql
+    image: ${DOCKER_REGISTRY-}generatorapi
+    build:
+      context: ./images/generator.api
+      dockerfile: Dockerfile
     environment:
       - ASPNETCORE_ENVIRONMENT=Development
-      #- ASPNETCORE_URLS=https://+:443;http://+:80
       - ASPNETCORE_HTTP_PORTS=8080
-      #- ASPNETCORE_HTTPS_PORTS=8081
+      - DataBaseSettings__ServerName=host.docker.internal
+      - DataBaseSettings__ServerType=mssql
+      - DataBaseSettings__ClientName=${MQ_CLIENTNAME:-client1}
+      - DataBaseSettings__DataBase=${MQ_DATABASE:-client1_ods}
+      - DataBaseSettings__User=${MQ_USER:-postgres}
+      - DataBaseSettings__Password=${MQ_PASSWORD:-postgres}
+    ports:
+      - "8110:8080"
+    volumes:
+      - ${APPDATA}/Microsoft/UserSecrets:/home/app/.microsoft/usersecrets:ro
+      - ${APPDATA}/ASP.NET/Https:/home/app/.aspnet/https:ro
+      - ./logs:/logs
+    depends_on:
+      postgresdb:
+        condition: service_healthy
+
+  nevadwh:
+    image: ${DOCKER_REGISTRY-}nevadwh
+    build:
+      context: ./images/nevadwh
+      dockerfile: Dockerfile
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development
+      - ASPNETCORE_HTTP_PORTS=8080
       - ConnectionStrings__DefaultConnection=Host=postgresdb;Port=5432;Database=nevadwh;Username=${POSTGRES_USER:-postgres};Password=${POSTGRES_PASSWORD:-postgres}
-      - ConnectionStrings__GeneratorConnection=http://host.docker.internal:8110
+      - ConnectionStrings__GeneratorConnection=http://generator.api:8080
       - ConnectionStrings__mqWebServiceConnectionString=http://mq.webservice:8080
       - ConnectionStrings__LandingWebServiceConnectionString=http://landing.webservice:8080
     ports:
       - "8100:8080"
-      #- "8101:8081"
     volumes:
       - ${APPDATA}/Microsoft/UserSecrets:/home/app/.microsoft/usersecrets:ro
       - ${APPDATA}/ASP.NET/Https:/home/app/.aspnet/https:ro
-      - ./logs:/logs   
+      - ./logs:/logs
     depends_on:
       postgresdb:
         condition: service_healthy
       rabbit:
-        condition: service_healthy        
+        condition: service_healthy
+      mq.webservice:
+        condition: service_started
+      landing.webservice:
+        condition: service_started
+      generator.api:
+        condition: service_started
+
 volumes:
   postgres-clientdata:

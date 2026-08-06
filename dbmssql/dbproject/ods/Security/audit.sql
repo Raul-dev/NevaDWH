@@ -1,5 +1,5 @@
-﻿CREATE SCHEMA [audit]
-    AUTHORIZATION [dbo];
+CREATE SCHEMA [audit]
+  AUTHORIZATION [dbo];
 
 
 

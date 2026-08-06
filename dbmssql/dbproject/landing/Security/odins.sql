@@ -1,2 +1,2 @@
 CREATE SCHEMA [odins]
-    AUTHORIZATION [dbo];
+  AUTHORIZATION [dbo];

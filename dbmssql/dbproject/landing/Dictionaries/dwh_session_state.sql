@@ -1,29 +1,24 @@
-﻿
 DECLARE @session_state AS TABLE
 (
-    [dwh_session_state_id] TINYINT,
-    [name] NVARCHAR(100)
+  [DwhSessionStateId] TINYINT,
+  [Name]            NVARCHAR(100)
 )
 
-INSERT @session_state ([dwh_session_state_id], [name])
+INSERT @session_state ([DwhSessionStateId], [Name])
 VALUES
 (1, N'Начало формирования пакета DWH'),
 (2, N'Завершение формирования пакета DWH'),
 (3, N'Ошибка формирования пакета DWH'),
 (4, N'Завершение переноса данных в DWH')
 
+IF EXISTS (
+  SELECT 1 FROM [etl].[DwhSessionState] d
+  LEFT OUTER JOIN @session_state s ON s.[DwhSessionStateId] = d.[DwhSessionStateId]
+  WHERE s.[DwhSessionStateId] IS NULL) THROW 60000, N'The table [etl].[DwhSessionState] was change.', 1;
 
---SELECT * FROM [dbo].[dwh_session_state] d 
-IF EXISTS ( 
-    SELECT 1 FROM [dbo].[dwh_session_state] d 
-    LEFT OUTER JOIN @session_state s ON s.dwh_session_state_id=d.dwh_session_state_id
-    WHERE s.dwh_session_state_id IS NULL) THROW 60000, N'The table [dwh_session_state] was change.', 1;
-
-MERGE INTO [dbo].[dwh_session_state] trg
-USING 
-@session_state src ON src.[dwh_session_state_id] = trg.[dwh_session_state_id]
-WHEN MATCHED THEN UPDATE SET 
-    [name] = src.[name]
-WHEN NOT MATCHED BY TARGET THEN 
-    INSERT ([dwh_session_state_id] , [name]) VALUES (src.[dwh_session_state_id] , src.[name])
+MERGE INTO [etl].[DwhSessionState] trg
+USING @session_state src ON src.[DwhSessionStateId] = trg.[DwhSessionStateId]
+WHEN MATCHED THEN UPDATE SET [Name] = src.[Name]
+WHEN NOT MATCHED BY TARGET THEN
+  INSERT ([DwhSessionStateId], [Name]) VALUES (src.[DwhSessionStateId], src.[Name])
 WHEN NOT MATCHED BY SOURCE THEN DELETE;

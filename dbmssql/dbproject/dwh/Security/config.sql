@@ -1,0 +1,17 @@
+CREATE SCHEMA [config]
+  AUTHORIZATION [dbo];
+
+GO
+
+CREATE ROLE [config]
+  AUTHORIZATION [dbo];
+
+GO
+
+GRANT SELECT, INSERT, UPDATE, DELETE, EXECUTE ON SCHEMA::[config] TO [config];
+
+GO
+
+GRANT SELECT, EXECUTE ON SCHEMA::[config] TO [mq];
+
+GO
