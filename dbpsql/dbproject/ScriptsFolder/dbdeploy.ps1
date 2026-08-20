@@ -133,12 +133,7 @@ try{
 
     ConcatenateScriptFolder $SourceDBFolder $OutputDumpFile
 
-    $SourceDBFolder = $SourceFolder + "\${DBName}\dbo\Tables"
-    ConcatenateScriptFolder $SourceDBFolder $OutputDumpFile
-    $SourceDBFolder = $SourceFolder + "\${DBName}\dbo\Stored Procedures"
-    ConcatenateScriptFolder $SourceDBFolder $OutputDumpFile
     $SourceDBFolder = $SourceFolder + "\${DBName}"
-    
     $SchemaFolders = Get-ChildItem $SourceDBFolder -Attributes Directory | Where-Object -FilterScript {($_.Name -ne 'dbo') -and ($_.Name -ne 'Dictionaries') -and ($_.Name -ne 'Security')}
     Write-Host $SchemaFolders
     for ($i=0; $i -lt $SchemaFolders.count; $i++){
@@ -170,11 +165,6 @@ try{
 
     ConcatenateScriptFolder $SourceDBFolder $OutputDumpFile
 
-    $SourceDBFolder = $SourceFolder + "\${DBName}\dbo\Tables"
-    ConcatenateScriptFolder $SourceDBFolder $OutputDumpFile
-    $SourceDBFolder = $SourceFolder + "\${DBName}\dbo\Stored Procedures"
-    ConcatenateScriptFolder $SourceDBFolder $OutputDumpFile
-    $SourceDBFolder = $SourceFolder + "\${DBName}"
 
     $SchemaFolders = Get-ChildItem $SourceDBFolder -Attributes Directory | Where-Object -FilterScript {($_.Name -ne 'dbo') -and ($_.Name -ne 'Dictionaries') -and ($_.Name -ne 'Security')}
     Write-Host $SchemaFolders
@@ -213,11 +203,6 @@ try{
 
     ConcatenateScriptFolder $SourceDBFolder $OutputDumpFile
 
-    $SourceDBFolder = $SourceFolder + "\${DBName}\dbo\Tables"
-    ConcatenateScriptFolder $SourceDBFolder $OutputDumpFile
-    $SourceDBFolder = $SourceFolder + "\${DBName}\dbo\Stored Procedures"
-    ConcatenateScriptFolder $SourceDBFolder $OutputDumpFile
-    $SourceDBFolder = $SourceFolder + "\${DBName}"
 
     $SchemaFolders = Get-ChildItem $SourceDBFolder -Attributes Directory | Where-Object -FilterScript {($_.Name -ne 'dbo') -and ($_.Name -ne 'Dictionaries') -and ($_.Name -ne 'Security')}
     Write-Host $SchemaFolders

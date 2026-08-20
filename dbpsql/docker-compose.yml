@@ -165,7 +165,7 @@ services:
     environment:
       - ASPNETCORE_ENVIRONMENT=Development
       - ASPNETCORE_HTTP_PORTS=8080
-      - ASPNETCORE_HTTPS_PORTS=8081
+      #- ASPNETCORE_HTTPS_PORTS=8081
       - DataBaseSettings__ServerName=postgresdb
       - DataBaseSettings__ServerType=psql
       - DataBaseSettings__NamingStyle=Snake
