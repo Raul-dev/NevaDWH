@@ -1,4 +1,4 @@
-
+﻿
 INSERT INTO data_source (data_source_id,name) 
 SELECT 1, N'ods1c';
 

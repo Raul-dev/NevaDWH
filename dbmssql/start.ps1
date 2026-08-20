@@ -1,4 +1,4 @@
-Param (
+﻿Param (
   [parameter(Mandatory=$false)][string]$IsUpdate=$false
   )
 function Test-Administrator  
@@ -109,4 +109,48 @@ if( Test-Connection $serverName 2> $null ){
 }
 
 Set-Location $CurrentPath
-docker compose up
+# ==============================================================================
+# ПРОВЕРКА И ПЕРЕЗАПУСК DOCKER (ЕСЛИ СВЯЗЬ СЛОМАНА)
+# ==============================================================================
+
+Write-Host "Проверка связи с Docker..." -ForegroundColor Cyan
+
+# Проверяем, отвечает ли Docker-демон
+$dockerCheck = docker ps 2>$null
+if ($LASTEXITCODE -ne 0) {
+    Write-Host "Ошибка: Связь с Docker потеряна (канал закрыт)." -ForegroundColor Red
+    Write-Host "Попытка перезапуска служб Docker..." -ForegroundColor Yellow
+
+    # Принудительно перезапускаем все службы Windows, связанные с Docker
+    Restart-Service *docker* -Force
+
+    # Ждем, пока Docker полностью поднимется (обычно требуется время)
+    Write-Host "Ожидание запуска Docker-демона (30 секунд)..." -ForegroundColor Yellow
+    Start-Sleep -Seconds 30
+    
+    # Вторая проверка после перезапуска
+    docker info > $null 2>&1
+    if ($LASTEXITCODE -ne 0) {
+        Write-Host "Критическая ошибка: Не удалось восстановить связь с Docker." -ForegroundColor Red
+        Write-Host "Пожалуйста, перезапустите Docker Desktop вручную." -ForegroundColor Red
+        Read-Host "Нажмите Enter для выхода..."
+        exit
+    }
+    Write-Host "Связь с Docker успешно восстановлена!" -ForegroundColor Green
+} else {
+    Write-Host "Docker работает нормально, продолжаем..." -ForegroundColor Green
+}
+
+# ==============================================================================
+# ОСНОВНОЙ СКРИПТ ПУСКА
+# ==============================================================================
+
+
+# 1. Запуск docker compose в новом окне для отображения логов
+Start-Process "cmd.exe" -ArgumentList "/k docker compose up"
+
+# 2. Пауза (в секундах), чтобы контейнеры успели запуститься до открытия браузера
+Start-Sleep -Seconds 15
+
+# 3. Открытие нужной страницы в браузере по умолчанию
+Start-Process "http://localhost:8100"

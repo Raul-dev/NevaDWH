@@ -3,7 +3,7 @@ CREATE TABLE [etl].[CodeGenDwhTable] (
   [CodeGenId]          int           NOT NULL,
   [TableName]          varchar(128)  COLLATE Cyrillic_General_CI_AS NOT NULL,
   [IsRoot]             bit           NOT NULL,
-  [IsEnable]           bit           NOT NULL,
+  [IsEnabled]           bit           NOT NULL,
   [DwhTableName]       varchar(128)  COLLATE Cyrillic_General_CI_AS NOT NULL,
   [IsVkeySession]      bit           CONSTRAINT [DF_etl_CodeGenDwhTable_IsVkeySession] DEFAULT ((0)) NOT NULL,
   [IsVkeySourcename]   bit           CONSTRAINT [DF_etl_CodeGenDwhTable_IsVkeySourcename] DEFAULT ((0)) NOT NULL,

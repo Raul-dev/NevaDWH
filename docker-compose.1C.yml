@@ -1,0 +1,61 @@
+version: '3.8'
+
+services:
+  db-1c:
+    image: local-postgres-1c:18.1
+    container_name: postgres_1c
+    restart: always
+    environment:
+      POSTGRES_DB: master
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: p!YourSecurePasswordHere  # Придумайте сложный пароль
+      POSTGRES_HOST_AUTH_METHOD: md5
+      # Настройки локали обязательны для корректной работы 1С с кириллицей
+      LANG: ru_RU.utf8
+      LC_ALL: ru_RU.utf8
+    ports:
+      - "5432:5432"
+    volumes:
+      - pg_data_1c:/var/lib/postgresql/data
+    command: >
+      postgres 
+      -c max_connections=150
+      -c shared_buffers=4GB
+      -c effective_cache_size=12GB
+      -c maintenance_work_mem=1GB
+      -c checkpoint_completion_target=0.9
+      -c checkpoint_timeout=15min
+      -c min_wal_size=2GB
+      -c max_wal_size=16GB
+      -c escape_string_warning=off
+      -c standard_conforming_strings=off
+
+  server-1c:
+    image: local-1c-server:8.3.27.2130 
+    container_name: server-1c
+    environment:
+      - DB_SERVER=db-1c
+      - DB_USER=postgres
+      - DB_PASSWORD=p!YourSecurePasswordHere
+    ports:
+      - "1540:1540"
+      - "1541:1541"
+      - "1560-1591:1560-1591"
+    volumes:
+      - server_1c_data:/home/usr1cv8/.1cv8
+      - ./server_1c_licenses:/var/1C/licenses
+      - /etc/localtime:/etc/localtime:ro
+    command: /opt/1cv8/x86_64/8.3.27.2130/ragent -agent -regport 1541 -port 1540 -range 1560:1591 -seclev 0 -pingPeriod 1000 -d /var/1C/srvinfo
+    depends_on:
+      - db-1c
+    restart: always
+    networks:
+      - network-1c
+
+volumes:
+  pg_data_1c:
+  server_1c_data:
+
+networks:
+  network-1c:
+    driver: bridge

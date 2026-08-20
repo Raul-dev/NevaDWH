@@ -19,13 +19,13 @@ INSERT INTO tmp_dwh_session_state (dwh_session_state_id, name)VALUES
 (7, N'Ошибка обработки DWH');
 
 
-UPDATE dwh_session_state as c
+UPDATE etl.dwh_session_state as c
 SET name = t.name
 FROM tmp_dwh_session_state as t
 WHERE c.dwh_session_state_id = t.dwh_session_state_id;
 
-INSERT INTO dwh_session_state (dwh_session_state_id, name)
+INSERT INTO etl.dwh_session_state (dwh_session_state_id, name)
 SELECT * FROM tmp_dwh_session_state t
-WHERE  NOT t.dwh_session_state_id in (SELECT dwh_session_state_id FROM dwh_session_state c);
+WHERE  NOT t.dwh_session_state_id in (SELECT dwh_session_state_id FROM etl.dwh_session_state c);
 
 DROP TABLE tmp_dwh_session_state;

@@ -1,0 +1,78 @@
+FROM ubuntu:24.04
+
+# Отключаем интерактивные диалоги apt
+ENV DEBIAN_FRONTEND=noninteractive
+
+# Устанавливаем базовые системные утилиты и локали
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    locales \
+    tzdata \
+    bzip2 \
+    && rm -rf /var/lib/apt/lists/*
+
+# Генерация русской локали (обязательно для СУБД 1С)
+RUN locale-gen ru_RU.UTF-8
+ENV LANG=ru_RU.UTF-8
+ENV LC_ALL=ru_RU.UTF-8
+
+# Создаем системного пользователя postgres (стандартный UID 999)
+RUN groupadd -r postgres --gid=999 && useradd -r -g postgres --uid=999 postgres
+
+# Копируем архив с DEB-пакетами. Инструкция ADD автоматически распакует его в /tmp/pg-packages/
+ADD postgresql_18.1_2_ubuntu_24.04_x86_64_package.tar.bz2 /tmp/pg-packages/
+
+# Установка пакетов с автоматическим разрешением всех зависимостей через APT
+RUN apt-get update && \
+    cd /tmp/pg-packages && \
+    # Сначала ставим общие пакеты конфигурации, чтобы задать структуру
+    apt-get install -y --no-install-recommends \
+        ./postgresql-client-common_287.pgdg24.04+1_all.deb \
+        ./postgresql-common_287.pgdg24.04+1_all.deb && \
+    # Затем устанавливаем библиотеки и сам сервер 1С одной командой
+    apt-get install -y --no-install-recommends \
+        ./libpq5_18.1-2.1C_amd64.deb \
+        ./libpgtypes3_18.1-2.1C_amd64.deb \
+        ./libecpg6_18.1-2.1C_amd64.deb \
+        ./libecpg-compat3_18.1-2.1C_amd64.deb \
+        ./postgresql-client-18_18.1-2.1C_amd64.deb \
+        ./postgresql-18_18.1-2.1C_amd64.deb && \
+    # Очищаем кэш и удаляем временные файлы для уменьшения размера итогового образа
+    apt-get clean && \
+    rm -rf /var/lib/apt/lists/* /tmp/pg-packages
+
+# Добавляем бинарники СУБД в глобальный PATH контейнера
+ENV PATH="/usr/lib/postgresql/18/bin:$PATH"
+ENV PGDATA="/var/lib/postgresql/data"
+
+# Создаем директорию под данные и выставляем права доступа СУБД
+RUN mkdir -p "$PGDATA" && chown -R postgres:postgres "$PGDATA" && chmod 700 "$PGDATA"
+VOLUME /var/lib/postgresql/data
+
+# Открываем порт Postgres
+EXPOSE 5432
+# Пути к данным СУБД (эти переменные уже объявлены выше, дублируем для надежности контекста)
+ENV PATH="/usr/lib/postgresql/18/bin:$PATH"
+ENV PGDATA="/var/lib/postgresql/data"
+
+# 1. Создаем директорию под данные и выставляем права (пока мы ROOT)
+RUN mkdir -p "$PGDATA" && chown -R postgres:postgres "$PGDATA" && chmod 700 "$PGDATA"
+VOLUME /var/lib/postgresql/data
+
+# 2. Создаем скрипт инициализации в доступной системной папке (пока мы ROOT)
+RUN echo '#!/bin/bash\n\
+if [ -z "$(ls -A "$PGDATA")" ]; then\n\
+    echo "Папка данных пуста. Инициализируем кластер базы данных (initdb)..."\n\
+    initdb -D "$PGDATA" --locale=ru_RU.UTF-8\n\
+    echo "Инициализация успешно завершена!"\n\
+fi\n\
+exec postgres' > /usr/local/bin/entrypoint.sh && \
+    chmod +x /usr/local/bin/entrypoint.sh
+
+# Открываем порт Postgres
+EXPOSE 5432
+
+# 3. ТОЛЬКО СЕЙЧАС переключаемся на пользователя postgres
+USER postgres
+
+# Запускаем наш скрипт-обертку при старте контейнера
+ENTRYPOINT ["/bin/bash", "/usr/local/bin/entrypoint.sh"]

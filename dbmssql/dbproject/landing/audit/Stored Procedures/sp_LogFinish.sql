@@ -24,7 +24,7 @@ BEGIN
   SET @UseLnk = [audit].[fn_log_IsLnk]()
 
   IF @AuditTypeID = 1 AND @UseLnk = 1
-    EXEC [$(LinkSRVLogLanding)].[$(ods)].[audit].sp_LnkUpdate
+    EXEC [$(LinkSRVLogLanding)].[$(landing)].[audit].sp_LnkUpdate
       @LogID         = @LogID,
       @EndTime       = @EndTime,
       @RowCount      = @RowCount,

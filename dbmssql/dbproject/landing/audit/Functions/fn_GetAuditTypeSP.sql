@@ -3,11 +3,11 @@ CREATE FUNCTION [audit].[fn_GetAuditTypeSP](
 ) RETURNS int
 AS
 BEGIN
-  IF @AuditEnable = N'AuditProcAll'
-    RETURN 1
-
   IF @AuditEnable IS NULL OR @AuditEnable IN (N'DisableLog', N'')
     RETURN NULL
+
+  IF @AuditEnable = N'AuditProcAll'
+    RETURN 1
 
   IF @AuditEnable = N'AuditProcAllLnk'
     RETURN 2

@@ -1,27 +1,34 @@
-Param (
-    [parameter(Mandatory=$false)][string]$IsUpdate=$false
+﻿Param (
+  [parameter(Mandatory=$false)][string]$IsUpdate=$false
   )
-# todo: put this in a dedicated file for reuse and dot-source the file
 function Test-Administrator  
 {  
-    [OutputType([bool])]
-    param()
-    process {
-        [Security.Principal.WindowsPrincipal]$user = [Security.Principal.WindowsIdentity]::GetCurrent();
-        return $user.IsInRole([Security.Principal.WindowsBuiltinRole]::Administrator);
-    }
+  [OutputType([bool])]
+  param()
+  process {
+    [Security.Principal.WindowsPrincipal]$user = [Security.Principal.WindowsIdentity]::GetCurrent();
+    return $user.IsInRole([Security.Principal.WindowsBuiltinRole]::Administrator);
+  }
 }
 
+if(-not $IsUpdate) {
+  if(-not (Test-Administrator))
+  {
+    # TODO: define proper exit codes for the given errors 
+    Write-Error "This script must be executed as Administrator.";
+    exit 1;
+  }
+}
 
 $ErrorActionPreference = "Stop";
 $CurrentPath = Get-Location
 Set-Location "./dbproject/ScriptsFolder"
 $error.Clear()
 $LASTEXITCODE = 0
-$ClientName="nevadwh"
-$ClientDBODSName="nevadwh_ods"
-$ClientDBDWHName="nevadwh_dwh"
-$ClientDBLandingName="nevadwh_landing"
+$ClientName="newadwh"
+$ClientDBODSName="newadwh_ods"
+$ClientDBDWHName="newadwh_dwh"
+$ClientDBLandingName="newadwh_landing"
 ./dbdeploy -TargetServerName localhost -TargetODSDBname $ClientDBODSName -TargetLandingDBname $ClientDBLandingName -TargetDWHDBname $ClientDBDWHName -IsApplyScripts $false
 if ($LASTEXITCODE -eq -1)
 {
@@ -29,7 +36,7 @@ if ($LASTEXITCODE -eq -1)
 }
 Set-Location $CurrentPath
 $SqlScript = ("DROP DATABASE IF EXISTS $ClientDBODSName;",
- "DROP DATABASE IF EXISTS $ClientDBDWHName;",
+"DROP DATABASE IF EXISTS $ClientDBDWHName;",
 "DROP DATABASE IF EXISTS $ClientDBLandingName;",
 "CREATE DATABASE $ClientDBODSName ;",
 "\c $ClientDBODSName;",
@@ -60,7 +67,7 @@ $OutputDumpFile ="030_create_dwh.sql"
 Remove-Item -Path $OutputDumpFile -Force -ErrorAction SilentlyContinue
 "\c $ClientDBDWHName;`r`n" | Out-File -FilePath $OutputDumpFile -Encoding "UTF8" -Append
 "CREATE extension postgres_fdw;`r`n" | Out-File -FilePath $OutputDumpFile -Encoding "UTF8" -Append
-"CREATE SERVER client_ods FOREIGN DATA WRAPPER postgres_fdw OPTIONS (dbname 'nevadwh_ods', host '127.0.0.1', port '5432');`r`n" | Out-File -FilePath $OutputDumpFile -Encoding "UTF8" -Append
+"CREATE SERVER client_ods FOREIGN DATA WRAPPER postgres_fdw OPTIONS (dbname 'newadwh_ods', host '127.0.0.1', port '5432');`r`n" | Out-File -FilePath $OutputDumpFile -Encoding "UTF8" -Append
 "CREATE USER MAPPING FOR postgres SERVER client_ods OPTIONS ( USER 'postgres', PASSWORD 'postgres');`r`n" | Out-File -FilePath $OutputDumpFile -Encoding "UTF8" -Append
 Get-Content -Encoding "UTF8" $SqlFile | Out-File -FilePath $OutputDumpFile -Encoding "UTF8" -Append
 #"SELECT 2;" | Out-File -FilePath $OutputDumpFile -Encoding "UTF8" -Append
@@ -85,22 +92,94 @@ Remove-Item -Path $OutputDumpFile -Force -ErrorAction SilentlyContinue
 Get-Content -Encoding "UTF8" $SqlFile | Out-File -FilePath $OutputDumpFile -Encoding "UTF8" -Append
 
 if($IsUpdate -eq $true){
-	try {
-		Invoke-RestMethod  -Uri http://localhost:8090/api/Home/Stop -ErrorAction SilentlyContinue
-	} catch {
-	}
-	Set-Location "./dbproject/ScriptsFolder"
-	./dbdeploy -TargetServerName localhost -TargetODSDBname $ClientDBODSName -TargetLandingDBname $ClientDBLandingName -TargetDWHDBname $ClientDBDWHName -IsApplyScripts $true
+  try {
+    Invoke-RestMethod  -Uri http://localhost:8090/api/Home/Stop -ErrorAction SilentlyContinue
+  } catch {
+  }
+  Set-Location "./dbproject/ScriptsFolder"
+  ./dbdeploy -TargetServerName localhost -TargetODSDBname $ClientDBODSName -TargetLandingDBname $ClientDBLandingName -TargetDWHDBname $ClientDBDWHName -IsApplyScripts $true
 
-		Set-Location $CurrentPath
+     Set-Location $CurrentPath
 
-	try {
-		Invoke-RestMethod  -Uri http://localhost:8090/api/Home/Start -ErrorAction SilentlyContinue
-	} catch {
-	}
-	exit
+  try {
+    Invoke-RestMethod  -Uri http://localhost:8090/api/Home/Start -ErrorAction SilentlyContinue
+  } catch {
+  }
+  exit
+}
+
+$Shares = Get-SMBShare -name "Upload" -erroraction 'silentlycontinue'
+if (Test-Administrator) {
+  if($Shares){
+    Remove-SmbShare -name "Upload" -Force
+  }
+}
+$serverName = 'HOMEST'
+$sharePath = 'Upload' # you can append more paths here
+if( Test-Connection $serverName 2> $null ){
+  if( -not (Test-Path "\\${serverName}\${sharePath}")){
+    $everyoneSID = [System.Security.Principal.SecurityIdentifier]::new('S-1-1-0')
+    $everyoneName = $everyoneSID.Translate([System.Security.Principal.NTAccount]).Value
+    Write-Host $everyoneName
+    $SharetPath = Join-Path -Path $CurrentPath -ChildPath  "Upload"
+    Write-Host $SharetPath
+    if( -not (Test-Path $SharetPath)){
+      New-Item -Path $CurrentPath -Name "Upload" -ItemType "directory"
+    }
+    if (Test-Administrator) {
+      New-SmbShare -Name "Upload" -Path $SharetPath -FullAccess $everyoneName
+    }
+  }
 }
 
 Set-Location $CurrentPath
+$utf8bom = [System.Text.UTF8Encoding]::new($true)
+[Console]::OutputEncoding = $utf8bom
+$OutputEncoding = $utf8bom
+# ==============================================================================
+# ПРОВЕРКА И ПЕРЕЗАПУСК DOCKER (ЕСЛИ СВЯЗЬ СЛОМАНА)
+# ==============================================================================
+
+Write-Host "Проверка связи с Docker..." -ForegroundColor Cyan
+
+# Проверяем, отвечает ли Docker-демон
+$dockerCheck = docker ps 2>$null
+if ($LASTEXITCODE -ne 0) {
+    Write-Host "Ошибка: Связь с Docker потеряна (канал закрыт)." -ForegroundColor Red
+    Write-Host "Попытка перезапуска служб Docker..." -ForegroundColor Yellow
+
+    # Принудительно перезапускаем все службы Windows, связанные с Docker
+    Restart-Service *docker* -Force
+
+    # Ждем, пока Docker полностью поднимется (обычно требуется время)
+    Write-Host "Ожидание запуска Docker-демона (30 секунд)..." -ForegroundColor Yellow
+    Start-Sleep -Seconds 30
+    
+    # Вторая проверка после перезапуска
+    docker info > $null 2>&1
+    if ($LASTEXITCODE -ne 0) {
+        Write-Host "Критическая ошибка: Не удалось восстановить связь с Docker." -ForegroundColor Red
+        Write-Host "Пожалуйста, перезапустите Docker Desktop вручную." -ForegroundColor Red
+        Read-Host "Нажмите Enter для выхода..."
+        exit
+    }
+    Write-Host "Связь с Docker успешно восстановлена!" -ForegroundColor Green
+} else {
+    Write-Host "Docker работает нормально, продолжаем..." -ForegroundColor Green
+}
+
+# ==============================================================================
+# ОСНОВНОЙ СКРИПТ ПУСКА
+# ==============================================================================
+
 docker compose down -v
-docker compose up
+#docker compose up
+
+# 1. Запуск docker compose в новом окне для отображения логов
+Start-Process "cmd.exe" -ArgumentList "/k docker compose up"
+
+# 2. Пауза (в секундах), чтобы контейнеры успели запуститься до открытия браузера
+Start-Sleep -Seconds 15
+
+# 3. Открытие нужной страницы в браузере по умолчанию
+Start-Process "http://localhost:8100"

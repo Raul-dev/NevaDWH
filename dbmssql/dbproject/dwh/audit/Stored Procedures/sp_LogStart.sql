@@ -20,7 +20,7 @@ AS
 BEGIN
   SET NOCOUNT ON
   DECLARE @AuditTypeID tinyint, @UseLnk bit
-  SELECT @AuditTypeID = [audit].[fn_GetAuditTypeSP](N'AuditProcAll')
+  SELECT @AuditTypeID = [audit].[fn_GetAuditTypeSP](@AuditEnable)
 
   IF @AuditTypeID IS NULL OR @AuditTypeID = 0
     RETURN 0
@@ -48,7 +48,7 @@ BEGIN
   SET @ProcedureName = LEFT(REPLICATE('  ', @CountIds) + LTRIM(RTRIM(@ProcedureName)), 512)
 
   IF @AuditTypeID = 1 AND @UseLnk = 1
-    EXEC [$(LinkSRVLogLanding)].[$(ods)].[audit].sp_LnkInsert
+    EXEC [$(LinkSRVLogLanding)].[$(dwh)].[audit].sp_LnkInsert
       @MainID           = @MainID,
       @ParentID         = @ParentID,
       @StartTime        = @StartTime,

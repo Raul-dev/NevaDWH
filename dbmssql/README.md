@@ -76,7 +76,7 @@ flowchart TB
 ## Быстрый запуск
 
 ```powershell
-cd \dbmssql
+cd F:\Work\GitLab\gitlab26.neva.loc\shop\publicdwh_nodejs\src\dbprojects\dbmssql
 
 # 1. Сборка образов
 docker compose build

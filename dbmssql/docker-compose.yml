@@ -31,10 +31,11 @@ x-common:
     - "host.docker.internal:host-gateway"
   volumes:
     - ./ETLAirflow/dags:/opt/airflow/dags
-    - ./ETLAirflow/logs:/opt/airflow/logs
+    - ./logs/ETLAirflow:/opt/airflow/logs
     - ./ETLAirflow/plugins:/opt/airflow/plugins
     - ./ETLAirflow/config:/opt/airflow/config
     - /var/run/docker.sock:/var/run/docker.sock
+
 
 x-depends-on:
   &depends-on
@@ -60,7 +61,7 @@ services:
       - postgres-clientdata:/var/lib/postgresql
       - ./005_create_db.sql:/docker-entrypoint-initdb.d/005_create_db.sql
       - ./070_msgqueue.sql:/docker-entrypoint-initdb.d/070_msgqueue.sql
-                
+            
     env_file:
       - .env
 
@@ -149,10 +150,7 @@ services:
 
   mq.webservice:
     <<: *host-mssql
-    image: ${DOCKER_REGISTRY-}mqmswebservice
-    build:
-      context: ./images/mq.webservice
-      dockerfile: Dockerfile
+    image: raulamailru/nevadwh-mq:0.0.2
     environment:
       - ASPNETCORE_ENVIRONMENT=Development
       - ASPNETCORE_HTTP_PORTS=8080
@@ -187,10 +185,7 @@ services:
 
   landing.webservice:
     <<: *host-mssql
-    image: ${DOCKER_REGISTRY-}landinwebservice
-    build:
-      context: ./images/landing.webservice
-      dockerfile: Dockerfile
+    image: raulamailru/nevadwh-landing:0.0.2
     environment:
       - ASPNETCORE_ENVIRONMENT=Development
       - ASPNETCORE_HTTP_PORTS=8080
@@ -215,10 +210,7 @@ services:
 
   generator.api:
     <<: *host-mssql
-    image: ${DOCKER_REGISTRY-}generatorapi
-    build:
-      context: ./images/generator.api
-      dockerfile: Dockerfile
+    image: raulamailru/nevadwh-generator:0.0.2
     environment:
       - ASPNETCORE_ENVIRONMENT=Development
       - ASPNETCORE_HTTP_PORTS=8080
@@ -239,10 +231,7 @@ services:
         condition: service_healthy
 
   nevadwh:
-    image: ${DOCKER_REGISTRY-}nevadwh
-    build:
-      context: ./images/nevadwh
-      dockerfile: Dockerfile
+    image: raulamailru/nevadwh-admin:0.0.2
     environment:
       - ASPNETCORE_ENVIRONMENT=Development
       - ASPNETCORE_HTTP_PORTS=8080

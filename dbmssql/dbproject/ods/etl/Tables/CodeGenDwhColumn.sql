@@ -6,7 +6,7 @@ CREATE TABLE [etl].[CodeGenDwhColumn] (
   [TextLength]          int           NULL,
   [Precision]           int           NULL,
   [Scale]               int           NULL,
-  [IsEnable]            bit           CONSTRAINT [DF_etl_CodeGenDwhColumn_IsEnable] DEFAULT ((1)) NOT NULL,
+  [IsEnabled]            bit           CONSTRAINT [DF_etl_CodeGenDwhColumn_IsEnabled] DEFAULT ((1)) NOT NULL,
   [IsVersionkey]        bit           CONSTRAINT [DF_etl_CodeGenDwhColumn_IsVersionkey] DEFAULT ((0)) NOT NULL,
   [IsNulable]           bit           CONSTRAINT [DF_etl_CodeGenDwhColumn_IsNulable] DEFAULT ((1)) NOT NULL,
   [NullValue]           varchar(128)  NULL,

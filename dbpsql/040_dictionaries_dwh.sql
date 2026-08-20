@@ -1,4 +1,4 @@
-\c nevadwh_dwh;
+﻿\c newadwh_dwh;
 
 
 INSERT INTO data_source (data_source_id,name) 
