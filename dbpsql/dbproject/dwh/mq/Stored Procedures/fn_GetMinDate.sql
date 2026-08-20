@@ -1,5 +1,5 @@
 
-CREATE OR REPLACE FUNCTION  "fn_GetMinDate"()
+CREATE OR REPLACE FUNCTION  mq."fn_GetMinDate"()
 RETURNS timestamp
 AS $BODY$
 BEGIN

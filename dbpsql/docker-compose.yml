@@ -158,6 +158,9 @@ services:
         mkdir -p /opt/airflow/logs /opt/airflow/dags /opt/airflow/plugins /opt/airflow/config
         chown -R "${AIRFLOW_UID:-0}:0" /opt/airflow/{logs,dags,plugins,config}
         exec /entrypoint airflow version
+    depends_on:
+      postgresdb:
+        condition: service_healthy
 
   mq.webservice:
     <<: *host-mssql
@@ -165,7 +168,7 @@ services:
     environment:
       - ASPNETCORE_ENVIRONMENT=Development
       - ASPNETCORE_HTTP_PORTS=8080
-      #- ASPNETCORE_HTTPS_PORTS=8081
+      - ASPNETCORE_HTTPS_PORTS=8081
       - DataBaseSettings__ServerName=postgresdb
       - DataBaseSettings__ServerType=psql
       - DataBaseSettings__NamingStyle=Snake
@@ -201,7 +204,6 @@ services:
     environment:
       - ASPNETCORE_ENVIRONMENT=Development
       - ASPNETCORE_HTTP_PORTS=8080
-      - DataBaseSettings__ServerName=postgresdb
       - DataBaseSettings__ServerType=psql
       - DataBaseSettings__NamingStyle=Snake
       - DataBaseSettings__ClientName=${MQ_CLIENTNAME:-client1}

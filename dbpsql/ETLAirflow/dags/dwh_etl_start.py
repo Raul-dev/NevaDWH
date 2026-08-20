@@ -48,7 +48,7 @@ with DAG(
         src.set_autocommit(src_conn, True)
         cursor = src_conn.cursor()
         #params = (v_dwh_session_id, v_count, v_session_date) 
-        cursor.execute("""CALL public."dwh_AssignSessionID"(null::bigint, null::bigint, null::timestamp)""")
+        cursor.execute("""CALL etl."dwh_AssignSessionID"(null::bigint, null::bigint, null::timestamp)""")
         v_dwh_session_id  = models.Variable.get('dwh_session_id', default_var=-1)
         new_var = models.Variable()
         new_var.type = int
@@ -115,8 +115,8 @@ with DAG(
             #params = (v_dwh_session_id, v_count, v_session_date) 
             logging.info("Type %s Date %s",type(v_session_date),v_session_date)
             params = (v_session_date) 
-            #call public."sp_SaveSessionState"(NULL::bigint, 7::bigint, 2123::bigint, 1::smallint, null::smallint, '2023-08-27 21:06:57.878293'::timestamp without time zone, null::varchar(4000))
-            cursor.execute(f"""CALL public."sp_SaveSessionState"(NULL::bigint, {v_dwh_session_id}::bigint, {v_count}::bigint, 1::smallint, null::smallint, '{v_session_date}'::timestamp without time zone, null::varchar(4000))""")
+            #call mq."sp_SaveSessionState"(NULL::bigint, 7::bigint, 2123::bigint, 1::smallint, null::smallint, '2023-08-27 21:06:57.878293'::timestamp without time zone, null::varchar(4000))
+            cursor.execute(f"""CALL mq."sp_SaveSessionState"(NULL::bigint, {v_dwh_session_id}::bigint, {v_count}::bigint, 1::smallint, null::smallint, '{v_session_date}'::timestamp without time zone, null::varchar(4000))""")
        
             id=0
             for row in cursor:
@@ -154,7 +154,7 @@ with DAG(
         v_session_id  = models.Variable.get('session_id', default_var=-1)      
         #params = (v_session_id) 
         #cursor.execute("""CALL "sp_SaveSessionState" @session_id=%d, @session_state_id=2;""",params)
-        cursor.execute(f"""CALL public."sp_SaveSessionState"({v_session_id}::bigint, NULL::bigint, NULL::bigint, 1::smallint, 2::smallint, NULL::timestamp without time zone, null::varchar(4000))""")
+        cursor.execute(f"""CALL mq."sp_SaveSessionState"({v_session_id}::bigint, NULL::bigint, NULL::bigint, 1::smallint, 2::smallint, NULL::timestamp without time zone, null::varchar(4000))""")
         cursor.close()
         src_conn.close()
         src = PostgresHook(postgres_conn_id='postgres_ods')
@@ -163,7 +163,7 @@ with DAG(
         cursor = src_conn.cursor()
         v_dwh_session_id  = models.Variable.get('dwh_session_id', default_var=-1)      
         params = (v_dwh_session_id) 
-        cursor.execute("""CALL public."dwh_SaveSessionState"(%s::bigint, null::smallint, 4::smallint);""",params)
+        cursor.execute("""CALL mq."dwh_SaveSessionState"(%s::bigint, null::smallint, 4::smallint);""",params)
         cursor.close()
         src_conn.close()
 

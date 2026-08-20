@@ -2,15 +2,15 @@
 DO
 $$
 BEGIN
-RAISE NOTICE 'CREATE PROCEDURE "sp_SaveSessionState"';
+RAISE NOTICE 'CREATE PROCEDURE mq."sp_SaveSessionState"';
 END;
 $$;
 /*
-call public."sp_SaveSessionState" (null::bigint, 1::bigint, 1::bigint, 1::smallint, 1::smallint, now()::timestamp, null::varchar(4000) ) 
+call mq."sp_SaveSessionState" (null::bigint, 1::bigint, 1::bigint, 1::smallint, 1::smallint, now()::timestamp, null::varchar(4000) ) 
 SELECT * FROM session
 SELECT COALESE(par_create_session, now())
 */
-CREATE OR REPLACE PROCEDURE "sp_SaveSessionState" (
+CREATE OR REPLACE PROCEDURE mq."sp_SaveSessionState" (
     par_session_id INOUT bigint DEFAULT NULL, 
     par_dwh_session_id IN bigint DEFAULT NULL, 
     par_rows_count  IN bigint DEFAULT NULL, 
@@ -28,14 +28,14 @@ BEGIN
     IF par_session_id IS NULL THEN
         SELECT COALESCE(par_create_session, now()) into par_create_session;
         SELECT COALESCE(par_session_state_id, 1) into par_session_state_id;
-        INSERT INTO session (data_source_id, session_state_id, rows_count, create_session, dwh_session_id)
+        INSERT INTO mq.session (data_source_id, session_state_id, rows_count, create_session, dwh_session_id)
         VALUES(par_data_source_id, par_session_state_id, par_rows_count, par_create_session, par_dwh_session_id);
         
         SELECT currval(pg_get_serial_sequence('session','session_id')) into par_session_id;
         RETURN;
     ELSE
     
-        UPDATE session
+        UPDATE mq.session
             SET 
                 session_state_id = par_session_state_id,    
                 error_message = par_error_message,

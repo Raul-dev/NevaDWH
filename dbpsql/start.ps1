@@ -1,6 +1,7 @@
 ﻿Param (
-  [parameter(Mandatory=$false)][string]$IsUpdate=$false
-  )
+  [Parameter(Mandatory=$false)][string]$IsUpdate=$false,
+  [Parameter(Mandatory = $false)][string]$ServerName = 'localhost'
+)
 function Test-Administrator  
 {  
   [OutputType([bool])]
@@ -11,14 +12,6 @@ function Test-Administrator
   }
 }
 
-if(-not $IsUpdate) {
-  if(-not (Test-Administrator))
-  {
-    # TODO: define proper exit codes for the given errors 
-    Write-Error "This script must be executed as Administrator.";
-    exit 1;
-  }
-}
 
 $ErrorActionPreference = "Stop";
 $CurrentPath = Get-Location
@@ -114,10 +107,17 @@ if (Test-Administrator) {
     Remove-SmbShare -name "Upload" -Force
   }
 }
-$serverName = 'HOMEST'
 $sharePath = 'Upload' # you can append more paths here
-if( Test-Connection $serverName 2> $null ){
-  if( -not (Test-Path "\\${serverName}\${sharePath}")){
+if ($ServerName -in @('localhost', '127.0.0.1', '.')) {
+    $ServerName = $env:COMPUTERNAME
+    # Альтернативный вариант для получения полного FQDN-имени (с доменом):
+    # $ServerName = [System.Net.Dns]::GetHostEntry('').HostName
+}
+Write-Host "Работаем с сервером: $ServerName"
+if (-not (Test-Connection $ServerName -Count 1 -Quiet -ErrorAction SilentlyContinue)) {
+    Write-Host "Сервер $ServerName недоступен."
+} else {
+  if( -not (Test-Path "\\${ServerName}\${sharePath}")){
     $everyoneSID = [System.Security.Principal.SecurityIdentifier]::new('S-1-1-0')
     $everyoneName = $everyoneSID.Translate([System.Security.Principal.NTAccount]).Value
     Write-Host $everyoneName
@@ -128,6 +128,8 @@ if( Test-Connection $serverName 2> $null ){
     }
     if (Test-Administrator) {
       New-SmbShare -Name "Upload" -Path $SharetPath -FullAccess $everyoneName
+    } else {
+      Write-Warning "Can't create upload share. This script must be executed as Administrator.";
     }
   }
 }

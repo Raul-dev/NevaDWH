@@ -16,7 +16,7 @@ SELECT
   nkey,
   NULL::uuid AS vkey,
   now()::timestamp without time zone AS start_date,
-  public."fn_GetMaxDate"()::timestamp without time zone AS end_date,
+  mq."fn_GetMaxDate"()::timestamp without time zone AS end_date,
   "RefID",
   "DeletionMark",
   "Number",

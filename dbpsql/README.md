@@ -1,22 +1,22 @@
-# NevaDWH-DEMO (dbpsql) — локальный стенд
+# NevaDWH-DEMO (dbmssql) — локальный стенд
 
-Docker Compose для отладки PostgresSQL DWH-клиента **NevaDWH-DEMO**. Сервисы приложений это образы c docker.io/raulamailru/nevadwh-* ; образы Airflow и Rabbit — из локальной папки `images/`.
+Docker Compose для отладки MS SQL DWH-клиента **NevaDWH-DEMO**. Сервисы приложений собираются из рабочих проектов `src/services`; образы Airflow и Rabbit — из локальной папки `images/`.
 
 ## Состав и версии
 
-| Сервис                 | Образ / сборка                                 | Версия | Назначение                                 |
-| ---------------------------- | --------------------------------------------------------- | ------------ | ---------------------------------------------------- |
-| **SQL Server**         | на хосте (не в compose)                         | —           | БД log / landing / ods / dwh (dacpac)              |
-| **postgresdb**         | `postgres:17.2-alpine`                                  | 17.2         | Metadata Airflow, БД`nevadwh`                    |
-| **rabbit**             | `images/Rabbit` → `rabbitmq:4.3.4-management`        | 4.3.4        | Очереди для`mq_ms`                       |
-| **airflow-init**       | `images/airflow` → `apache/airflow:3.3.0-python3.12` | 3.3.0        | Миграция БД Airflow, init                  |
-| **api-server**         | тот же образ Airflow                            | 3.3.0        | UI + REST API Airflow                                |
-| **scheduler**          | тот же образ Airflow                            | 3.3.0        | Планировщик DAG                           |
-| **dag-processor**      | тот же образ Airflow                            | 3.3.0        | Парсинг DAG (обязателен в AF3)     |
-| **mq.webservice**      | `src/services/mq_ms`                                    | .NET 10      | RabbitMQ → PostgreSQL (ODS)                         |
-| **landing.webservice** | `src/services/dwhmanager`                               | .NET 8       | API landing-слоя                                 |
-| **generator.api**      | `src/services/dwhgenerator`                             | .NET 8       | Генератор DWH (xdto API)                    |
-| **nevadwh**            | `src/services/dwhmanager` (NevaDWH)                     | .NET 8       | Веб-приложение / оркестрация |
+| Сервис | Образ / сборка | Версия | Назначение |
+|--------|----------------|--------|------------|
+| **SQL Server** | на хосте (не в compose) | — | БД log / landing / ods / dwh (dacpac) |
+| **postgresdb** | `postgres:17.2-alpine` | 17.2 | Metadata Airflow, БД `nevadwh` |
+| **rabbit** | `images/Rabbit` → `rabbitmq:4.3.4-management` | 4.3.4 | Очереди для `mq_ms` |
+| **airflow-init** | `images/airflow` → `apache/airflow:3.3.0-python3.12` | 3.3.0 | Миграция БД Airflow, init |
+| **api-server** | тот же образ Airflow | 3.3.0 | UI + REST API Airflow |
+| **scheduler** | тот же образ Airflow | 3.3.0 | Планировщик DAG |
+| **dag-processor** | тот же образ Airflow | 3.3.0 | Парсинг DAG (обязателен в AF3) |
+| **mq.webservice** | `src/services/mq_ms` | .NET 10 | RabbitMQ → PostgreSQL (ODS) |
+| **landing.webservice** | `src/services/dwhmanager` | .NET 8 | API landing-слоя |
+| **generator.api** | `src/services/dwhgenerator` | .NET 8 | Генератор DWH (xdto API) |
+| **nevadwh** | `src/services/dwhmanager` (NevaDWH) | .NET 8 | Веб-приложение / оркестрация |
 
 Проект БД (эталон схем): `dbproject/` — landing, ods, dwh, log.
 
@@ -102,96 +102,96 @@ docker compose up -d
 
 ### SQL Server (хост)
 
-| Параметр         | Значение                                                                           |
-| ------------------------ | ------------------------------------------------------------------------------------------ |
-| Сервер             | `localhost,1433`                                                                         |
-| Пользователь | `NevaDWH-DEMOuser`                                                                       |
-| Пароль             | `MyPassword321`                                                                          |
-| Базы                 | `NevaDWH-DEMO_log`, `NevaDWH-DEMO_landing`, `NevaDWH-DEMO_ods`, `NevaDWH-DEMO_dwh` |
+| Параметр | Значение |
+|----------|----------|
+| Сервер | `localhost,1433` |
+| Пользователь | `NevaDWH-DEMOuser` |
+| Пароль | `MyPassword321` |
+| Базы | `NevaDWH-DEMO_log`, `NevaDWH-DEMO_landing`, `NevaDWH-DEMO_ods`, `NevaDWH-DEMO_dwh` |
 
 ### PostgreSQL (контейнер `client-postgresdb17`)
 
-| Параметр     | Значение                                                                          |
-| -------------------- | ----------------------------------------------------------------------------------------- |
-| Host (с хоста) | `localhost:54321`                                                                       |
-| User / Password      | `postgres` / `postgres`                                                               |
-| Airflow DB           | `airflow`                                                                               |
-| NevaDWH DB           | `nevadwh` (создаётся приложением при необходимости) |
+| Параметр | Значение |
+|----------|----------|
+| Host (с хоста) | `localhost:54321` |
+| User / Password | `postgres` / `postgres` |
+| Airflow DB | `airflow` |
+| NevaDWH DB | `nevadwh` (создаётся приложением при необходимости) |
 
 ### RabbitMQ
 
-| Параметр | Значение       |
-| ---------------- | ---------------------- |
-| AMQP             | `localhost:5672`     |
-| Management UI    | http://localhost:15672 |
-| Login / Password | `admin` / `admin`  |
+| Параметр | Значение |
+|----------|----------|
+| AMQP | `localhost:5672` |
+| Management UI | http://localhost:15672 |
+| Login / Password | `admin` / `admin` |
 
 ### Airflow 3.3
 
-| Параметр | Значение                                             |
-| ---------------- | ------------------------------------------------------------ |
-| Web UI           | http://localhost:8080                                        |
-| Login / Password | `airflow` / `airflow`                                    |
-| Health           | http://localhost:8080/api/v2/monitor/health                  |
-| REST API v2      | http://localhost:8080/api/v2/                                |
-| Scheduler health | порт`8793` (внутренний)                      |
-| DAG'и           | `ETLAirflow/dags/`                                         |
-| Connections      | `mssql_ods`, `mssql_dwh`, `postgres_*` (из `.env`) |
+| Параметр | Значение |
+|----------|----------|
+| Web UI | http://localhost:8080 |
+| Login / Password | `airflow` / `airflow` |
+| Health | http://localhost:8080/api/v2/monitor/health |
+| REST API v2 | http://localhost:8080/api/v2/ |
+| Scheduler health | порт `8793` (внутренний) |
+| DAG'и | `ETLAirflow/dags/` |
+| Connections | `mssql_ods`, `mssql_dwh`, `postgres_*` (из `.env`) |
 
 ### MQ WebService (`mq_ms`)
 
-| Параметр                       | Значение                                         |
-| -------------------------------------- | -------------------------------------------------------- |
-| HTTP                                   | http://localhost:8090                                    |
-| HTTPS                                  | https://localhost:8091                                   |
-| Swagger                                | http://localhost:8090/swagger                            |
-| Status API                             | http://localhost:8090/v1/mq/service/status               |
-| Stop/Start (deploy)                    | `POST http://localhost:8090/api/Home/Stop`, `/Start` |
-| PostgreSQL (из контейнера) | `host.docker.internal` → ODS `NevaDWH-DEMO_ods`     |
-| Rabbit (из контейнера)     | `rabbit:5672`                                          |
+| Параметр | Значение |
+|----------|----------|
+| HTTP | http://localhost:8090 |
+| HTTPS | https://localhost:8091 |
+| Swagger | http://localhost:8090/swagger |
+| Status API | http://localhost:8090/v1/mq/service/status |
+| Stop/Start (deploy) | `POST http://localhost:8090/api/Home/Stop`, `/Start` |
+| PostgreSQL (из контейнера) | `host.docker.internal` → ODS `NevaDWH-DEMO_ods` |
+| Rabbit (из контейнера) | `rabbit:5672` |
 
 ### Landing WebService
 
-| Параметр | Значение              |
-| ---------------- | ----------------------------- |
-| HTTP             | http://localhost:8092         |
-| HTTPS            | https://localhost:8093        |
-| Swagger          | http://localhost:8092/swagger |
-| PostgreSQL       | `NevaDWH-DEMO_landing`      |
+| Параметр | Значение |
+|----------|----------|
+| HTTP | http://localhost:8092 |
+| HTTPS | https://localhost:8093 |
+| Swagger | http://localhost:8092/swagger |
+| PostgreSQL | `NevaDWH-DEMO_landing` |
 
 ### Generator API
 
-| Параметр | Значение                                  |
-| ---------------- | ------------------------------------------------- |
-| HTTP             | http://localhost:8110                             |
-| Swagger UI       | http://localhost:8110/api/swagger                 |
-| OpenAPI JSON     | http://localhost:8110/api/swagger/v1/swagger.json |
-| PostgreSQL       | `NevaDWH-DEMO_ods`                              |
+| Параметр | Значение |
+|----------|----------|
+| HTTP | http://localhost:8110 |
+| Swagger UI | http://localhost:8110/api/swagger |
+| OpenAPI JSON | http://localhost:8110/api/swagger/v1/swagger.json |
+| PostgreSQL | `NevaDWH-DEMO_ods` |
 
 ### NevaDWH (веб-приложение)
 
-| Параметр                 | Значение                                                   |
-| -------------------------------- | ------------------------------------------------------------------ |
-| HTTP                             | http://localhost:8100                                              |
-| Swagger (Development)            | http://localhost:8100/swagger                                      |
-| Postgres                         | `postgresdb:5432`, БД `nevadwh`, `postgres` / `postgres` |
-| Generator (внутри compose) | http://generator.api:8080                                          |
-| MQ (внутри compose)        | http://mq.webservice:8080                                          |
-| Landing (внутри compose)   | http://landing.webservice:8080                                     |
+| Параметр | Значение |
+|----------|----------|
+| HTTP | http://localhost:8100 |
+| Swagger (Development) | http://localhost:8100/swagger |
+| Postgres | `postgresdb:5432`, БД `nevadwh`, `postgres` / `postgres` |
+| Generator (внутри compose) | http://generator.api:8080 |
+| MQ (внутри compose) | http://mq.webservice:8080 |
+| Landing (внутри compose) | http://landing.webservice:8080 |
 
 ---
 
 ## Сводная таблица URL
 
-| Сервис        | URL                               | Логин                                        | Пароль |
-| ------------------- | --------------------------------- | ------------------------------------------------- | ------------ |
-| Airflow UI          | http://localhost:8080             | `airflow`                                       | `airflow`  |
-| RabbitMQ Management | http://localhost:15672            | `admin`                                         | `admin`    |
-| MQ Swagger          | http://localhost:8090/swagger     | —                                                | —           |
-| Landing Swagger     | http://localhost:8092/swagger     | —                                                | —           |
-| Generator Swagger   | http://localhost:8110/api/swagger | —                                                | —           |
-| NevaDWH Swagger     | http://localhost:8100/swagger     | —                                                | —           |
-| NevaDWH App         | http://localhost:8100             | *(зависит от настройки auth)* | —           |
+| Сервис | URL | Логин | Пароль |
+|--------|-----|-------|--------|
+| Airflow UI | http://localhost:8080 | `airflow` | `airflow` |
+| RabbitMQ Management | http://localhost:15672 | `admin` | `admin` |
+| MQ Swagger | http://localhost:8090/swagger | — | — |
+| Landing Swagger | http://localhost:8092/swagger | — | — |
+| Generator Swagger | http://localhost:8110/api/swagger | — | — |
+| NevaDWH Swagger | http://localhost:8100/swagger | — | — |
+| NevaDWH App | http://localhost:8100 | *(зависит от настройки auth)* | — |
 
 ---
 
@@ -242,18 +242,18 @@ dbpsql/
 
 ## Переменные `.env` (основные)
 
-| Переменная                       | Пример                             | Описание                                    |
-| ------------------------------------------ | ---------------------------------------- | --------------------------------------------------- |
-| `MQ_CLIENTNAME`                          | `NevaDWH-DEMO`                         | Имя клиента для MQ/Landing             |
-| `MQ_DATABASE`                            | `NevaDWH-DEMO_ods`                     | ODS для MQ/Generator                             |
-| `LANDING_DATABASE`                       | `NevaDWH-DEMO_landing`                 | Landing БД                                        |
-| `MQ_USER` / `MQ_PASSWORD`              | `NevaDWH-DEMOuser` / `MyPassword321` | SQL login для сервисов                   |
-| `MQ_SESSION_MODE`                        | `FullMode`                             | Режим MQ worker (`FullMode`, `BufferOnly`) |
-| `RABBITMQ_DEFAULT_QUEUE`                 | `InfoBase`                             | Очередь RabbitMQ (как в legacy`mq`)    |
-| `RABBITMQ_EXCHANGE`                      | `amq.fanout`                           | Exchange RabbitMQ                                   |
-| `RABBITMQ_VIRTUAL_HOST`                  | `/`                                    | Virtual host                                        |
-| `RABBITMQ_USER` / `RABBITMQ_PASSWORD`  | `admin` / `admin`                    | Доступ к RabbitMQ                            |
-| `SIMPLE_AUTH_MANAGER_*` + passwords.json | `airflow` / `airflow`                | UI Airflow 3 (SimpleAuth)                           |
+| Переменная | Пример | Описание |
+|------------|--------|----------|
+| `MQ_CLIENTNAME` | `NevaDWH-DEMO` | Имя клиента для MQ/Landing |
+| `MQ_DATABASE` | `NevaDWH-DEMO_ods` | ODS для MQ/Generator |
+| `LANDING_DATABASE` | `NevaDWH-DEMO_landing` | Landing БД |
+| `MQ_USER` / `MQ_PASSWORD` | `NevaDWH-DEMOuser` / `MyPassword321` | SQL login для сервисов |
+| `MQ_SESSION_MODE` | `FullMode` | Режим MQ worker (`FullMode`, `BufferOnly`) |
+| `RABBITMQ_DEFAULT_QUEUE` | `InfoBase` | Очередь RabbitMQ (как в legacy `mq`) |
+| `RABBITMQ_EXCHANGE` | `amq.fanout` | Exchange RabbitMQ |
+| `RABBITMQ_VIRTUAL_HOST` | `/` | Virtual host |
+| `RABBITMQ_USER` / `RABBITMQ_PASSWORD` | `admin` / `admin` | Доступ к RabbitMQ |
+| `SIMPLE_AUTH_MANAGER_*` + passwords.json | `airflow` / `airflow` | UI Airflow 3 (SimpleAuth) |
 
 ---
 

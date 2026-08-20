@@ -30,7 +30,7 @@ BEGIN
     session_id = COALESCE(trget.session_id, staging.session_id),
     start_date = COALESCE(trget.start_date, staging.start_date)
   FROM staging."DIM_Клиенты" as src
-    LEFT JOIN target."DIM_Клиенты" as trget ON trget.end_date = public."fn_GetMaxDate"() AND trget.nkey = src.nkey AND trget.vkey = src.vkey
+    LEFT JOIN target."DIM_Клиенты" as trget ON trget.end_date = mq."fn_GetMaxDate"() AND trget.nkey = src.nkey AND trget.vkey = src.vkey
   WHERE staging.staging_id = src.staging_id;
 
   INSERT INTO staging."DIM_Клиенты" (
@@ -67,7 +67,7 @@ BEGIN
   FROM (
     SELECT source.*
       FROM target."DIM_Клиенты" source
-      WHERE source.end_date = public."fn_GetMaxDate"() AND
+      WHERE source.end_date = mq."fn_GetMaxDate"() AND
       EXISTS( SELECT 1 FROM staging."DIM_Клиенты" as stg WHERE source.nkey = stg.nkey AND source.id <> stg.id )
     ) a;
   GET DIAGNOSTICS var_rowcount = ROW_COUNT;

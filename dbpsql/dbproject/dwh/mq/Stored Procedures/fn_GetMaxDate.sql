@@ -1,5 +1,5 @@
 
-CREATE OR REPLACE FUNCTION  "fn_GetMaxDate"()
+CREATE OR REPLACE FUNCTION  mq."fn_GetMaxDate"()
 RETURNS timestamp
 AS $BODY$
 BEGIN
