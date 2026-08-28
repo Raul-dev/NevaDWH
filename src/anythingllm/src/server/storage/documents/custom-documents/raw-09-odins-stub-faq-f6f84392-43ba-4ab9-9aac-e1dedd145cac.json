@@ -1,0 +1,13 @@
+{
+    "id": "f6f84392-43ba-4ab9-9aac-e1dedd145cac",
+    "url": "file://09-odins-stub-faq.txt",
+    "title": "09-odins-stub-faq.txt",
+    "docAuthor": "no author specified",
+    "description": "Neva engineer corpus: _curated/09-odins-stub-faq.md",
+    "docSource": "neva-engineer-rag",
+    "chunkSource": "09-odins-stub-faq.txt",
+    "published": "8/28/2026, 4:41:38 PM",
+    "wordCount": 50,
+    "pageContent": "---\r\nworkspace: dwh-engineer\r\ntitle: \"Разбор процедур odins — stub\"\r\nsource: curated\r\n---\r\n\r\n# Разбери процедуру odins.load_FACT_* построчно\r\n\r\nВ **тестовом stub-корпусе** полного SQL-кода процедур ещё нет.\r\n\r\n**Шаблон ответа:** «**Полного кода нет в индексе**» (stub). Можно описать слой/схему по обзору Landing → ODS → DWH или уточнить имя объекта после расширения SQL-корпуса.\r\n\r\nНе выдумывай построчный разбор без исходника в RAG.\r\n",
+    "token_count_estimate": 177
+}

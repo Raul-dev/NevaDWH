@@ -1,0 +1,13 @@
+{
+    "id": "a8e9b908-4a98-4324-8ee9-736938ecf832",
+    "url": "file://03-landing-vs-ods-faq.txt",
+    "title": "03-landing-vs-ods-faq.txt",
+    "docAuthor": "no author specified",
+    "description": "Neva engineer corpus: _curated/03-landing-vs-ods-faq.md",
+    "docSource": "neva-engineer-rag",
+    "chunkSource": "03-landing-vs-ods-faq.txt",
+    "published": "8/28/2026, 4:41:38 PM",
+    "wordCount": 39,
+    "pageContent": "---\r\nworkspace: dwh-engineer\r\ntitle: \"Landing vs ODS\"\r\nsource: curated\r\n---\r\n\r\n# Чем Landing отличается от ODS?\r\n\r\n**Шаблон ответа:** **Landing** — сырьё из источника (1С, файлы, очереди), минимальная очистка. **ODS** — операционный слой дневной активности, актуальные срезы для отчётности.\r\n\r\nПоток: источник → Landing → ODS → DWH.\r\n",
+    "token_count_estimate": 130
+}

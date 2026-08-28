@@ -1,0 +1,13 @@
+{
+    "id": "f84535b1-7408-4f45-bac6-12d3ba89350c",
+    "url": "file://05-schemas-mq-etl-staging-faq.txt",
+    "title": "05-schemas-mq-etl-staging-faq.txt",
+    "docAuthor": "no author specified",
+    "description": "Neva engineer corpus: _curated/05-schemas-mq-etl-staging-faq.md",
+    "docSource": "neva-engineer-rag",
+    "chunkSource": "05-schemas-mq-etl-staging-faq.txt",
+    "published": "8/28/2026, 4:41:38 PM",
+    "wordCount": 41,
+    "pageContent": "---\r\nworkspace: dwh-engineer\r\ntitle: \"Роли схем mq etl staging\"\r\nsource: curated\r\n---\r\n\r\n# Какие роли у схем mq, etl, staging?\r\n\r\n**Шаблон ответа:**\r\n- **mq** — буферы и **очереди** сообщений (интеграция с MQ-сервисом).\r\n- **etl** — процедуры загрузки и трансформации.\r\n- **staging** — **промежуточные** таблицы перед target / ODS / DWH.\r\n",
+    "token_count_estimate": 139
+}

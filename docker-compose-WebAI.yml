@@ -1,0 +1,151 @@
+version: '3.8'
+
+services:
+  # --- 1. TRAEFIK REVERSE PROXY ---
+  traefik:
+    image: traefik:v3.0
+    container_name: traefik
+    restart: unless-stopped
+    security_opt:
+      - no-new-privileges:true
+    ports:
+      - "80:80"
+      - "443:443"
+      - "8080:8080" # Дашборд Traefik (http://localhost:8080)
+    environment:
+      - TZ=Europe/Moscow
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+      - ./src/TraefikProxy/data/traefik.yml:/traefik.yml:ro
+      - ./src/TraefikProxy/data/acme.json:/acme.json
+      - ./src/TraefikProxy/data/configurations:/configurations:ro
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.traefik.rule=Host(`traefik.localhost`)"
+      - "traefik.http.routers.traefik.service=api@internal"
+    networks:
+      - neva-network
+
+  # --- 2. ASTRO (Главный сайт на корне домена /) ---
+  astro-site:
+    build:
+      context: ./src/NevaAI
+      dockerfile: Dockerfile
+    container_name: neva-astro
+    restart: always
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.astro.rule=Host(`localhost`) && PathPrefix(`/`)"
+      - "traefik.http.routers.astro.entrypoints=web"
+      # ИСПРАВЛЕНИЕ: Низкий приоритет для фронтенда, он обрабатывает запросы, которые не подошли под API
+      - "traefik.http.routers.astro.priority=1"      
+      - "traefik.http.services.astro.loadbalancer.server.port=80"
+    networks:
+      - neva-network
+
+
+      
+  anything-llm:
+    image: raulamailru/nevadwh-nevaai:0.0.2
+    container_name: anythingllm
+    cap_add:
+      - SYS_ADMIN
+    volumes:
+      - "${ANYTHINGLLM_ENV_FILE:-./src/anythingllm/.env}:/app/server/.env"
+      - "${ANYTHINGLLM_STORAGE:-./src/anythingllm/src/server/storage}:/app/server/storage"
+      - "${ANYTHINGLLM_HOTDIR:-./src/anythingllm/src/collector/hotdir}:/app/collector/hotdir"
+      - "${ANYTHINGLLM_OUTPUTS:-./src/anythingllm/src/collector/outputs}:/app/collector/outputs"
+      - "${NEVA_RAG_HOST_PATH:-./src/images/anything-llm/rag}:/rag:ro"
+    user: "${UID:-1000}:${GID:-1000}"
+    ports:
+      - "3001:3001"
+    env_file:
+      - ${ANYTHINGLLM_ENV_FILE:-./src/anythingllm/.env}
+    networks:
+      - neva-network
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    environment:
+      - SERVER_PORT=3001
+      - BASE_PATH=/nevaaichat
+      - STORAGE_DIR=/app/server/storage
+      # Кнопка «Chat 1B» → Docker Ollama. Короткие имена llama3 / qwen2.5
+      # (в образе = 1B копии; на EXTERNAL1 те же имена = 7B+). См. doc/Corporate_RAG_план.md
+      - LLM_PROVIDER=ollama
+      - OLLAMA_BASE_PATH=http://ollama:11434
+      - OLLAMA_MODEL_PREF=llama3
+      - NEVA_RAG_PORTAL_CHAT_MODEL=llama3
+      - NEVA_RAG_ENGINEER_CHAT_MODEL=qwen2.5
+      # Абсолютные ссылки в RAG/ответах (/docs/ → https://…/docs/)
+      - NEVA_RAG_BASE_URL=${NEVA_RAG_BASE_URL:-https://dwh.neva.cloudns.nz}
+      - NEVA_PORTAL_HOME=${NEVA_PORTAL_HOME:-/nevaai}
+      # 7B: ?external1 → тот же chatModel, другой host (модели llama3/qwen2.5 уже на GPU)
+      - OLLAMA_BASE_PATH_EXTERNAL1=http://192.168.0.72:11434
+      # Не переименовывать модель: workspace уже зовёт llama3|qwen2.5
+      # - OLLAMA_MODEL_EXTERNAL1=
+      - EMBEDDING_ENGINE=native
+      - EMBEDDING_BASE_PATH=http://ollama:11434
+      # Авто: Portal Helper + DWH Engineer из /rag (mount images/anything-llm/rag)
+      - NEVA_RAG_BOOTSTRAP=true
+      - NEVA_RAG_ROOT=/rag
+      - NEVA_RAG_PORTAL=/rag/portal
+      - NEVA_RAG_ENGINEER=/rag/engineer
+      - NEVA_RAG_WORKSPACE_NAME=Neva Portal Helper
+      - NEVA_RAG_WORKSPACE_SLUG=neva-portal-helper
+      - NEVA_RAG_ENGINEER_WORKSPACE_NAME=Neva DWH Engineer
+      - NEVA_RAG_ENGINEER_WORKSPACE_SLUG=neva-dwh-engineer
+      - NEVA_RAG_ENGINEER_BOOTSTRAP=true
+      - NEVA_RAG_BOOTSTRAP_DELAY_MS=10000
+      # NEVA_RAG_BOOTSTRAP_FORCE=true
+      - DISABLE_TELEMETRY=true
+    labels:
+      - "traefik.enable=true"
+      - "traefik.docker.network=neva-network"
+      # Host обязателен: иначе при глюках сети выигрывает Astro (PathPrefix `/`) и отдаёт HTML → чат висит
+      - "traefik.http.routers.nevaaichat.rule=(Host(`localhost`) || Host(`127.0.0.1`)) && PathPrefix(`/nevaaichat`)"
+      - "traefik.http.routers.nevaaichat.entrypoints=web"
+      - "traefik.http.routers.nevaaichat.priority=100"
+      - "traefik.http.services.nevaaichat.loadbalancer.server.port=3001"
+      - "traefik.http.services.nevaaichat.loadbalancer.passhostheader=true"
+    depends_on:
+      ollama:
+        condition: service_healthy
+
+
+  # Маленькая Ollama в Docker для кнопки «Neva AI Chat 1B» (/nevaaichat → anything-llm).
+  # 7B / WSL — отдельно (кнопка 2, /nevaaiollama), в этот сервис не входит.
+  ollama:
+    image: nevaaichat-ollama
+    build:
+      context: ./src/images/ollama
+      dockerfile: Dockerfile
+    container_name: ollama
+    environment:
+      # При старте entrypoint подтянет модели, если их ещё нет в volume
+      - OLLAMA_INIT_MODELS=llama3.2:1b=llama3 qwen2.5:1.5b=qwen2.5
+      - OLLAMA_HOST=0.0.0.0:11434
+    volumes:
+      - ollama-data:/root/.ollama
+    restart: always
+    healthcheck:
+      test: ["CMD", "ollama", "list"]
+      interval: 15s
+      timeout: 10s
+      retries: 30
+      start_period: 300s
+    # Без publish 11434 на хост — не конфликтует с WSL portproxy; доступ только в neva-network
+    networks:
+      - neva-network
+
+volumes:
+  open-webui-data:
+  ollama-data:
+  pgdata:
+
+
+networks:
+  # Явное имя: иначе Compose делает publicdwh_nodejs_neva-network,
+  # а label traefik.docker.network=neva-network не совпадает → роутер AnythingLLM пропадает.
+  neva-network:
+    name: neva-network
+    driver: bridge

@@ -1,0 +1,13 @@
+{
+    "id": "eb7b879f-8a46-43df-99a2-83a69133f4e0",
+    "url": "file://04-faq-docs.txt",
+    "title": "04-faq-docs.txt",
+    "docAuthor": "no author specified",
+    "description": "Neva portal corpus: _curated/04-faq-docs.md",
+    "docSource": "neva-portal-rag",
+    "chunkSource": "04-faq-docs.txt",
+    "published": "8/28/2026, 4:41:16 PM",
+    "wordCount": 73,
+    "pageContent": "---\r\nworkspace: portal-helper\r\ntitle: \"Где документация (docs)\"\r\nsource: curated\r\n---\r\n\r\n# Где документация / докс / docs\r\n\r\nЕсли пользователь спрашивает «где докс», «где docs», «где документация», «открой docs» — ответь сразу коротко, без стилизации слова.\r\n\r\nПравильный ответ (одна-две строки):\r\n\r\nДокументация портала: https://dwh.neva.cloudns.nz/docs/\r\n\r\nПри необходимости добавь одну фразу: там каталог статей (аналитика, MetaData → SQL, ROI и др.).\r\n\r\nЗапрещено:\r\n- писать слово Docs/Докс буквами с диакритикой или «красивым» шрифтом (ДộcС, Ďокс и т.п.);\r\n- начинать ответ с отдельных букв или транслита без ссылки;\r\n- выдумывать другие URL.\r\n",
+    "token_count_estimate": 254
+}

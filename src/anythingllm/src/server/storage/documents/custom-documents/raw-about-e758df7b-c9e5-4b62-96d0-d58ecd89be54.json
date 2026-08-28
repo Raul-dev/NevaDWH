@@ -1,0 +1,13 @@
+{
+    "id": "e758df7b-c9e5-4b62-96d0-d58ecd89be54",
+    "url": "file://about.txt",
+    "title": "about.txt",
+    "docAuthor": "no author specified",
+    "description": "Neva portal corpus: pages/about.md",
+    "docSource": "neva-portal-rag",
+    "chunkSource": "about.txt",
+    "published": "8/28/2026, 4:41:17 PM",
+    "wordCount": 227,
+    "pageContent": "---\nworkspace: portal-helper\nroute: /about/\ntitle: \"О проекте\"\ndescription: \"NevaDWH — платформа в разработке для автоматизации DWH и публикации IT-стартапов\"\nsource: nevadwh-astro\n---\n\n# О проекте\n\n> NevaDWH — платформа в разработке для автоматизации DWH и публикации IT-стартапов\n\nКанонический URL на портале: /about/\n\n# NevaDWH\n\n\r\n\nПлатформа в активной разработке: мы строим среду, где команды смогут быстрее разворачивать и сопровождать корпоративные хранилища данных, а IT-стартапы — публиковать проекты и находить аудиторию.\n\n\r\n\r\n\nСейчас доступна ранняя версия: часть функций ещё в работе, интерфейс и документация будут дополняться по мере релизов.\n\n\r\n\r\n\n## Что уже есть\n\n\r\n\n\r\n        - Генератор слоёв DWH (ODS, DWH, ETL) из метаданных источника\n\r\n        - Личный кабинет и API для работы с проектами\n\r\n        - Форум для обсуждений, обратной связи и публикации стартапов\n\r\n        - Docker- и k3s-окружения для локального и внутреннего тестирования\n\r\n\n\r\n\r\n\n## Куда смотреть дальше\n\n\r\n\nТехнические статьи по DWH, SQL Server, PostgreSQL и производительности — в разделе форума **Technical / База данных**.\n\n\r\n    \r\n\r\n    \r\n      [forum Форум Обсуждения, стартапы и технические темы](https://dwh.neva.cloudns.nz/forum/)\r\n\r\n      [database Technical / База данных Статьи по DWH, SQL Server и PostgreSQL](https://dwh.neva.cloudns.nz/forum/category/3)\r\n\r\n      [dashboard Личный кабинет Проекты, генератор и настройки](https://dwh.neva.cloudns.nz/app/)\r\n\r\n      [savings ROI: от недель к минутам TTM и экономия часов DWH-инженеров](https://dwh.neva.cloudns.nz/docs/ttm-roi/)\n",
+    "token_count_estimate": 617
+}

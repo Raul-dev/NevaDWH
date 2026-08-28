@@ -1,0 +1,13 @@
+{
+    "id": "aed9344a-14c4-418b-921c-3d5ddafaffa9",
+    "url": "file://07-model-comparison-faq.txt",
+    "title": "07-model-comparison-faq.txt",
+    "docAuthor": "no author specified",
+    "description": "Neva portal corpus: _curated/07-model-comparison-faq.md",
+    "docSource": "neva-portal-rag",
+    "chunkSource": "07-model-comparison-faq.txt",
+    "published": "8/28/2026, 4:41:16 PM",
+    "wordCount": 47,
+    "pageContent": "---\r\nworkspace: portal-helper\r\ntitle: \"Страница сравнения моделей\"\r\nsource: curated\r\n---\r\n\r\n# Что за страница сравнения моделей?\r\n\r\nВопросы: «сравнение моделей», «MAE RMSE MAPE», «какие модели в финансовом анализе».\r\n\r\nОтвет: статья **Сравнение моделей** — https://dwh.neva.cloudns.nz/docs/model-comparison/\r\n\r\nТам описаны метрики **MAE**, **RMSE**, **MAPE** и сравнение подходов прогнозирования в сервисе [Финансовый анализ](https://dwh.neva.cloudns.nz/finance/).\r\n\r\nЭто **не** личный кабинет `https://dwh.neva.cloudns.nz/app/` и не генератор DWH.\r\n",
+    "token_count_estimate": 215
+}

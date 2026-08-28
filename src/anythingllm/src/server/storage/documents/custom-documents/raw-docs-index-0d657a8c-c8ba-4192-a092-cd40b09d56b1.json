@@ -1,0 +1,13 @@
+{
+    "id": "0d657a8c-c8ba-4192-a092-cd40b09d56b1",
+    "url": "file://docs-index.txt",
+    "title": "docs-index.txt",
+    "docAuthor": "no author specified",
+    "description": "Neva portal corpus: docs/docs-index.md",
+    "docSource": "neva-portal-rag",
+    "chunkSource": "docs-index.txt",
+    "published": "8/28/2026, 4:41:17 PM",
+    "wordCount": 398,
+    "pageContent": "---\nworkspace: portal-helper\nroute: https://dwh.neva.cloudns.nz/docs/\ntitle: \"Документация\"\ndescription: \"Каталог руководств NevaDWH: генератор DWH, инструменты, финансовый анализ и Neva AI\"\nsource: nevadwh-astro\n---\n\n# Документация\n\n> Каталог руководств NevaDWH: генератор DWH, инструменты, финансовый анализ и Neva AI\n\nКанонический URL на портале: https://dwh.neva.cloudns.nz/docs/\n\n# Документация\n\n\r\n\nРазделы и статьи платформы NevaDWH. Выберите тему — от генерации хранилища и инструментов до финансового анализа и корпоративного RAG.\n\n\r\n\r\n    `}>\r\n          \r\n            \r\n              \r\n            \r\n            \r\n\n##\n\n\r\n\n\r\n            \r\n          \r\n\r\n\n\r\n             class=\"docs-index__card\">\r\n                  \r\n                    \r\n                  \r\n                  \r\n                    \r\n                    \r\n                  \r\n                  \r\n                    chevron_right\r\n                  \r\n                \r\n              \r\n            ))}\r\n\n\r\n        \r\n      ))\r\n    }\n",
+    "token_count_estimate": 281
+}

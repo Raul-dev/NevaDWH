@@ -1,0 +1,13 @@
+{
+    "id": "883452c1-f42a-457f-baf7-98bd0833ec9c",
+    "url": "file://nevaai.txt",
+    "title": "nevaai.txt",
+    "docAuthor": "no author specified",
+    "description": "Neva portal corpus: pages/nevaai.md",
+    "docSource": "neva-portal-rag",
+    "chunkSource": "nevaai.txt",
+    "published": "8/28/2026, 4:41:17 PM",
+    "wordCount": 124,
+    "pageContent": "---\nworkspace: portal-helper\nroute: https://dwh.neva.cloudns.nz/nevaai/\ntitle: \"Neva AI\"\ndescription: \"Локальный AI-ассистент на базе Ollama\"\nsource: nevadwh-astro\n---\n\n# Neva AI\n\n> Локальный AI-ассистент на базе Ollama\n\nКанонический URL на портале: https://dwh.neva.cloudns.nz/nevaai/\n\n# Neva AI\n\n\r\n\nAI-ассистент платформы NevaDWH: ответы по документации, метаданным и SQL с опорой на локальную модель 1.5B развернутую в k3s.\n\n\r\n      \r\n        \r\n          Открыть Neva AI Chat 1B\r\n        \r\n      \r\n\n7B может быть выключена, так как она запущена на отдельном сервере с видеокартой 8gb.\n\n\r\n\r\n      \r\n        \r\n          Открыть Neva AI Chat 7B\n",
+    "token_count_estimate": 232
+}

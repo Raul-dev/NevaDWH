@@ -1,0 +1,13 @@
+{
+    "id": "93a1fb0b-3b16-4c12-9a83-2ee808e08c5c",
+    "url": "file://12-about-faq.txt",
+    "title": "12-about-faq.txt",
+    "docAuthor": "no author specified",
+    "description": "Neva portal corpus: _curated/12-about-faq.md",
+    "docSource": "neva-portal-rag",
+    "chunkSource": "12-about-faq.txt",
+    "published": "8/28/2026, 4:41:17 PM",
+    "wordCount": 50,
+    "pageContent": "---\r\nworkspace: portal-helper\r\ntitle: \"О проекте — что уже есть\"\r\nsource: curated\r\n---\r\n\r\n# Что уже есть на платформе (о проекте)?\r\n\r\nСтраница **О проекте**: https://dwh.neva.cloudns.nz/about/\r\n\r\nСейчас на платформе:\r\n- **Генератор слоёв DWH** (ODS, DWH, ETL) из метаданных — https://dwh.neva.cloudns.nz/app/\r\n- **Личный кабинет и API** для проектов\r\n- **Форум** — https://dwh.neva.cloudns.nz/forum/\r\n- Docker- и k3s-окружения для тестирования\r\n\r\nВсегда указывай ссылку `/about/` в ответе.\r\n",
+    "token_count_estimate": 183
+}

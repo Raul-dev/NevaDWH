@@ -1,0 +1,13 @@
+{
+    "id": "c8b57f2d-94f6-4502-8114-4ad1ee7ac53c",
+    "url": "file://02-layers-cheatsheet.txt",
+    "title": "02-layers-cheatsheet.txt",
+    "docAuthor": "no author specified",
+    "description": "Neva engineer corpus: _curated/02-layers-cheatsheet.md",
+    "docSource": "neva-engineer-rag",
+    "chunkSource": "02-layers-cheatsheet.txt",
+    "published": "8/28/2026, 4:41:37 PM",
+    "wordCount": 127,
+    "pageContent": "---\r\nworkspace: dwh-engineer\r\ntitle: \"Слои Landing ODS DWH — шпаргалка\"\r\nsource: curated\r\nstatus: test-stub\r\n---\r\n\r\n# Landing / ODS / DWH — шпаргалка для инженера\r\n\r\n## Landing\r\n\r\n- Приём данных «как есть» из источника.\r\n- Часто через linked server / файлы / MQ.\r\n- Не смешивать с витринами отчётов.\r\n\r\n## ODS (Operational Data Store)\r\n\r\n- В NevaDWH часто трактуется как **mini-DWH дневной активности**.\r\n- Календарь (`DIM_Date`), FK на дату отчётности.\r\n- Подходит для оперативных отчётов «за сегодня / за период».\r\n\r\n## DWH\r\n\r\n- Долгосрочная история, факты продаж/остатков и т.п.\r\n- Измерения (DIM_*) и факты (FACT_*).\r\n- ETL из ODS / staging в target.\r\n\r\n## Генератор\r\n\r\nПолный ZIP DWH и настройка проектов — в личном кабинете портала https://dwh.neva.cloudns.nz/app/.  \r\nРазовый SQL одного объекта — https://dwh.neva.cloudns.nz/generator/ (это **Portal Helper**, не Engineer; всегда указывай `https://dwh.neva.cloudns.nz/generator/`).\r\n\r\n## Тестовый режим ассистента\r\n\r\nМодель маленькая: отвечай 3–6 предложениями, ссылайся на этот документ, не генерируй полный DDL.\r\n",
+    "token_count_estimate": 417
+}

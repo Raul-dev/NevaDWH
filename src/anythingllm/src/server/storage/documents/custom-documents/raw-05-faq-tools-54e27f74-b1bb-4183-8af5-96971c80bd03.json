@@ -1,0 +1,13 @@
+{
+    "id": "54e27f74-b1bb-4183-8af5-96971c80bd03",
+    "url": "file://05-faq-tools.txt",
+    "title": "05-faq-tools.txt",
+    "docAuthor": "no author specified",
+    "description": "Neva portal corpus: _curated/05-faq-tools.md",
+    "docSource": "neva-portal-rag",
+    "chunkSource": "05-faq-tools.txt",
+    "published": "8/28/2026, 4:41:16 PM",
+    "wordCount": 167,
+    "pageContent": "---\r\nworkspace: portal-helper\r\ntitle: \"Какие инструменты есть на портале\"\r\nsource: curated\r\n---\r\n\r\n# Какие инструменты есть на портале\r\n\r\nЕсли спрашивают «какие инструменты», «список инструментов», «где список инструментов», «что тут есть», «что умеет портал», «инструменты в сайдбаре», «раздел Инструменты» — ответь **только** этим списком (можно чуть сократить формулировки, смысл не менять). Ссылки — абсолютные с базой портала. Укажи, что полный каталог — в https://dwh.neva.cloudns.nz/docs/\r\n\r\n1. **Генератор DWH** — https://dwh.neva.cloudns.nz/app/  \r\n   Полноценное приложение хранилища данных: слои, ETL, сервисы на .NET, Docker. Не создаёт «данные в CSV/JSON» и не является магазином.\r\n\r\n2. **MetaData → SQL** — https://dwh.neva.cloudns.nz/generator/  \r\n   Предпросмотр SQL по одному объекту конфигурации 1С (MetaDataObject XML/JSON → SQL).\r\n\r\n3. **Debug SQL** — https://dwh.neva.cloudns.nz/debug-sql/  \r\n   Audit-обёртки для SQL-процедур.\r\n\r\n4. **Финансовый анализ** — https://dwh.neva.cloudns.nz/finance/\r\n\r\n5. **Документация** — https://dwh.neva.cloudns.nz/docs/\r\n\r\n6. **Форум** — https://dwh.neva.cloudns.nz/forum/\r\n\r\n7. **Neva AI** — https://dwh.neva.cloudns.nz/nevaai\r\n\r\nЗапрещено в ответе:\r\n- магазин / Magazin / загрузка CSV/JSON в магазин;\r\n- сокровища, взлом уникальных значений, «схема БД» как отдельный мифический инструмент;\r\n- утверждать, что https://dwh.neva.cloudns.nz/app/ или https://dwh.neva.cloudns.nz/generator/ «создают CSV/JSON файлы данных»;\r\n- выдумывать регистрацию «для доступа к контексту» как отдельный инструмент.\r\n",
+    "token_count_estimate": 616
+}

@@ -1,0 +1,13 @@
+{
+    "id": "40b73071-d241-4ea7-a8d0-7b4082130d89",
+    "url": "file://06-generator-vs-metadata-sql.txt",
+    "title": "06-generator-vs-metadata-sql.txt",
+    "docAuthor": "no author specified",
+    "description": "Neva portal corpus: _curated/06-generator-vs-metadata-sql.md",
+    "docSource": "neva-portal-rag",
+    "chunkSource": "06-generator-vs-metadata-sql.txt",
+    "published": "8/28/2026, 4:41:16 PM",
+    "wordCount": 121,
+    "pageContent": "---\r\nworkspace: portal-helper\r\ntitle: \"MetaData SQL vs Генератор DWH\"\r\nsource: curated\r\n---\r\n\r\n# Чем отличается MetaData → SQL от полного Генератора DWH\r\n\r\nЧастый вопрос. Ответ для пользователя (коротко, по фактам):\r\n\r\n## MetaData → SQL — https://dwh.neva.cloudns.nz/generator/\r\n\r\n- Инструмент **точечного предпросмотра**.\r\n- На вход: **один** объект MetaDataObject 1С (XML/JSON описания объекта).\r\n- На выход: SQL-скрипты для этого объекта (ODS и т.п.).\r\n- Не разворачивает всё хранилище и не собирает Docker-приложение.\r\n\r\n## Генератор DWH — https://dwh.neva.cloudns.nz/app/\r\n\r\n- **Полный цикл** в личном кабинете.\r\n- Из метаданных 1С генерируется **готовое приложение DWH**: Landing/ODS/DWH, ETL, сервисы на **.NET**, контейнеры **Docker**.\r\n- Это не экспорт CSV/JSON и не «создание СУБД кнопкой» — это проект/приложение хранилища.\r\n\r\n## Как ответить одной фразой\r\n\r\n**MetaData → SQL** — быстро посмотреть SQL по одному объекту; **Генератор DWH** — собрать полноценное приложение хранилища в `https://dwh.neva.cloudns.nz/app/`.\r\n\r\nДокументация: [MetaData → SQL](https://dwh.neva.cloudns.nz/docs/metadata-sql/), [ROI генератора](https://dwh.neva.cloudns.nz/docs/ttm-roi/).\r\n",
+    "token_count_estimate": 451
+}

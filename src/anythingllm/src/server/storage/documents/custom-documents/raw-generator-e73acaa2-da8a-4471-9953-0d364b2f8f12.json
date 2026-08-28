@@ -1,0 +1,13 @@
+{
+    "id": "e73acaa2-da8a-4471-9953-0d364b2f8f12",
+    "url": "file://generator.txt",
+    "title": "generator.txt",
+    "docAuthor": "no author specified",
+    "description": "Neva portal corpus: pages/generator.md",
+    "docSource": "neva-portal-rag",
+    "chunkSource": "generator.txt",
+    "published": "8/28/2026, 4:41:17 PM",
+    "wordCount": 464,
+    "pageContent": "---\nworkspace: portal-helper\nroute: https://dwh.neva.cloudns.nz/generator/\ntitle: \"Генератор SQL\"\ndescription: \"Генерация SQL из MetaDataObject 1С (XML/JSON)\"\nsource: nevadwh-astro\n---\n\n# Генератор SQL\n\n> Генерация SQL из MetaDataObject 1С (XML/JSON)\n\nКанонический URL на портале: https://dwh.neva.cloudns.nz/generator/\n\n# Генератор SQL\n\n\r\n\nXml MetaDataObject 1С можно получить в панели администратора или командой `1cv8.exe /DumpConfigToFiles`. Ниже — пример самодельного объекта `DocumentObject.Продажи`.\n\n\r\n\r\n    \r\n      \r\n        \r\n          MetaData 1C (xml/json)\r\n        \r\n        \r\n          Скрипт SQL\r\n        \r\n      \r\n\r\n      \r\n        \r\n\n_(поле ввода MetaData — содержимое примера опущено в RAG)_\n\n\r\n\r\n          \r\n            \r\n              Сгенерировать SQL\r\n            \r\n\r\n            \r\n              СУБД\r\n              \r\n                MS SQL\r\n                Postgres\r\n                Oracle\r\n                ClickHouse\r\n              \r\n            \r\n\r\n            \r\n              Метод\r\n              \r\n                Tables\r\n                Procedures\r\n                MetaData\r\n              \r\n            \r\n          \r\n        \r\n\r\n        \r\n\n_(поле ввода MetaData — содержимое примера опущено в RAG)_\n",
+    "token_count_estimate": 313
+}

@@ -1,0 +1,34 @@
+---
+import Layout from './Layout.astro';
+
+interface BreadcrumbItem {
+  label: string;
+  href?: string;
+}
+
+interface Props {
+  title: string;
+  description?: string;
+  breadcrumbs?: BreadcrumbItem[];
+}
+
+const { title, description, breadcrumbs = [] } = Astro.props;
+const currentPath = Astro.url.pathname;
+---
+
+<Layout title={`${title} · NevaDWH`} description={description}>
+  <div class="app-shell" data-app-shell>
+
+
+
+    <main id="main-content" class="app-shell__main">
+      
+      <div class="app-shell__content">
+        <div class="app-shell__content-inner">
+          {breadcrumbs.length > 0 && <Breadcrumbs items={breadcrumbs} />}
+          <slot />
+        </div>
+      </div>
+    </main>
+  </div>
+</Layout>

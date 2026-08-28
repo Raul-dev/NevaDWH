@@ -1,0 +1,13 @@
+{
+    "id": "44e20240-5509-4c54-b751-6dc5f8edae3d",
+    "url": "file://08-portal-redirect-faq.txt",
+    "title": "08-portal-redirect-faq.txt",
+    "docAuthor": "no author specified",
+    "description": "Neva engineer corpus: _curated/08-portal-redirect-faq.md",
+    "docSource": "neva-engineer-rag",
+    "chunkSource": "08-portal-redirect-faq.txt",
+    "published": "8/28/2026, 4:41:38 PM",
+    "wordCount": 68,
+    "pageContent": "---\r\nworkspace: dwh-engineer\r\ntitle: \"Вопросы про портал — Portal Helper\"\r\nsource: curated\r\n---\r\n\r\n# Вопросы про UI портала (не Engineer)\r\n\r\nИнженерный ассистент не описывает кнопки интерфейса. Перенаправляй в **Neva Portal Helper**.\r\n\r\n## Полный ZIP генератора DWH\r\n\r\n**Шаблон:** личный кабинет https://dwh.neva.cloudns.nz/app/ — полный проект DWH (слои, ETL, Docker).\r\n\r\n## MetaData → SQL — где кнопка?\r\n\r\n**Шаблон:** это зона **Portal Helper**, не Engineer. Инструмент: https://dwh.neva.cloudns.nz/generator/ (MetaData → SQL). Точка входа ассистентов: https://dwh.neva.cloudns.nz/nevaai.\r\n\r\nВсегда указывай `https://dwh.neva.cloudns.nz/generator/` при отсылке к MetaData → SQL.\r\n",
+    "token_count_estimate": 247
+}

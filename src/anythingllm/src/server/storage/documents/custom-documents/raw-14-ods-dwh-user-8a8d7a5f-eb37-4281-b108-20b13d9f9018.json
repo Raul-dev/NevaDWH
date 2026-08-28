@@ -1,0 +1,13 @@
+{
+    "id": "8a8d7a5f-eb37-4281-b108-20b13d9f9018",
+    "url": "file://14-ods-dwh-user.txt",
+    "title": "14-ods-dwh-user.txt",
+    "docAuthor": "no author specified",
+    "description": "Neva portal corpus: _curated/14-ods-dwh-user.md",
+    "docSource": "neva-portal-rag",
+    "chunkSource": "14-ods-dwh-user.txt",
+    "published": "8/28/2026, 4:41:17 PM",
+    "wordCount": 61,
+    "pageContent": "---\r\nworkspace: portal-helper\r\ntitle: \"ODS vs DWH для пользователя\"\r\nsource: curated\r\n---\r\n\r\n# Чем ODS отличается от DWH (для пользователя)?\r\n\r\nПо материалу https://dwh.neva.cloudns.nz/docs/ttm-roi/:\r\n\r\n- **ODS** — оперативный слой для **дневной активности**: быстрая фиксация текущих данных без тяжёлой истории.\r\n- **DWH** — слой **истории и аналитики**: архив, витрины, отчётность; данные переносятся из ODS в периоды низкой нагрузки.\r\n\r\nЭто не отказ — отвечай по фактам из ttm-roi, не «в документации этого нет».\r\n",
+    "token_count_estimate": 200
+}

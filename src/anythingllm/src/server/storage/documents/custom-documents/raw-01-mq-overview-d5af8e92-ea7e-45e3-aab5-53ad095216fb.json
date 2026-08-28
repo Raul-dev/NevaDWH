@@ -1,0 +1,13 @@
+{
+    "id": "d5af8e92-ea7e-45e3-aab5-53ad095216fb",
+    "url": "file://01-mq-overview.txt",
+    "title": "01-mq-overview.txt",
+    "docAuthor": "no author specified",
+    "description": "Neva engineer corpus: _curated/01-mq-overview.md",
+    "docSource": "neva-engineer-rag",
+    "chunkSource": "01-mq-overview.txt",
+    "published": "8/28/2026, 4:41:37 PM",
+    "wordCount": 141,
+    "pageContent": "---\r\nworkspace: dwh-engineer\r\ntitle: \"MQ Message Queue Service — stub\"\r\nsource: curated\r\nstatus: test-stub\r\n---\r\n\r\n# MQ (Message Queue Service) — stub для Engineer RAG\r\n\r\nСервис **MQ** переносит сообщения между БД (SQL Server / PostgreSQL) и очередями **RabbitMQ** или **Kafka**.\r\n\r\n## Основные сценарии\r\n\r\n1. **SendMsg** — выбрать сообщения из БД → опубликовать в очередь.\r\n2. **GetMsg** — потребить из очереди → сохранить в БД.\r\n3. **Web API** (`MQ.WebService`) — start/stop/reset, status, meta-maps, health.\r\n\r\n## Типичные таблицы (метахранилище)\r\n\r\n| Таблица / сущность | Назначение |\r\n|-------------------|------------|\r\n| `msgqueue` | Очередь сообщений в БД |\r\n| `orders_log_buffer` | Буфер логов заказов |\r\n| `metamap` / `metadata` | Метаданные mapping |\r\n\r\n## API (кратко)\r\n\r\n- `POST /v1/mq/service/start|stop|reset`\r\n- `GET /v1/mq/service/status`, `GET /v1/mq/health`\r\n- `GET|POST /v1/mq/meta-maps`\r\n\r\nLegacy совместимость с NevaDWH: пути вида `/api/MetaMapsOds`, `/api/Setup/Reset`.\r\n\r\n## Что сказать пользователю в тесте\r\n\r\n- «MQ — транспорт между БД и RabbitMQ/Kafka; **SendMsg** / **GetMsg**; управление через MQ.WebService.»\r\n- Статус: `GET /v1/mq/service/status`, health: `GET /v1/mq/health`.\r\n- Детали конкретной процедуры клиента — только после индексации SQL-корпуса.\r\n",
+    "token_count_estimate": 474
+}

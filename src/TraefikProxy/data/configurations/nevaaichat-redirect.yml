@@ -1,0 +1,18 @@
+# Redirect bare /workspace/* → /nevaaichat/workspace/* (BASE_PATH)
+http:
+  middlewares:
+    nevaaichat-workspace-redirect:
+      redirectRegex:
+        regex: "^/workspace/(.*)"
+        replacement: "/nevaaichat/workspace/$1"
+        permanent: false
+
+  routers:
+    nevaaichat-workspace-bare:
+      rule: "(Host(`localhost`) || Host(`127.0.0.1`)) && PathPrefix(`/workspace`)"
+      entryPoints:
+        - web
+      middlewares:
+        - nevaaichat-workspace-redirect
+      service: noop@internal
+      priority: 90

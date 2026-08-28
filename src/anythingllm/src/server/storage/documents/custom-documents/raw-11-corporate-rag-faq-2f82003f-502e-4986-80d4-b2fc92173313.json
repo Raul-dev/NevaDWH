@@ -1,0 +1,13 @@
+{
+    "id": "2f82003f-502e-4986-80d4-b2fc92173313",
+    "url": "file://11-corporate-rag-faq.txt",
+    "title": "11-corporate-rag-faq.txt",
+    "docAuthor": "no author specified",
+    "description": "Neva portal corpus: _curated/11-corporate-rag-faq.md",
+    "docSource": "neva-portal-rag",
+    "chunkSource": "11-corporate-rag-faq.txt",
+    "published": "8/28/2026, 4:41:16 PM",
+    "wordCount": 71,
+    "pageContent": "---\r\nworkspace: portal-helper\r\ntitle: \"Корпоративный RAG на Neva\"\r\nsource: curated\r\n---\r\n\r\n# Что такое корпоративный RAG на Neva?\r\n\r\n**Шаблон ответа:** https://dwh.neva.cloudns.nz/docs/corporate-rag/ — корпоративный RAG; на платформе **два ассистента** (Portal Helper и Neva DWH Engineer), вход https://dwh.neva.cloudns.nz/nevaai.\r\n\r\nСтатья: https://dwh.neva.cloudns.nz/docs/corporate-rag/\r\n\r\n**Корпоративный RAG** на NevaDWH — ответы AI опираются на ваши документы и код хранилища, без утечки во внешние облака.\r\n\r\nНа платформе **два ассистента**:\r\n1. **Portal Helper** — помощник по порталу для пользователей.\r\n2. **Neva DWH Engineer** — инженерный ассистент по коду DWH.\r\n\r\nТочка входа: https://dwh.neva.cloudns.nz/nevaai\r\n",
+    "token_count_estimate": 280
+}

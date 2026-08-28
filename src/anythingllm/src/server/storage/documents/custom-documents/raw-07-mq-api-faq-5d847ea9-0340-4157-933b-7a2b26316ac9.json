@@ -1,0 +1,13 @@
+{
+    "id": "5d847ea9-0340-4157-933b-7a2b26316ac9",
+    "url": "file://07-mq-api-faq.txt",
+    "title": "07-mq-api-faq.txt",
+    "docAuthor": "no author specified",
+    "description": "Neva engineer corpus: _curated/07-mq-api-faq.md",
+    "docSource": "neva-engineer-rag",
+    "chunkSource": "07-mq-api-faq.txt",
+    "published": "8/28/2026, 4:41:38 PM",
+    "wordCount": 26,
+    "pageContent": "---\r\nworkspace: dwh-engineer\r\ntitle: \"API статуса MQ\"\r\nsource: curated\r\n---\r\n\r\n# Где API статуса MQ?\r\n\r\n**Шаблон ответа:**\r\n- `GET /v1/mq/service/status` — статус сервиса;\r\n- `GET /v1/mq/health` — health check (live/ready).\r\n\r\nТакже: `POST /v1/mq/service/start|stop|reset`, meta-maps: `/v1/mq/meta-maps`.\r\n",
+    "token_count_estimate": 117
+}

@@ -1,0 +1,234 @@
+---
+import DashboardLayout from '../layouts/DashboardLayout.astro';
+
+const pageTitle = 'Neva AI';
+const pageDescription = 'Локальный AI-ассистент на базе Ollama';
+
+const workspaces = [
+  {
+    slug: 'neva-portal-helper',
+    label: 'Neva Portal Helper',
+    hint: 'Разделы портала, docs, инструменты',
+  },
+  {
+    slug: 'neva-dwh-engineer',
+    label: 'Neva DWH Engineer',
+    hint: 'Слои DWH / MQ (тестовый stub)',
+  },
+] as const;
+
+const defaultSlug = workspaces[0].slug;
+const chatBase = '/nevaaichat';
+const chat7bUrlCheck = '/nevaaiollama/';
+---
+<DashboardLayout title={pageTitle} description={pageDescription}>
+  <section class="landing-hero">
+    <div class="page-card">
+      <h1 class="page-card__title">Neva AI</h1>
+      <p class="page-card__description">
+        Выберите workspace и откройте чат. Контур
+        <strong>1B</strong> — Ollama в Docker (~1.5B). Контур
+        <strong>7B</strong> — внешний GPU/WSL (<code>?external1</code>), может быть offline.
+      </p>
+
+      <label class="page-card__field" for="workspace-select">
+        <span class="page-card__field-label">Workspace</span>
+        <select id="workspace-select" class="page-card__select" name="workspace">
+          {
+            workspaces.map((ws) => (
+              <option value={ws.slug} selected={ws.slug === defaultSlug}>
+                {ws.label} — {ws.hint}
+              </option>
+            ))
+          }
+        </select>
+      </label>
+
+      <div class="page-card__actions">
+        <a
+          href={`${chatBase}/workspace/${defaultSlug}`}
+          class="btn btn--primary"
+          id="btn-1b"
+          data-chat-base={chatBase}
+        >
+          Открыть Neva AI Chat 1B
+        </a>
+      </div>
+
+      <div class="page-card__actions">
+        <a
+          href={`${chatBase}/workspace/${defaultSlug}?external1`}
+          id="btn-7b"
+          class="btn btn--primary"
+          data-chat-base={chatBase}
+          data-health-url={chat7bUrlCheck}
+        >
+          Открыть Neva AI Chat 7B
+        </a>
+      </div>
+    </div>
+  </section>
+</DashboardLayout>
+
+<script>
+  const select = document.getElementById('workspace-select') as HTMLSelectElement | null;
+  const btn1b = document.getElementById('btn-1b') as HTMLAnchorElement | null;
+  const btn7b = document.getElementById('btn-7b') as HTMLAnchorElement | null;
+
+  function selectedSlug(): string {
+    return select?.value?.trim() || 'neva-portal-helper';
+  }
+
+  function workspaceUrl(external7b: boolean): string {
+    const base = (btn1b?.dataset.chatBase || '/nevaaichat').replace(/\/+$/, '');
+    const path = `${base}/workspace/${selectedSlug()}`;
+    return external7b ? `${path}?external1` : path;
+  }
+
+  function syncButtonHrefs() {
+    if (btn1b) btn1b.href = workspaceUrl(false);
+    if (btn7b) btn7b.href = workspaceUrl(true);
+  }
+
+  let isAvailable = false;
+  let isChecking = true;
+
+  async function checkServerAvailability() {
+    if (!btn7b) return;
+
+    const targetUrl = btn7b.dataset.healthUrl ?? '/nevaaiollama/';
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 3000);
+
+    try {
+      const response = await fetch(targetUrl, {
+        method: 'GET',
+        signal: controller.signal,
+      });
+      clearTimeout(timeoutId);
+
+      if (response.ok) {
+        isAvailable = true;
+        btn7b.classList.remove('btn--disabled');
+        btn7b.textContent = 'Открыть Neva AI Chat 7B';
+      } else {
+        throw new Error('Server error response');
+      }
+    } catch {
+      clearTimeout(timeoutId);
+      isAvailable = false;
+      btn7b.classList.add('btn--disabled');
+      btn7b.textContent = 'Neva AI Chat 7B (Offline)';
+    } finally {
+      isChecking = false;
+    }
+  }
+
+  function initButtonHandler() {
+    if (!btn7b) return;
+
+    btn7b.addEventListener('click', (e) => {
+      if (isChecking) {
+        e.preventDefault();
+        alert(
+          'Идет проверка доступности сервера Ollama 7B. Пожалуйста, подождите пару секунд.'
+        );
+        return;
+      }
+
+      if (!isAvailable) {
+        e.preventDefault();
+        alert(
+          'Внимание: Сервер /nevaaiollama сейчас недоступен.\n\nМодель 7B выключена, так как хост-сервер с видеокартой 8GB сейчас не активен или перегружен.'
+        );
+        return;
+      }
+
+      // href уже синхронизирован с combobox (+ ?external1)
+      syncButtonHrefs();
+    });
+  }
+
+  select?.addEventListener('change', syncButtonHrefs);
+  syncButtonHrefs();
+
+  function boot() {
+    syncButtonHrefs();
+    if (!btn7b?.dataset.bound) {
+      if (btn7b) btn7b.dataset.bound = '1';
+      initButtonHandler();
+      checkServerAvailability();
+    }
+  }
+
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', boot);
+  } else {
+    boot();
+  }
+</script>
+
+<style>
+  .page-card__field {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    margin: 1.25rem 0 0.5rem;
+    max-width: 36rem;
+  }
+
+  .page-card__field-label {
+    font-weight: 600;
+    font-size: 0.95rem;
+  }
+
+  .page-card__select {
+    width: 100%;
+    padding: 0.65rem 0.75rem;
+    border: 1px solid #c5cdd8;
+    border-radius: 6px;
+    font-size: 1rem;
+    background: #fff;
+    color: inherit;
+  }
+
+  .page-card__select:focus {
+    outline: 2px solid #0066cc;
+    outline-offset: 1px;
+  }
+
+  .page-card__actions {
+    margin: 1.25rem 0;
+  }
+
+  .btn {
+    display: inline-block;
+    padding: 0.75rem 1.5rem;
+    border-radius: 6px;
+    font-weight: 500;
+    text-decoration: none;
+    transition: background-color 0.2s ease, transform 0.1s ease, opacity 0.2s ease;
+    cursor: pointer;
+  }
+
+  .btn--primary {
+    background-color: #0066cc;
+    color: #ffffff;
+  }
+
+  .btn--primary:hover:not(.btn--disabled) {
+    background-color: #0052a3;
+  }
+
+  .btn--primary:active:not(.btn--disabled) {
+    transform: scale(0.98);
+  }
+
+  .btn--disabled {
+    background-color: #cccccc !important;
+    color: #666666 !important;
+    cursor: not-allowed !important;
+    pointer-events: none;
+    opacity: 0.7;
+  }
+</style>

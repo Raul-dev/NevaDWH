@@ -1,0 +1,13 @@
+{
+    "id": "85940216-3c08-4146-a13e-58390ef86a43",
+    "url": "file://00-architecture-overview.txt",
+    "title": "00-architecture-overview.txt",
+    "docAuthor": "no author specified",
+    "description": "Neva engineer corpus: _curated/00-architecture-overview.md",
+    "docSource": "neva-engineer-rag",
+    "chunkSource": "00-architecture-overview.txt",
+    "published": "8/28/2026, 4:41:37 PM",
+    "wordCount": 195,
+    "pageContent": "---\r\nworkspace: dwh-engineer\r\ntitle: \"Обзор архитектуры NevaDWH (инженерный stub)\"\r\nsource: curated\r\nstatus: test-stub\r\n---\r\n\r\n# Архитектура NevaDWH — краткий обзор (stub для RAG)\r\n\r\nЭто **тестовый** корпус для workspace **Neva DWH Engineer**. Полный индекс SQL (`dbmssql`, `dbpsql`, `mq_ms`) будет добавлен позже.\r\n\r\n## Слои данных\r\n\r\n| Слой | Назначение |\r\n|------|------------|\r\n| **Landing** | Сырые данные из источника (1С, файлы, очереди). Минимальная очистка. |\r\n| **ODS** | Операционный слой «дневной активности»: актуальные срезы для отчётности. |\r\n| **DWH** | Историческое хранилище: факты, измерения, аналитика. |\r\n\r\nТипичный поток: `источник → Landing → ODS → DWH` (через ETL / staging).\r\n\r\n## Схемы (роли)\r\n\r\n| Схема / зона | Роль |\r\n|--------------|------|\r\n| `mq` | Буферы и очереди сообщений (интеграция с MQ-сервисом) |\r\n| `etl` | Процедуры и объекты загрузки / трансформации |\r\n| `staging` | Промежуточные таблицы перед target |\r\n| `target` / целевые схемы ODS/DWH | Итоговые таблицы для потребителей |\r\n\r\nКонкретные имена процедур зависят от проекта генератора (клиентский dacpac).\r\n\r\n## Связанные компоненты в репозитории\r\n\r\n- SQL MS: проекты вроде `dbmssql` / шаблоны генератора\r\n- SQL PG: `dbpsql`\r\n- Очереди: сервис **MQ** (`mq_ms` / `MQ.WebService`) — SendMsg / GetMsg, RabbitMQ или Kafka\r\n\r\n## Ограничение stub\r\n\r\nПока в индексе нет полного дампа процедур. На вопросы «разбери `odins.load_FACT_*`» отвечай: **«полного кода нет в индексе»** (stub). Опиши слой/схему по обзору или уточни имя объекта после расширения корпуса.\r\n\r\nСм. также `_curated/09-odins-stub-faq.md`.\r\n",
+    "token_count_estimate": 670
+}

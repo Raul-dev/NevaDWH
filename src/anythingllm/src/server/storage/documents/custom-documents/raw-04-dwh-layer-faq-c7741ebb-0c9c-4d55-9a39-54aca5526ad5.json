@@ -1,0 +1,13 @@
+{
+    "id": "c7741ebb-0c9c-4d55-9a39-54aca5526ad5",
+    "url": "file://04-dwh-layer-faq.txt",
+    "title": "04-dwh-layer-faq.txt",
+    "docAuthor": "no author specified",
+    "description": "Neva engineer corpus: _curated/04-dwh-layer-faq.md",
+    "docSource": "neva-engineer-rag",
+    "chunkSource": "04-dwh-layer-faq.txt",
+    "published": "8/28/2026, 4:41:38 PM",
+    "wordCount": 37,
+    "pageContent": "---\r\nworkspace: dwh-engineer\r\ntitle: \"Для чего слой DWH\"\r\nsource: curated\r\n---\r\n\r\n# Для чего слой DWH?\r\n\r\n**Шаблон ответа:** Слой **DWH** — **история**, **факты** и **измерения** (FACT_*, DIM_*), долгосрочная **аналитика** и отчётность. ODS — оперативка; DWH — накопленная история.\r\n\r\nКлючевые слова: история, факты, измерения, аналитика.\r\n",
+    "token_count_estimate": 144
+}

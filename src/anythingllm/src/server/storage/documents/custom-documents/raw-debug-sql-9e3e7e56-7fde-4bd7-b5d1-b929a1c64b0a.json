@@ -1,0 +1,13 @@
+{
+    "id": "9e3e7e56-7fde-4bd7-b5d1-b929a1c64b0a",
+    "url": "file://debug-sql.txt",
+    "title": "debug-sql.txt",
+    "docAuthor": "no author specified",
+    "description": "Neva portal corpus: docs/debug-sql.md",
+    "docSource": "neva-portal-rag",
+    "chunkSource": "debug-sql.txt",
+    "published": "8/28/2026, 4:41:17 PM",
+    "wordCount": 124,
+    "pageContent": "---\nworkspace: portal-helper\nroute: https://dwh.neva.cloudns.nz/docs/debug-sql/\ntitle: \"Debug SQL\"\ndescription: \"Документация по инструменту Debug SQL\"\nsource: nevadwh-astro\n---\n\n# Debug SQL\n\n> Документация по инструменту Debug SQL\n\nКанонический URL на портале: https://dwh.neva.cloudns.nz/docs/debug-sql/\n\n# Debug SQL\n\n\r\n\nИнструмент [Инструменты → Debug SQL](https://dwh.neva.cloudns.nz/debug-sql/) предназначен для отладки и проверки SQL-скриптов в контексте NevaDWH.\n\n\r\n\r\n\n## Статус\n\n\r\n\nИнструмент на [/debug-sql/](https://dwh.neva.cloudns.nz/debug-sql/) вызывает `POST api/ApplyProcLog`: на вход — текст процедуры, на выход — процедура с audit-обёртками.\n\n\r\n\r\n\n## Связанный проект\n\n\r\n\nAudit-база и утилита массового применения аудита к процедурам на SQL Server: [github.com/Raul-dev/Moex_CGate — src/ProcDebug](https://github.com/Raul-dev/Moex_CGate/tree/main/src/ProcDebug).\n\n\r\n\r\n\n## Планируемое назначение\n\n\r\n\n\r\n      - Проверка и разбор SQL, полученного из генератора или вручную.\n\r\n      - Диагностика ошибок синтаксиса и несовместимости диалектов СУБД.\n\r\n      - Связка с артефактами ODS/DWH до выкладки на целевой сервер.\n\r\n\n\r\n\r\n\nПока для генерации скриптов из метаданных 1С используйте [MetaData → SQL](https://dwh.neva.cloudns.nz/docs/metadata-sql/).\n",
+    "token_count_estimate": 471
+}

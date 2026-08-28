@@ -1,0 +1,22 @@
+{
+  "workspace": "neva-portal-helper",
+  "workspaceSlugHint": "neva-portal-helper",
+  "generatedAt": "2026-08-26T14:29:38.331Z",
+  "files": [
+    "docs/analytics.md",
+    "docs/model-comparison.md",
+    "docs/market-indices.md",
+    "docs/ttm-roi.md",
+    "docs/corporate-rag.md",
+    "docs/metadata-sql.md",
+    "docs/debug-sql.md",
+    "docs/docs-index.md",
+    "pages/about.md",
+    "pages/nevaai.md",
+    "pages/generator.md",
+    "pages/debug-sql-tool.md",
+    "_curated/01-navigation.md",
+    "_curated/00-portal-overview.md",
+    "_curated/system-prompt.txt"
+  ]
+}

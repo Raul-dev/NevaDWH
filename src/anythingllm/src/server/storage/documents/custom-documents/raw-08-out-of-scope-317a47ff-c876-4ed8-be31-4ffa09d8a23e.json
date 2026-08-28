@@ -1,0 +1,13 @@
+{
+    "id": "317a47ff-c876-4ed8-be31-4ffa09d8a23e",
+    "url": "file://08-out-of-scope.txt",
+    "title": "08-out-of-scope.txt",
+    "docAuthor": "no author specified",
+    "description": "Neva portal corpus: _curated/08-out-of-scope.md",
+    "docSource": "neva-portal-rag",
+    "chunkSource": "08-out-of-scope.txt",
+    "published": "8/28/2026, 4:41:16 PM",
+    "wordCount": 103,
+    "pageContent": "---\r\nworkspace: portal-helper\r\ntitle: \"Вне зоны Portal Helper\"\r\nsource: curated\r\n---\r\n\r\n# Вопросы вне документации портала\r\n\r\n**Не применяй этот шаблон** к общим вопросам про ODS/DWH, GPU, инструменты, ROI — на них есть отдельные статьи в `https://dwh.neva.cloudns.nz/docs/`.\r\n\r\n## Процедуры DWH, odins.*, ETL, внутренний код\r\n\r\nЕсли спрашивают объяснить процедуру (`odins.load_*`, `crs.*`, полный код ETL) — **не** давай пошаговый разбор и **не** предлагай Debug SQL как замену инженерной справке.\r\n\r\nОтвет: «Полного кода процедуры в документации портала нет. Для внутренних процедур DWH используйте инженерного ассистента **Neva DWH Engineer** в https://dwh.neva.cloudns.nz/nevaai.»\r\n\r\n## Функции, которых нет в docs\r\n\r\nЕсли в контексте нет упоминания (например Oracle-only админка, магазин CSV) — ответь: **«В документации портала этого нет.»** Можно добавить ссылку на https://dwh.neva.cloudns.nz/docs/\r\n",
+    "token_count_estimate": 355
+}

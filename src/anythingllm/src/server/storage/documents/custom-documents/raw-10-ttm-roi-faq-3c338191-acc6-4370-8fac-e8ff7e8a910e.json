@@ -1,0 +1,13 @@
+{
+    "id": "3c338191-acc6-4370-8fac-e8ff7e8a910e",
+    "url": "file://10-ttm-roi-faq.txt",
+    "title": "10-ttm-roi-faq.txt",
+    "docAuthor": "no author specified",
+    "description": "Neva portal corpus: _curated/10-ttm-roi-faq.md",
+    "docSource": "neva-portal-rag",
+    "chunkSource": "10-ttm-roi-faq.txt",
+    "published": "8/28/2026, 4:41:16 PM",
+    "wordCount": 64,
+    "pageContent": "---\r\nworkspace: portal-helper\r\ntitle: \"ROI от недель к минутам TTM\"\r\nsource: curated\r\n---\r\n\r\n# Зачем ROI «от недель к минутам»?\r\n\r\n**Шаблон ответа:** Статья https://dwh.neva.cloudns.nz/docs/ttm-roi/ — NevaDWH сокращает **TTM** и экономит сотни часов DWH-инженеров за счёт автогенерации ODS/DWH/ETL.\r\n\r\nСтатья: https://dwh.neva.cloudns.nz/docs/ttm-roi/\r\n\r\nNevaDWH сокращает **TTM** (Time-to-Market): вместо недель ручной работы DWH-инженеров — минуты автоматической генерации слоёв ODS/DWH и ETL из метаданных 1С. Экономия сотен часов на изменениях структуры.\r\n\r\nКлючевые слова для ответа: `https://dwh.neva.cloudns.nz/docs/ttm-roi/`, TTM, экономия времени.\r\n",
+    "token_count_estimate": 271
+}

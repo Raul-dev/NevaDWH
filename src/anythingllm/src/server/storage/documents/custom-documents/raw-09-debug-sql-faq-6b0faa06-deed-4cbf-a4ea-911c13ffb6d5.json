@@ -1,0 +1,13 @@
+{
+    "id": "6b0faa06-deed-4cbf-a4ea-911c13ffb6d5",
+    "url": "file://09-debug-sql-faq.txt",
+    "title": "09-debug-sql-faq.txt",
+    "docAuthor": "no author specified",
+    "description": "Neva portal corpus: _curated/09-debug-sql-faq.md",
+    "docSource": "neva-portal-rag",
+    "chunkSource": "09-debug-sql-faq.txt",
+    "published": "8/28/2026, 4:41:16 PM",
+    "wordCount": 31,
+    "pageContent": "---\r\nworkspace: portal-helper\r\ntitle: \"Debug SQL — что делает\"\r\nsource: curated\r\n---\r\n\r\n# Что делает Debug SQL?\r\n\r\nDebug SQL — https://dwh.neva.cloudns.nz/debug-sql/\r\n\r\nДобавляет **audit-обёртки** в текст SQL-процедуры (логирование вызовов).\r\n\r\nДокументация: https://dwh.neva.cloudns.nz/docs/debug-sql/\r\n\r\nОтвет всегда с обеими ссылками: инструмент `/debug-sql/` и статья `https://dwh.neva.cloudns.nz/docs/debug-sql/`.\r\n",
+    "token_count_estimate": 144
+}

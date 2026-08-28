@@ -1,0 +1,13 @@
+{
+    "id": "b97b3910-9218-497d-951e-ed9a4ba96b8f",
+    "url": "file://03-greeting-howto.txt",
+    "title": "03-greeting-howto.txt",
+    "docAuthor": "no author specified",
+    "description": "Neva portal corpus: _curated/03-greeting-howto.md",
+    "docSource": "neva-portal-rag",
+    "chunkSource": "03-greeting-howto.txt",
+    "published": "8/28/2026, 4:41:16 PM",
+    "wordCount": 71,
+    "pageContent": "---\r\nworkspace: portal-helper\r\ntitle: \"Как отвечать на приветствие\"\r\nsource: curated\r\n---\r\n\r\n# Приветствие пользователя\r\n\r\nЕсли пользователь пишет «привет», «здравствуйте», «hello», «hi» или спрашивает «кто ты» / «что умеешь» — это не вопрос про документацию.\r\n\r\nПравильный ответ ассистента (кратко, по-русски):\r\n\r\nЗдравствуйте. Я помогаю ориентироваться на портале NevaDWH: разделы, документация, инструменты. С чего начнём — https://dwh.neva.cloudns.nz/docs/, MetaData → SQL или что-то другое?\r\n\r\nНе отвечай заголовками статей вроде «Где искать историю» и не начинай разбор рыночных индексов, пока пользователь об этом не спросил.\r\n",
+    "token_count_estimate": 250
+}

@@ -1,0 +1,20 @@
+http:
+  middlewares:
+    secure-headers:
+      headers:
+        sslRedirect: true
+        forceSTSHeader: true
+        stsIncludeSubdomains: true
+        stsPreload: true
+        stsSeconds: 31536000
+
+    basic-auth:
+      basicAuth:
+        users:
+          - "admin:$apr1$Hfjrj7f3$N5wE7QkP3L5qQ9N5Q9N5Q9."
+
+    rate-limit:
+      rateLimit:
+        average: 100
+        burst: 50
+        period: 1s

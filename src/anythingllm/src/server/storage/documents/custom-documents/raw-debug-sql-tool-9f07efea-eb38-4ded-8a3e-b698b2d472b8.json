@@ -1,0 +1,13 @@
+{
+    "id": "9f07efea-eb38-4ded-8a3e-b698b2d472b8",
+    "url": "file://debug-sql-tool.txt",
+    "title": "debug-sql-tool.txt",
+    "docAuthor": "no author specified",
+    "description": "Neva portal corpus: pages/debug-sql-tool.md",
+    "docSource": "neva-portal-rag",
+    "chunkSource": "debug-sql-tool.txt",
+    "published": "8/28/2026, 4:41:17 PM",
+    "wordCount": 279,
+    "pageContent": "---\nworkspace: portal-helper\nroute: /debug-sql/\ntitle: \"Debug SQL\"\ndescription: \"Добавление audit-обёрток к тексту CREATE/ALTER PROCEDURE\"\nsource: nevadwh-astro\n---\n\n# Debug SQL\n\n> Добавление audit-обёрток к тексту CREATE/ALTER PROCEDURE\n\nКанонический URL на портале: /debug-sql/\n\n# Debug SQL\n\n\r\n\nВставьте текст `CREATE`/`CREATE OR ALTER`/`ALTER PROCEDURE` — API `ApplyProcLog` вернёт процедуру с audit-логированием (`sp_LogStart` / `sp_LogFinish`).\n\n\r\n\nПроект audit-базы и утилита применения аудита к процедурам: [Moex_CGate / ProcDebug](https://github.com/Raul-dev/Moex_CGate/tree/main/src/ProcDebug).\n\n\r\n\r\n    \r\n      \r\n        \r\n          Процедура SQL\r\n        \r\n        \r\n          С audit\r\n        \r\n      \r\n\r\n      \r\n        \r\n\n_(поле ввода MetaData — содержимое примера опущено в RAG)_\n\n\r\n\r\n          \r\n            \r\n              Сгенерировать SQL\r\n            \r\n\r\n            \r\n              \r\n              Оборачивать RETURN\r\n            \r\n          \r\n        \r\n\r\n        \r\n\n_(поле ввода MetaData — содержимое примера опущено в RAG)_\n",
+    "token_count_estimate": 310
+}

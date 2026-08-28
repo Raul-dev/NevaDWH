@@ -1,0 +1,13 @@
+{
+    "id": "7415b212-2853-4900-823a-864d16c25d23",
+    "url": "file://13-gpu-faq.txt",
+    "title": "13-gpu-faq.txt",
+    "docAuthor": "no author specified",
+    "description": "Neva portal corpus: _curated/13-gpu-faq.md",
+    "docSource": "neva-portal-rag",
+    "chunkSource": "13-gpu-faq.txt",
+    "published": "8/28/2026, 4:41:17 PM",
+    "wordCount": 57,
+    "pageContent": "---\r\nworkspace: portal-helper\r\ntitle: \"GPU для чтения документации\"\r\nsource: curated\r\n---\r\n\r\n# Нужен ли GPU пользователю для чтения docs?\r\n\r\n**Нет.** Для чтения документации на портале GPU не нужен — обычный браузер.\r\n\r\nGPU используется **на стороне сервера** для локальных моделей в **Neva AI** (https://dwh.neva.cloudns.nz/nevaai), не у конечного пользователя при просмотре `https://dwh.neva.cloudns.nz/docs/`.\r\n\r\nОтвет: «Нет, GPU не требуется для чтения документации. GPU — на сервере для Neva AI.»\r\n",
+    "token_count_estimate": 168
+}

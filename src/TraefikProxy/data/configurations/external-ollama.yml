@@ -1,0 +1,22 @@
+http:
+  routers:
+    external-ollama-router:
+      rule: "(Host(`localhost`) || Host(`127.0.0.1`)) && PathPrefix(`/nevaaiollama`)"
+      entryPoints:
+        - web
+      service: external-ollama-service
+      # Подключаем middleware, который будет отрезать префикс перед отправкой на Ollama
+      middlewares:
+        - ollama-strip-prefix
+
+  middlewares:
+    ollama-strip-prefix:
+      stripPrefix:
+        prefixes:
+          - "/nevaaiollama"
+
+  services:
+    external-ollama-service:
+      loadBalancer:
+        servers:
+          - url: "http://192.168.0.72:11434"

@@ -1,0 +1,13 @@
+{
+    "id": "c6530c03-25d1-4604-a0f4-34ed5c062344",
+    "url": "file://10-ods-vs-dwh-faq.txt",
+    "title": "10-ods-vs-dwh-faq.txt",
+    "docAuthor": "no author specified",
+    "description": "Neva engineer corpus: _curated/10-ods-vs-dwh-faq.md",
+    "docSource": "neva-engineer-rag",
+    "chunkSource": "10-ods-vs-dwh-faq.txt",
+    "published": "8/28/2026, 4:41:38 PM",
+    "wordCount": 37,
+    "pageContent": "---\r\nworkspace: dwh-engineer\r\ntitle: \"ODS vs DWH\"\r\nsource: curated\r\n---\r\n\r\n# Чем ODS отличается от DWH?\r\n\r\n**Шаблон ответа:**\r\n- **ODS** — оперативный слой, **дневная активность**, актуальные срезы.\r\n- **DWH** — **история**, факты и измерения, аналитика на длинном горизонте.\r\n\r\nПоток: Landing → ODS → (staging/etl) → DWH.\r\n",
+    "token_count_estimate": 133
+}

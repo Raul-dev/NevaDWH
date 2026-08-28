@@ -1,0 +1,28 @@
+api:
+  dashboard: true
+  insecure: true # Включает дашборд на порту 8080 для локальной отладки
+
+log:
+  level: INFO
+  filePath: /var/log/traefik/traefik.log
+  format: json
+
+accessLog:
+  filePath: /var/log/traefik/access.log
+  format: json
+  bufferingSize: 100
+
+entryPoints:
+  web:
+    address: ":80"
+  websecure:
+    address: ":443"
+
+providers:
+  docker:
+    endpoint: "unix:///var/run/docker.sock"
+    exposedByDefault: false # Безопасность: проксируем только контейнеры с traefik.enable=true
+  # ДОЛЖНО БЫТЬ ВКЛЮЧЕНО:
+  file:
+    directory: /configurations
+    watch: true

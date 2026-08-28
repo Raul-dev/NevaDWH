@@ -1,0 +1,13 @@
+{
+    "id": "6f24a7be-fb0b-46c3-b0ab-1e50dd78c90e",
+    "url": "file://06-mq-service-faq.txt",
+    "title": "06-mq-service-faq.txt",
+    "docAuthor": "no author specified",
+    "description": "Neva engineer corpus: _curated/06-mq-service-faq.md",
+    "docSource": "neva-engineer-rag",
+    "chunkSource": "06-mq-service-faq.txt",
+    "published": "8/28/2026, 4:41:38 PM",
+    "wordCount": 44,
+    "pageContent": "---\r\nworkspace: dwh-engineer\r\ntitle: \"Что делает сервис MQ\"\r\nsource: curated\r\n---\r\n\r\n# Что делает сервис MQ?\r\n\r\n**Шаблон ответа:** Сервис **MQ** переносит сообщения между БД (SQL Server / PostgreSQL) и **RabbitMQ** или **Kafka**:\r\n- **SendMsg** — из БД в очередь;\r\n- **GetMsg** — из очереди в БД.\r\n\r\nУправление: **MQ.WebService** (start/stop/status).\r\n\r\nТаблицы метахранилища: `msgqueue`, `orders_log_buffer`, `metamap`.\r\n",
+    "token_count_estimate": 158
+}
