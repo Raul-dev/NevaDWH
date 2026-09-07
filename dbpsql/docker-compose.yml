@@ -1,8 +1,7 @@
 version: '3.4'
 
-# Paths are relative to this folder: src/dwhclients/newadwh/dbmssql
-# App images expect Release publish output under images/<service>/publish
-# Prepare them:  .\build-images.ps1
+# Paths are relative to this folder: src/dwhclients/<client>/dbpsql
+# App images from Docker Hub; Airflow and Rabbit from local images/
 
 x-host-mssql:
   &host-mssql
@@ -18,7 +17,7 @@ x-common:
   env_file:
     - .env
   environment:
-    # Airflow 3 SimpleAuth (FAB _AIRFLOW_WWW_USER_* ignored). Login: airflow/airflow
+    # Airflow 3 SimpleAuth (FAB _AIRFLOW_WWW_USER_* ignored). Login: admin/admin (как RabbitMQ)
     AIRFLOW__CORE__SIMPLE_AUTH_MANAGER_USERS: airflow:admin,admin:admin
     AIRFLOW__CORE__SIMPLE_AUTH_MANAGER_PASSWORDS_FILE: /opt/airflow/config/simple_auth_manager_passwords.json
     # LocalExecutor workers must call Execution API in api-server container (not localhost)
@@ -46,6 +45,36 @@ x-depends-on:
       condition: service_completed_successfully
 
 services:
+  # Traefik v3, config via command + Docker labels (no traefik.yml / configurations/).
+  # http://localhost/              NevaDWH admin
+  # http://localhost/v1/xdto       generator.api (PathBase)
+  # http://localhost/v1/mq         mq.webservice (без StripPrefix)
+  # http://localhost/v1/landing    landing.webservice (без StripPrefix)
+  # http://localhost:8080          Airflow UI (не за Traefik)
+  # http://localhost/rabbit/       RabbitMQ management (path_prefix, без StripPrefix)
+  # http://traefik.localhost       Traefik dashboard
+  traefik:
+    image: traefik:v3.0
+    container_name: traefik
+    restart: unless-stopped
+    security_opt:
+      - no-new-privileges:true
+    command:
+      - --api.dashboard=true
+      - --providers.docker=true
+      - --providers.docker.exposedbydefault=false
+      - --entrypoints.web.address=:80
+      - --log.level=INFO
+    ports:
+      - "80:80"
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.traefik.rule=Host(`traefik.localhost`)"
+      - "traefik.http.routers.traefik.entrypoints=web"
+      - "traefik.http.routers.traefik.service=api@internal"
+
   postgresdb:
     image: postgres:17.2-alpine
     container_name: client-postgresdb17
@@ -54,7 +83,7 @@ services:
       - "-c"
       - "max_connections=500"
       - "-c"
-      - "shared_buffers=1GB" 
+      - "shared_buffers=1GB"
     healthcheck:
       test: ["CMD", "pg_isready", "-U", "postgres"]
       interval: 5s
@@ -72,7 +101,6 @@ services:
       - ./040_dictionaries_dwh.sql:/docker-entrypoint-initdb.d/040_dictionaries_dwh.sql
       - ./050_create_landing.sql:/docker-entrypoint-initdb.d/050_create_landing.sql
       - ./060_dictionaries_landing.sql:/docker-entrypoint-initdb.d/060_dictionaries_landing.sql
-            
     env_file:
       - .env
 
@@ -92,6 +120,22 @@ services:
     ports:
       - '5672:5672'
       - '15672:15672'
+    volumes:
+      # Always apply path_prefix from the repo file (cached images omit it → Object Not Found).
+      - ./images/Rabbit/rabbitmq.conf:/etc/rabbitmq/rabbitmq.conf:ro
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.middlewares.rabbit-slash.redirectregex.regex=^https?://[^/]+/rabbit$$"
+      - "traefik.http.middlewares.rabbit-slash.redirectregex.replacement=/rabbit/"
+      - "traefik.http.routers.rabbit-slash.rule=Path(`/rabbit`)"
+      - "traefik.http.routers.rabbit-slash.entrypoints=web"
+      - "traefik.http.routers.rabbit-slash.middlewares=rabbit-slash"
+      - "traefik.http.routers.rabbit-slash.priority=110"
+      - "traefik.http.routers.rabbit-slash.service=rabbit"
+      - "traefik.http.routers.rabbit.rule=PathPrefix(`/rabbit`)"
+      - "traefik.http.routers.rabbit.entrypoints=web"
+      - "traefik.http.routers.rabbit.priority=100"
+      - "traefik.http.services.rabbit.loadbalancer.server.port=15672"
 
   scheduler:
     <<: [*common, *depends-on]
@@ -164,7 +208,7 @@ services:
 
   mq.webservice:
     <<: *host-mssql
-    image: raulamailru/nevadwh-mq:0.0.2
+    image: raulamailru/nevadwh-mq:0.0.3
     environment:
       - ASPNETCORE_ENVIRONMENT=Development
       - ASPNETCORE_HTTP_PORTS=8080
@@ -188,6 +232,12 @@ services:
     ports:
       - "8090:8080"
       - "8091:8081"
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.mq.rule=PathPrefix(`/v1/mq`)"
+      - "traefik.http.routers.mq.entrypoints=web"
+      - "traefik.http.routers.mq.priority=100"
+      - "traefik.http.services.mq.loadbalancer.server.port=8080"
     volumes:
       - ${APPDATA}/Microsoft/UserSecrets:/home/app/.microsoft/usersecrets:ro
       - ${APPDATA}/ASP.NET/Https:/home/app/.aspnet/https:ro
@@ -200,12 +250,14 @@ services:
 
   landing.webservice:
     <<: *host-mssql
-    image: raulamailru/nevadwh-landing:0.0.2
+    image: raulamailru/nevadwh-landing:0.0.3
     environment:
       - ASPNETCORE_ENVIRONMENT=Development
       - ASPNETCORE_HTTP_PORTS=8080
+      - DataBaseSettings__ServerName=postgresdb
       - DataBaseSettings__ServerType=psql
       - DataBaseSettings__NamingStyle=Snake
+      - DataBaseSettings__Port=5432
       - DataBaseSettings__ClientName=${MQ_CLIENTNAME:-client1}
       - DataBaseSettings__DataBase=${LANDING_DATABASE:-client1_landing}
       - DataBaseSettings__User=${LANDING_USER:-postgres}
@@ -213,6 +265,12 @@ services:
     ports:
       - "8092:8080"
       - "8093:8081"
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.landing.rule=PathPrefix(`/v1/landing`)"
+      - "traefik.http.routers.landing.entrypoints=web"
+      - "traefik.http.routers.landing.priority=100"
+      - "traefik.http.services.landing.loadbalancer.server.port=8080"
     volumes:
       - ${APPDATA}/Microsoft/UserSecrets:/home/app/.microsoft/usersecrets:ro
       - ${APPDATA}/ASP.NET/Https:/home/app/.aspnet/https:ro
@@ -225,7 +283,7 @@ services:
 
   generator.api:
     <<: *host-mssql
-    image: raulamailru/nevadwh-generator:0.0.2
+    image: raulamailru/nevadwh-generator:0.0.3
     environment:
       - ASPNETCORE_ENVIRONMENT=Development
       - ASPNETCORE_HTTP_PORTS=8080
@@ -237,6 +295,12 @@ services:
       - DataBaseSettings__Password=${MQ_PASSWORD:-postgres}
     ports:
       - "8110:8080"
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.generator.rule=PathPrefix(`/v1/xdto`)"
+      - "traefik.http.routers.generator.entrypoints=web"
+      - "traefik.http.routers.generator.priority=100"
+      - "traefik.http.services.generator.loadbalancer.server.port=8080"
     volumes:
       - ${APPDATA}/Microsoft/UserSecrets:/home/app/.microsoft/usersecrets:ro
       - ${APPDATA}/ASP.NET/Https:/home/app/.aspnet/https:ro
@@ -246,7 +310,7 @@ services:
         condition: service_healthy
 
   nevadwh:
-    image: raulamailru/nevadwh-admin:0.0.2
+    image: raulamailru/nevadwh-admin:0.0.3
     environment:
       - ASPNETCORE_ENVIRONMENT=Development
       - ASPNETCORE_HTTP_PORTS=8080
@@ -254,8 +318,21 @@ services:
       - ConnectionStrings__GeneratorConnection=http://generator.api:8080
       - ConnectionStrings__mqWebServiceConnectionString=http://mq.webservice:8080
       - ConnectionStrings__LandingWebServiceConnectionString=http://landing.webservice:8080
+      # Browser menu URLs (Traefik public routes). Override via EXTERNAL_* in .env
+      - ExternalLinks__Airflow=${EXTERNAL_AIRFLOW_URL:-http://localhost:8080}
+      - ExternalLinks__RabbitMQ=${EXTERNAL_RABBITMQ_URL:-http://localhost/rabbit/}
+      - ExternalLinks__MqWebService=${EXTERNAL_MQ_URL:-http://localhost/v1/mq/swagger}
+      - ExternalLinks__LandingWebService=${EXTERNAL_LANDING_URL:-http://localhost/v1/landing/swagger}
+      - ExternalLinks__GeneratorApi=${EXTERNAL_GENERATOR_URL:-http://localhost/v1/xdto/api/swagger}
+      - ExternalLinks__Traefik=${EXTERNAL_TRAEFIK_URL:-http://traefik.localhost}
     ports:
       - "8100:8080"
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.nevadwh.rule=PathPrefix(`/`)"
+      - "traefik.http.routers.nevadwh.entrypoints=web"
+      - "traefik.http.routers.nevadwh.priority=1"
+      - "traefik.http.services.nevadwh.loadbalancer.server.port=8080"
     volumes:
       - ${APPDATA}/Microsoft/UserSecrets:/home/app/.microsoft/usersecrets:ro
       - ${APPDATA}/ASP.NET/Https:/home/app/.aspnet/https:ro

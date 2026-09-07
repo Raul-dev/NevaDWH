@@ -15,7 +15,7 @@ Docker Compose для отладки MS SQL DWH-клиента **NevaDWH-DEMO**.
 | **dag-processor** | тот же образ Airflow | 3.3.0 | Парсинг DAG (обязателен в AF3) |
 | **mq.webservice** | `src/services/mq_ms` | .NET 10 | RabbitMQ → PostgreSQL (ODS) |
 | **landing.webservice** | `src/services/dwhmanager` | .NET 8 | API landing-слоя |
-| **generator.api** | `src/services/dwhgenerator` | .NET 8 | Генератор DWH (xdto API) |
+| **generator.api** | `src/services/dwhgenerator` | .NET 10 | Генератор DWH (xdto API) |
 | **nevadwh** | `src/services/dwhmanager` (NevaDWH) | .NET 8 | Веб-приложение / оркестрация |
 
 Проект БД (эталон схем): `dbproject/` — landing, ods, dwh, log.
@@ -144,9 +144,9 @@ docker compose up -d
 |----------|----------|
 | HTTP | http://localhost:8090 |
 | HTTPS | https://localhost:8091 |
-| Swagger | http://localhost:8090/swagger |
+| Swagger | http://localhost:8090/v1/mq/swagger |
 | Status API | http://localhost:8090/v1/mq/service/status |
-| Stop/Start (deploy) | `POST http://localhost:8090/api/Home/Stop`, `/Start` |
+| Stop/Start (deploy) | `POST http://localhost:8090/v1/mq/service/stop`, `/start` |
 | PostgreSQL (из контейнера) | `host.docker.internal` → ODS `NevaDWH-DEMO_ods` |
 | Rabbit (из контейнера) | `rabbit:5672` |
 
@@ -156,7 +156,7 @@ docker compose up -d
 |----------|----------|
 | HTTP | http://localhost:8092 |
 | HTTPS | https://localhost:8093 |
-| Swagger | http://localhost:8092/swagger |
+| Swagger | http://localhost:8092/v1/landing/swagger |
 | PostgreSQL | `NevaDWH-DEMO_landing` |
 
 ### Generator API
@@ -187,8 +187,8 @@ docker compose up -d
 |--------|-----|-------|--------|
 | Airflow UI | http://localhost:8080 | `airflow` | `airflow` |
 | RabbitMQ Management | http://localhost:15672 | `admin` | `admin` |
-| MQ Swagger | http://localhost:8090/swagger | — | — |
-| Landing Swagger | http://localhost:8092/swagger | — | — |
+| MQ Swagger | http://localhost:8090/v1/mq/swagger | — | — |
+| Landing Swagger | http://localhost:8092/v1/landing/swagger | — | — |
 | Generator Swagger | http://localhost:8110/api/swagger | — | — |
 | NevaDWH Swagger | http://localhost:8100/swagger | — | — |
 | NevaDWH App | http://localhost:8100 | *(зависит от настройки auth)* | — |

@@ -17,17 +17,16 @@ BEGIN
 
   EXEC [audit].[sp_LogStart] @AuditEnable = @AuditEnable, @ProcedureName = @ProcedureName, @ProcedureParams = @ProcedureParams, @LogID = @LogID OUTPUT
 END
-SET XACT_ABORT OFF
+SET XACT_ABORT ON
 SET CONCAT_NULL_YIELDS_NULL ON
 SET NOCOUNT ON
 
---SET TRANSACTION ISOLATION LEVEL READ COMMITTED
---SET DEADLOCK_PRIORITY LOW
 DECLARE @FilePath nvarchar(4000)
 DECLARE @FormatFilePath nvarchar(4000)
 DECLARE @SqlCmd nvarchar(Max), @IsSingleFile bit = 0
 DECLARE @MsgKey nvarchar(256) = 'DocumentObject.Продажи';
 DECLARE @IdError bigint = 0
+DECLARE @UpdateDate datetime2(4) = GETDATE()
 
 BEGIN TRY
 
@@ -91,7 +90,7 @@ BEGIN TRY
           [ТипДоставки] = X.C.value(''(ТипДоставки/text())[1]'', ''varchar(500)''),
           [ПримерСоставногоТипа] = X.C.value(''(ПримерСоставногоТипа/text())[1]'', ''varchar(36)''),
           [ПримерСоставногоТипа_ТипЗначения] = X.C.value(''(ПримерСоставногоТипа/@xsi:type)[1]'', ''varchar(128)''),
-          [UpdatedAt] = GetDate()
+          [UpdatedAt] = GETDATE()
         FROM OPENROWSET(BULK ''' + @FilePath + ''', SINGLE_BLOB, CODEPAGE = ''65001'') AS T(File_xml)
           CROSS APPLY (VALUES (CAST(T.File_xml AS xml)) ) AS T2(XMLFromFile)
           CROSS APPLY T2.XMLFromFile.nodes(''/Data/Реквизиты/DocumentObject.Продажи'') AS X(C);
@@ -99,18 +98,17 @@ BEGIN TRY
         EXEC [audit].[sp_Print] @SqlCmd, 2
         EXEC dbo.sp_executesql @SqlCmd
 
-        DELETE src
-          FROM staging.FACT_Продажи src
-          INNER JOIN (
-            SELECT [NKey], [Id] = MAX([Id]) FROM staging.FACT_Продажи
-            GROUP BY [NKey]
-            HAVING Count(*) > 1
-          ) dbl ON dbl.[NKey] = src.[NKey] AND src.[Id] < dbl.[Id]
+        ;WITH d AS
+        (
+          SELECT rn = ROW_NUMBER() OVER (PARTITION BY [NKey] ORDER BY [Id] DESC)
+          FROM staging.FACT_Продажи
+        )
+        DELETE FROM d WHERE rn > 1
 
         SET TRANSACTION ISOLATION LEVEL READ COMMITTED
         BEGIN TRANSACTION
           EXEC [odins].[load_FACT_Продажи_staging]
-          UPDATE [mq].[FileQueue] SET [StateId] = 2, [UpdatedAt] = GetDate()
+          UPDATE [mq].[FileQueue] SET [StateId] = 2, [UpdatedAt] = @UpdateDate
           WHERE  [FileQueueId] = @FileQueueID
         COMMIT
       END
@@ -129,7 +127,7 @@ BEGIN CATCH
   END
 
   IF @IdError = 0
-    UPDATE [mq].[FileQueue] SET [StateId] = 3, [ErrorMessage] = @ErrorMessage, [UpdatedAt] = GetDate()
+    UPDATE [mq].[FileQueue] SET [StateId] = 3, [ErrorMessage] = @ErrorMessage, [UpdatedAt] = GETDATE()
     WHERE [FileQueueId] = @FileQueueID
 
   SET @RowCount = @@ROWCOUNT

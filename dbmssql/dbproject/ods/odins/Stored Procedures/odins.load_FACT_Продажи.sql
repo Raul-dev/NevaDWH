@@ -43,63 +43,72 @@ BEGIN
     '@BufferHistoryMode=' + ISNULL(LTRIM(STR(@BufferHistoryMode, 30)),'NULL') + ', ' +
     '@BufferId=' + ISNULL(LTRIM(STR(@BufferId, 30)),'NULL')
 END
-SET XACT_ABORT OFF
+SET XACT_ABORT ON
 
-SET TRANSACTION ISOLATION LEVEL READ UNCOMMITTED
+SET TRANSACTION ISOLATION LEVEL READ COMMITTED
 SET DEADLOCK_PRIORITY LOW
 DECLARE @MinDate      datetime2(4)  = [mq].[fn_GetMinDate](),
-  @UpdateDate         datetime2(4)  = GetDate(),
+  @UpdateDate         datetime2(4)  = GETDATE(),
   @BufferHistoryDays  int,
-  @BatchSize          int           = 200000
+  @BatchSize          int           = 200000,
+  @ErrorNumber        int
 
 SET @BufferHistoryDays = IIF(@BufferHistoryMode = 2, 10, 30)
 
-DECLARE @LockedList AS TABLE(
-  [BufferId] bigint Primary key,
-  [MessageId] uniqueidentifier,
-  [RefID] uniqueidentifier,
-  [MessageTypeId] tinyint
-)
-DECLARE @LockedListUniq AS TABLE(
-  [BufferId] bigint Primary key,
-  [RefID] uniqueidentifier
-)
-
 BEGIN TRY
-BEGIN TRANSACTION
+
+  CREATE TABLE #LockedList
+  (
+    [BufferId] bigint NOT NULL PRIMARY KEY,
+    [MessageId] uniqueidentifier,
+    [RefID] uniqueidentifier,
+    [MessageTypeId] tinyint
+  )
+  CREATE TABLE #LockedListUniq
+  (
+    [BufferId] bigint NOT NULL PRIMARY KEY,
+    [RefID] uniqueidentifier
+  )
 
   IF @AuditEnable IS NOT NULL 
     EXEC [audit].[sp_LogStart] @AuditEnable = @AuditEnable, @ProcedureName = @ProcedureName, @ProcedureParams = @ProcedureParams, @LogID = @LogID OUTPUT
 
   IF ISNULL(@BufferId, 0) <= 0
-    INSERT INTO @LockedList ([BufferId], [MessageId], [RefID], [MessageTypeId])
+    INSERT INTO #LockedList ([BufferId], [MessageId], [RefID], [MessageTypeId])
     SELECT TOP (@BatchSize) [BufferId], [MessageId], [RefID], [MessageTypeId]
     FROM [odins].[FACT_ПродажиBuffer] b 
-    WHERE b.[UpdatedAt] = @MinDate
+    WHERE b.[IsError] = 0
+      AND b.[UpdatedAt] = @MinDate
     ORDER BY [BufferId]
   ELSE
-    INSERT INTO @LockedList ([BufferId], [MessageId], [RefID], [MessageTypeId])
+    INSERT INTO #LockedList ([BufferId], [MessageId], [RefID], [MessageTypeId])
     SELECT TOP (@BatchSize) [BufferId], [MessageId], [RefID], [MessageTypeId]
     FROM [odins].[FACT_ПродажиBuffer] b 
-    WHERE [BufferId] >= @BufferId
+    WHERE b.[IsError] = 0
       AND b.[UpdatedAt] = @MinDate
+      AND [BufferId] >= @BufferId
     ORDER BY [BufferId]
 
   SET @RowCount = @@ROWCOUNT;
 
   IF @Debug = 1
-    SELECT [@LockedList] = '@LockedList', * FROM @LockedList
+    SELECT [@LockedList] = '@LockedList', * FROM #LockedList
   IF @RowCount = 0 
   BEGIN
-  
+    IF @BufferHistoryMode >= 2
+      DELETE b
+      FROM [odins].[FACT_ПродажиBuffer] b
+      WHERE b.[IsError] = 0
+        AND b.[UpdatedAt] <> @MinDate
+        AND b.[UpdatedAt] < DATEADD(DD, -@BufferHistoryDays, @UpdateDate)
     EXEC [audit].[sp_LogFinish] @LogID = @LogID, @RowCount = 0, @ProcedureInfo = 'Empty buffer'
-    COMMIT TRANSACTION
     RETURN 0
   END
 
-  IF EXISTS (SELECT 1 FROM @LockedList WHERE [MessageTypeId] = 2)
+  IF EXISTS (SELECT 1 FROM #LockedList WHERE [MessageTypeId] = 2)
   BEGIN
 
+    BEGIN TRANSACTION
     ;WITH XMLNAMESPACES (DEFAULT 'http://v8.1c.ru/8.1/data/enterprise/current-config', 'http://www.w3.org/2001/XMLSchema-instance' as xsi)
     INSERT INTO [mq].[FileQueue] ([SessionId], [MessageKey], [MessageId], [StartDate], [FinishDate], [FileName], [FileFolder], [FileType], [ErrorMessage], [StateId], [CreatedAt])
     SELECT
@@ -115,35 +124,45 @@ BEGIN TRANSACTION
       1 [StateId],
       b.[CreatedAt]
     FROM [odins].[FACT_ПродажиBuffer] b
-    INNER JOIN @LockedList l ON b.[BufferId] = l.[BufferId]
+    INNER JOIN #LockedList l ON b.[BufferId] = l.[BufferId]
     WHERE l.[MessageTypeId] = 2 AND NOT EXISTS(SELECT 1 FROM [mq].[FileQueue] f WHERE f.[MessageKey] = 'DocumentObject.Продажи' AND f.[MessageId] = l.[MessageId] AND f.[CreatedAt] = b.[CreatedAt]);
+    COMMIT TRANSACTION
 
     DECLARE @FileQueueID bigint, @res int
     SELECT @FileQueueID = MIN([FileQueueId]) FROM [mq].[FileQueue] f WHERE f.[MessageKey] = 'DocumentObject.Продажи' AND [StateId] in (1,3)
-    COMMIT TRANSACTION
     EXEC @res = [odins].[load_FACT_Продажи_file] @FileQueueID = @FileQueueID, @ErrorMessage = @ErrorMessage OUTPUT
     IF @res <> 0 BEGIN
       EXEC [audit].[sp_LogFinish] @LogID = @LogID, @RowCount = 0, @ProcedureInfo = 'load_file @res<>0'
       RETURN
     END
-    BEGIN TRANSACTION
   END
 
-  INSERT INTO @LockedListUniq
+  INSERT INTO #LockedListUniq ([BufferId], [RefID])
   SELECT [BufferId] = MAX([BufferId]), [RefID]
-  FROM @LockedList l
+  FROM #LockedList l
   WHERE l.[MessageTypeId] = 1 
   GROUP BY [RefID]
   SET @RowCount = @@ROWCOUNT;
 
-  SELECT DISTINCT tmp = 1 INTO #tmpFACT_Продажи
-  FROM [odins].[FACT_Продажи] b WITH(ROWLOCK,XLOCK)
-  INNER JOIN @LockedListUniq ll ON b.[RefID] = ll.[RefID];
-
   TRUNCATE TABLE [staging].[FACT_Продажи];
-  SET @UpdateDate = GetDate();
+  SET @UpdateDate = GETDATE();
   ;WITH XMLNAMESPACES (DEFAULT 'http://v8.1c.ru/8.1/data/enterprise/current-config', 'http://www.w3.org/2001/XMLSchema-instance' as xsi)
-  INSERT [staging].[FACT_Продажи]([NKey],   [FACT_Продажи.Товары],  [RefID],  [DeletionMark],  [Number],  [Posted],  [Date],  [DateID],  [ДатаОтгрузки],  [ДатаОтгрузкиID],  [Клиент],  [ТипДоставки],  [ПримерСоставногоТипа],  [ПримерСоставногоТипа_ТипЗначения], [UpdatedAt])
+  INSERT [staging].[FACT_Продажи](
+    [NKey], 
+    [FACT_Продажи.Товары],
+    [RefID],
+    [DeletionMark],
+    [Number],
+    [Posted],
+    [Date],
+    [DateID],
+    [ДатаОтгрузки],
+    [ДатаОтгрузкиID],
+    [Клиент],
+    [ТипДоставки],
+    [ПримерСоставногоТипа],
+    [ПримерСоставногоТипа_ТипЗначения],
+    [UpdatedAt])
   SELECT
     [NKey] = X.C.value('(Ref/text())[1]', 'uniqueidentifier'),
     [FACT_Продажи.Товары] = X.C.query('declare default element namespace "http://v8.1c.ru/8.1/data/enterprise/current-config";Товары'),
@@ -161,39 +180,46 @@ BEGIN TRANSACTION
     [ПримерСоставногоТипа_ТипЗначения] = X.C.value('(ПримерСоставногоТипа/@xsi:type)[1]', 'varchar(128)'),
     [UpdatedAt] = @UpdateDate
   FROM [odins].[FACT_ПродажиBuffer] AS b
-  INNER JOIN @LockedListUniq l ON l.[BufferId] = b.[BufferId]
+  INNER JOIN #LockedListUniq l ON l.[BufferId] = b.[BufferId]
   CROSS APPLY b.[MessageBody].nodes('/Data/Реквизиты/DocumentObject.Продажи') AS X(C);
 
   IF @Debug = 1
     SELECT [staging_FACT_Продажи] = 'staging_FACT_Продажи', * FROM [staging].[FACT_Продажи]
 
+  BEGIN TRANSACTION
+
+  SELECT DISTINCT tmp = 1 INTO #tmpFACT_Продажи
+  FROM [odins].[FACT_Продажи] b WITH(ROWLOCK,XLOCK)
+  INNER JOIN #LockedListUniq ll ON b.[RefID] = ll.[RefID];
+
   EXEC [odins].[load_FACT_Продажи_staging]
 
-  -- Clear buffer table
-  IF @BufferHistoryMode = 1 AND NOT EXISTS (SELECT 1 FROM [odins].[FACT_ПродажиBuffer] WHERE [IsError] = 1)
+  IF @BufferHistoryMode = 1
   BEGIN
     DELETE b
     FROM [odins].[FACT_ПродажиBuffer] b
-    INNER JOIN @LockedList t ON b.[BufferId] = t.[BufferId]
+    INNER JOIN #LockedList t ON b.[BufferId] = t.[BufferId]
   END
   ELSE
   BEGIN
     UPDATE b SET
       [UpdatedAt] = @UpdateDate
     FROM [odins].[FACT_ПродажиBuffer] AS b
-    INNER JOIN @LockedList l ON l.[BufferId] = b.[BufferId]
+    INNER JOIN #LockedList l ON l.[BufferId] = b.[BufferId]
 
-    IF @BufferHistoryMode >= 2 AND NOT EXISTS (SELECT 1 FROM [odins].[FACT_ПродажиBuffer] WHERE [IsError] = 1)
+    IF @BufferHistoryMode >= 2
       DELETE b
       FROM [odins].[FACT_ПродажиBuffer] b
-      WHERE DATEDIFF(DD, @UpdateDate, [UpdatedAt]) > @BufferHistoryDays
+      WHERE b.[IsError] = 0
+        AND b.[UpdatedAt] <> @MinDate
+        AND b.[UpdatedAt] < DATEADD(DD, -@BufferHistoryDays, @UpdateDate)
   END
   EXEC [audit].[sp_LogFinish] @LogID = @LogID, @RowCount = @RowCount
 
 COMMIT TRANSACTION
 END TRY
 BEGIN CATCH
-  SET @ErrorMessage = ERROR_MESSAGE()
+  SELECT @ErrorMessage = ERROR_MESSAGE(), @ErrorNumber = ERROR_NUMBER()
   IF XACT_STATE() <> 0 AND @@TRANCOUNT > 0 
     ROLLBACK TRANSACTION
 
@@ -205,13 +231,14 @@ BEGIN CATCH
     [SessionStateId] = 3,
     [ErrorMessage] = 'Table [odins].[FACT_ПродажиBuffer]. Error: ' + @ErrorMessage
 
-  IF NOT @ErrorMessage LIKE '%deadlock%'
+  IF @ErrorNumber <> 1205
+    AND OBJECT_ID('tempdb..#LockedList') IS NOT NULL
     UPDATE b SET 
       [SessionId] = @err_SessionId,
       [IsError]   = 1,
-      [UpdatedAt]  = ISNULL(@UpdateDate, GetDate())
+      [UpdatedAt]  = ISNULL(@UpdateDate, GETDATE())
     FROM [odins].[FACT_ПродажиBuffer] b
-    INNER JOIN @LockedList l ON b.[BufferId] = l.[BufferId]
+    INNER JOIN #LockedList l ON b.[BufferId] = l.[BufferId]
     WHERE [IsError] = 0
 
   EXEC [audit].[sp_LogFinish] @LogID = @LogID, @RowCount = @RowCount, @ErrorMessage = @ErrorMessage

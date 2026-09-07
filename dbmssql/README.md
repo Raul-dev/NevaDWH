@@ -1,24 +1,29 @@
-# NevaDWH-DEMO (dbmssql) — локальный стенд
+# Локальный стенд DWH (MS SQL)
 
-Docker Compose для отладки MS SQL DWH-клиента **NevaDWH-DEMO**. Сервисы приложений собираются из рабочих проектов `src/services`; образы Airflow и Rabbit — из локальной папки `images/`.
+Docker Compose для отладки сгенерированного DWH-клиента на **SQL Server**. Сервисы приложений берутся из образов `raulamailru/nevadwh-*`; Airflow и Rabbit — из локальной папки `images/`. Имя клиента и баз — из `.env` (`MQ_CLIENTNAME`, по умолчанию шаблона `NevaDWH-DEMO`).
+
+HTTP UI с хоста идёт через **Traefik** на порт **80** (`http://localhost/...`). Прямые порты контейнеров оставлены для отладки.
 
 ## Состав и версии
 
 | Сервис | Образ / сборка | Версия | Назначение |
 |--------|----------------|--------|------------|
 | **SQL Server** | на хосте (не в compose) | — | БД log / landing / ods / dwh (dacpac) |
+| **traefik** | `traefik:v3.0` | 3.0 | Reverse proxy `:80`, только Docker labels (без `traefik.yml`) |
 | **postgresdb** | `postgres:17.2-alpine` | 17.2 | Metadata Airflow, БД `nevadwh` |
 | **rabbit** | `images/Rabbit` → `rabbitmq:4.3.4-management` | 4.3.4 | Очереди для `mq_ms` |
 | **airflow-init** | `images/airflow` → `apache/airflow:3.3.0-python3.12` | 3.3.0 | Миграция БД Airflow, init |
 | **api-server** | тот же образ Airflow | 3.3.0 | UI + REST API Airflow |
 | **scheduler** | тот же образ Airflow | 3.3.0 | Планировщик DAG |
 | **dag-processor** | тот же образ Airflow | 3.3.0 | Парсинг DAG (обязателен в AF3) |
-| **mq.webservice** | `src/services/mq_ms` | .NET 10 | RabbitMQ → MSSQL (ODS) |
-| **landing.webservice** | `src/services/dwhmanager` | .NET 8 | API landing-слоя |
-| **generator.api** | `src/services/dwhgenerator` | .NET 8 | Генератор DWH (xdto API) |
-| **nevadwh** | `src/services/dwhmanager` (NevaDWH) | .NET 8 | Веб-приложение / оркестрация |
+| **mq.webservice** | `raulamailru/nevadwh-mq` | — | RabbitMQ → MSSQL (ODS) |
+| **landing.webservice** | `raulamailru/nevadwh-landing` | — | API landing-слоя |
+| **generator.api** | `raulamailru/nevadwh-generator` | — | Генератор DWH (xdto API) |
+| **nevadwh** | `raulamailru/nevadwh-admin` | — | Веб-приложение / оркестрация |
 
-Проект БД (эталон схем): `dbproject/` — landing, ods, dwh, log.
+Теги `raulamailru/nevadwh-{mq,landing,generator,admin}:X.Y.Z` в этом compose обновляет `src/publishimage.ps1` (см. корневой README).
+
+Проект БД: `dbproject/` — landing, ods, dwh, log. Демо-сообщения 1С в ODS: PostDeploy `Dictionaries/messagequeue.sql` → `[mq].[MessageQueue]` (исходный dump — `070_msgqueue.sql`).
 
 ---
 
@@ -27,19 +32,28 @@ Docker Compose для отладки MS SQL DWH-клиента **NevaDWH-DEMO**.
 ```mermaid
 flowchart TB
   subgraph host [Хост Windows]
-    MSSQL["SQL Server :1433<br/>NevaDWH-DEMO_*"]
+    Browser["браузер :80"]
+    MSSQL["SQL Server :1433<br/>{Client}_ods / landing / dwh / log"]
   end
 
   subgraph compose [Docker Compose]
+    TR[traefik :80]
     PG[(postgresdb :54321)]
     RMQ[rabbit :5672]
     AF[Airflow 3.3<br/>api-server / scheduler / dag-processor]
-    MQ[mq_ms :8090]
-    LND[landing :8092]
-    GEN[generator :8110]
-    UI[nevadwh :8100]
+    MQ[mq.webservice]
+    LND[landing.webservice]
+    GEN[generator.api]
+    UI[nevadwh]
   end
 
+  Browser --> TR
+  TR --> UI
+  TR --> GEN
+  TR --> MQ
+  TR --> LND
+  TR --> RMQ
+  Browser --> AF
   MQ -->|AMQP| RMQ
   MQ -->|TDS| MSSQL
   LND -->|TDS| MSSQL
@@ -50,16 +64,15 @@ flowchart TB
   UI --> GEN
   UI --> MQ
   UI --> LND
-  GEN -.->|генерация sqlproj| MSSQL
 ```
 
 **Поток данных (упрощённо):**
 
-1. **MQ (`mq_ms`)** — читает сообщения из **RabbitMQ**, пишет в **MSSQL ODS** (`NevaDWH-DEMO_ods`, схемы `mq`, `odins`, `etl`).
-2. **Landing** — работает с **MSSQL landing** (`NevaDWH-DEMO_landing`).
-3. **Generator** — генерация/обновление артеfactов DWH по метаданным в **MSSQL ODS**.
-4. **Airflow** — DAG'и в `ETLAirflow/dags`: `[etl].[dwh_AssignSessionID]` на ODS → `[mq].[sp_SaveSessionState]` на DWH → staging publish-процедуры.
-5. **NevaDWH** — UI и API; хранит служебные данные в **Postgres** (`nevadwh`), вызывает generator / mq / landing по HTTP внутри compose-сети.
+1. **MQ (`mq_ms`)** — читает сообщения из **RabbitMQ**, пишет в **MSSQL ODS** (схемы `mq`, `odins`, `etl`). На старте dacpac сеет демо-очередь `[mq].[MessageQueue]`.
+2. **Landing** — **MSSQL landing**.
+3. **Generator** — артефакты DWH по метаданным в **MSSQL ODS**.
+4. **Airflow** — DAG'и в `ETLAirflow/dags`: `[etl].[dwh_AssignSessionID]` на ODS → `[mq].[sp_SaveSessionState]` на DWH → staging publish.
+5. **NevaDWH** — UI; служебные данные в **Postgres** (`nevadwh`), HTTP к generator / mq / landing внутри compose-сети (не через Traefik).
 
 ---
 
@@ -68,17 +81,18 @@ flowchart TB
 - Windows, **PowerShell от администратора** (для `start.ps1` и SMB share `Upload`)
 - **SQL Server** на `localhost` (порт **1433**)
 - **Docker Desktop**
-- **Visual Studio / MSBuild** + **SqlPackage** (для deploy dacpac через `dbdeploy.ps1`)
+- **Visual Studio / MSBuild** + **SqlPackage** (deploy dacpac через `dbdeploy.ps1`)
 - `sqlcmd` в PATH
+- Свободный **порт 80** (Traefik). `start.ps1` проверяет его до `docker compose up`: если занят — пишет процесс/контейнер и как освободить. Частые конфликты: другой Traefik (`docker-compose-price.yml` и т.п.), IIS (`net stop w3svc`).
 
 ---
 
 ## Быстрый запуск
 
-```powershell
-cd F:\Work\GitLab\gitlab26.neva.loc\shop\publicdwh_nodejs\src\dbprojects\dbmssql
+Из **этого** каталога (`dbmssql/` сгенерированного клиента):
 
-# 1. Сборка образов
+```powershell
+# 1. Сборка образов (если нужны локальные images/)
 docker compose build
 
 # 2. Deploy MSSQL + пользователь + docker (первый раз — от администратора)
@@ -87,6 +101,8 @@ docker compose build
 # Обновление только dacpac (MQ останавливается/запускается автоматически):
 .\start.ps1 -IsUpdate
 ```
+
+После старта браузер открывает http://localhost/ (NevaDWH через Traefik).
 
 **Первый запуск Airflow 3** (или после смены major-версии) — пересоздать volume metadata:
 
@@ -100,16 +116,38 @@ docker compose up -d
 
 ## Учётные данные и адреса
 
+Имя клиента ниже — из `.env` (`MQ_CLIENTNAME`). В шаблоне это `NevaDWH-DEMO`.
+
+### Traefik (`localhost:80`)
+
+Конфиг только в `docker-compose.yml` (`command` + labels, без папки `TraefikProxy`).
+
+| Путь | Сервис |
+|------|--------|
+| http://localhost/ | NevaDWH admin |
+| http://localhost/v1/xdto | generator.api (PathBase, без StripPrefix) |
+| http://localhost/v1/xdto/api/swagger | Generator Swagger |
+| http://localhost/v1/mq | mq.webservice (без StripPrefix) |
+| http://localhost/v1/mq/swagger | MQ Swagger |
+| http://localhost/v1/landing | landing.webservice (без StripPrefix) |
+| http://localhost/v1/landing/swagger | Landing Swagger |
+| http://localhost/rabbit/ | RabbitMQ management (`management.path_prefix`, слэш в конце обязателен) |
+| http://traefik.localhost | дашборд Traefik |
+
+Связь **между контейнерами** по-прежнему по именам сервисов (`http://generator.api:8080`, `rabbit:5672`), не через Traefik.
+
 ### SQL Server (хост)
 
 | Параметр | Значение |
 |----------|----------|
 | Сервер | `localhost,1433` |
-| Пользователь | `NevaDWH-DEMOuser` |
+| Пользователь | `{MQ_CLIENTNAME}user` (шаблон: `NevaDWH-DEMOuser`) |
 | Пароль | `MyPassword321` |
-| Базы | `NevaDWH-DEMO_log`, `NevaDWH-DEMO_landing`, `NevaDWH-DEMO_ods`, `NevaDWH-DEMO_dwh` |
+| Базы | `{Client}_log`, `{Client}_landing`, `{Client}_ods`, `{Client}_dwh` |
 
 ### PostgreSQL (контейнер `client-postgresdb17`)
+
+Только metadata Airflow и БД `nevadwh`. **Не** очередь 1С: `070_msgqueue.sql` в Postgres не монтируется.
 
 | Параметр | Значение |
 |----------|----------|
@@ -123,7 +161,8 @@ docker compose up -d
 | Параметр | Значение |
 |----------|----------|
 | AMQP | `localhost:5672` |
-| Management UI | http://localhost:15672 |
+| Management UI (прямой) | http://localhost:15672/rabbit/ |
+| Management UI (Traefik) | http://localhost/rabbit/ |
 | Login / Password | `admin` / `admin` |
 
 ### Airflow 3.3
@@ -131,7 +170,7 @@ docker compose up -d
 | Параметр | Значение |
 |----------|----------|
 | Web UI | http://localhost:8080 |
-| Login / Password | `airflow` / `airflow` |
+| Login / Password | `admin` / `admin` |
 | Health | http://localhost:8080/api/v2/monitor/health |
 | REST API v2 | http://localhost:8080/api/v2/ |
 | Scheduler health | порт `8793` (внутренний) |
@@ -142,37 +181,41 @@ docker compose up -d
 
 | Параметр | Значение |
 |----------|----------|
-| HTTP | http://localhost:8090 |
+| HTTP (Traefik) | http://localhost/v1/mq |
+| HTTP (прямой) | http://localhost:8090 |
 | HTTPS | https://localhost:8091 |
-| Swagger | http://localhost:8090/swagger |
+| Swagger | http://localhost/v1/mq/swagger или http://localhost:8090/v1/mq/swagger |
 | Status API | http://localhost:8090/v1/mq/service/status |
-| Stop/Start (deploy) | `POST http://localhost:8090/api/Home/Stop`, `/Start` |
-| MSSQL (из контейнера) | `host.docker.internal` → ODS `NevaDWH-DEMO_ods` |
+| Stop/Start (deploy) | `POST http://localhost:8090/v1/mq/service/stop`, `/start` |
+| MSSQL (из контейнера) | `host.docker.internal` → ODS `{Client}_ods` |
 | Rabbit (из контейнера) | `rabbit:5672` |
 
 ### Landing WebService
 
 | Параметр | Значение |
 |----------|----------|
-| HTTP | http://localhost:8092 |
+| HTTP (Traefik) | http://localhost/v1/landing |
+| HTTP (прямой) | http://localhost:8092 |
 | HTTPS | https://localhost:8093 |
-| Swagger | http://localhost:8092/swagger |
-| MSSQL | `NevaDWH-DEMO_landing` |
+| Swagger | http://localhost/v1/landing/swagger или http://localhost:8092/v1/landing/swagger |
+| MSSQL | `{Client}_landing` |
 
 ### Generator API
 
 | Параметр | Значение |
 |----------|----------|
-| HTTP | http://localhost:8110 |
-| Swagger UI | http://localhost:8110/api/swagger |
-| OpenAPI JSON | http://localhost:8110/api/swagger/v1/swagger.json |
-| MSSQL | `NevaDWH-DEMO_ods` |
+| HTTP (Traefik) | http://localhost/v1/xdto |
+| HTTP (прямой) | http://localhost:8110 |
+| Swagger UI | http://localhost/v1/xdto/api/swagger |
+| OpenAPI JSON | http://localhost/v1/xdto/api/swagger/v1/swagger.json |
+| MSSQL | `{Client}_ods` |
 
 ### NevaDWH (веб-приложение)
 
 | Параметр | Значение |
 |----------|----------|
-| HTTP | http://localhost:8100 |
+| HTTP (Traefik) | http://localhost/ |
+| HTTP (прямой) | http://localhost:8100 |
 | Swagger (Development) | http://localhost:8100/swagger |
 | Postgres | `postgresdb:5432`, БД `nevadwh`, `postgres` / `postgres` |
 | Generator (внутри compose) | http://generator.api:8080 |
@@ -183,15 +226,15 @@ docker compose up -d
 
 ## Сводная таблица URL
 
-| Сервис | URL | Логин | Пароль |
-|--------|-----|-------|--------|
-| Airflow UI | http://localhost:8080 | `airflow` | `airflow` |
-| RabbitMQ Management | http://localhost:15672 | `admin` | `admin` |
-| MQ Swagger | http://localhost:8090/swagger | — | — |
-| Landing Swagger | http://localhost:8092/swagger | — | — |
-| Generator Swagger | http://localhost:8110/api/swagger | — | — |
-| NevaDWH Swagger | http://localhost:8100/swagger | — | — |
-| NevaDWH App | http://localhost:8100 | *(зависит от настройки auth)* | — |
+| Сервис | Traefik | Прямой порт | Логин | Пароль |
+|--------|---------|-------------|-------|--------|
+| NevaDWH App | http://localhost/ | http://localhost:8100 | *(auth стенда)* | — |
+| Generator Swagger | http://localhost/v1/xdto/api/swagger | http://localhost:8110/api/swagger | — | — |
+| MQ Swagger | http://localhost/v1/mq/swagger | http://localhost:8090/v1/mq/swagger | — | — |
+| Landing Swagger | http://localhost/v1/landing/swagger | http://localhost:8092/v1/landing/swagger | — | — |
+| Airflow UI | — | http://localhost:8080 | `admin` | `admin` |
+| RabbitMQ Management | http://localhost/rabbit/ | http://localhost:15672/rabbit/ | `admin` | `admin` |
+| Traefik dashboard | http://traefik.localhost | — | — | — |
 
 ---
 
@@ -202,13 +245,17 @@ docker compose up -d
 docker compose up -d
 
 # Логи
-docker compose logs -f api-server mq.webservice nevadwh
+docker compose logs -f traefik api-server mq.webservice nevadwh
+
+# Кто занял порт 80
+Get-NetTCPConnection -LocalPort 80 -State Listen
+docker ps --filter publish=80
 
 # Пересборка одного сервиса после правок в src/services
 docker compose build mq.webservice
 docker compose up -d mq.webservice
 
-# Deploy dacpac вручную
+# Deploy dacpac вручную (сид MessageQueue — в ODS PostDeploy)
 cd .\dbproject\ScriptsFolder
 .\dbdeploy.ps1 -TargetServerName localhost `
   -TargetLogDBname NevaDWH-DEMO_log `
@@ -221,20 +268,23 @@ cd .\dbproject\ScriptsFolder
 docker compose exec api-server airflow dags list
 ```
 
+Подставьте имена баз из своего `.env`, если клиент не `NevaDWH-DEMO`.
+
 ---
 
 ## Структура каталога
 
 ```
 dbmssql/
-├── docker-compose.yml    # compose-стек
-├── .env                  # генерируется из TemplateScript/dbmssql/setup/env.airflow.tmpl
-├── start.ps1             # dacpac deploy + docker compose up (setup/start_ps1.tmpl)
+├── docker-compose.yml    # стек + Traefik labels
+├── .env                  # из TemplateScript/dbmssql/setup/env.airflow.tmpl
+├── start.ps1             # dacpac + проверка :80 + docker compose (setup/start_ps1.tmpl)
+├── 070_msgqueue.sql      # исходный dump 1С; в MSSQL грузится через Dictionaries/messagequeue.sql
 ├── images/               # Dockerfile Airflow, Rabbit
 ├── ETLAirflow/
 │   ├── dags/             # DAG'и (AF 3.3, схемы etl/mq/staging)
 │   └── config/           # SimpleAuth passwords.json
-├── dbproject/            # SSDT-проекты log/landing/ods/dwh
+├── dbproject/            # SSDT log/landing/ods/dwh
 └── logs/                 # логи .NET-сервисов (volume)
 ```
 
@@ -253,13 +303,14 @@ dbmssql/
 | `RABBITMQ_EXCHANGE` | `amq.fanout` | Exchange RabbitMQ |
 | `RABBITMQ_VIRTUAL_HOST` | `/` | Virtual host |
 | `RABBITMQ_USER` / `RABBITMQ_PASSWORD` | `admin` / `admin` | Доступ к RabbitMQ |
-| `SIMPLE_AUTH_MANAGER_*` + passwords.json | `airflow` / `airflow` | UI Airflow 3 (SimpleAuth) |
+| `SIMPLE_AUTH_MANAGER_*` + passwords.json | `admin` / `admin` | UI Airflow 3 (SimpleAuth, как RabbitMQ) |
 
 ---
 
 ## Примечания
 
 - Контейнеры .NET подключаются к MSSQL через **`host.docker.internal`** — SQL Server должен слушать на хосте и принимать SQL-аутентификацию.
-- Образы приложений пересобираются из **`../../services/`** — правки в `mq_ms`, `dwhmanager`, `dwhgenerator` требуют `docker compose build`.
-- Airflow **3.x**: вместо `webserver` используется **`api-server`**, обязателен **`dag-processor`**.
+- Образы приложений — **`raulamailru/nevadwh-*`**. Локальная пересборка: `docker compose build` после правок в `mq_ms`, `dwhmanager`, `dwhgenerator`.
+- Airflow **3.x**: вместо `webserver` — **`api-server`**, обязателен **`dag-processor`**. UI только на http://localhost:8080 (не за Traefik PathPrefix).
+- Postgres в compose **не** является ODS: очередь сообщений живёт в MSSQL `[mq].[MessageQueue]`.
 - Пароли в этом README — **только для локальной отладки**; не используйте их в production.

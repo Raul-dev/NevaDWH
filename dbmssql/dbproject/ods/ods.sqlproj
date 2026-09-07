@@ -184,6 +184,7 @@
   </None>
   <None Include="Dictionaries\metamap.sql" />
   <None Include="Dictionaries\codegen.sql" />
+  <None Include="Dictionaries\messagequeue.sql" />
   </ItemGroup>
   <ItemGroup>
   <PostDeploy Include="Dictionaries\Script.PostDeployment.sql" />

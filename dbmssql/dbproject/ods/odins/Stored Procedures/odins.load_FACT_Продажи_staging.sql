@@ -2,6 +2,7 @@ CREATE PROCEDURE [odins].[load_FACT_Продажи_staging]
 AS
 BEGIN
 DECLARE @LogID int, @ProcedureName varchar(510), @ProcedureParams varchar(max), @ProcedureInfo varchar(max), @AuditEnable nvarchar(256), @RowCount int
+DECLARE @UpdateDate datetime2(4) = GETDATE()
 SET @AuditEnable = [audit].[fn_GetAuditEnableSP](N'AuditProcAll')
 IF @AuditEnable IS NOT NULL 
 BEGIN
@@ -14,15 +15,41 @@ BEGIN
 END
 
   MERGE INTO [odins].[FACT_Продажи] trg
-  USING 
-  (
-    SELECT *
-    FROM [staging].[FACT_Продажи] p
-    ) src
+  USING [staging].[FACT_Продажи] src
     ON src.[NKey] = trg.[NKey] 
-    WHEN MATCHED 
+    WHEN MATCHED AND EXISTS
+      (
+        SELECT
+          src.[RefID],
+          src.[DeletionMark],
+          src.[Number],
+          src.[Posted],
+          src.[Date],
+          src.[DateID],
+          src.[ДатаОтгрузки],
+          src.[ДатаОтгрузкиID],
+          src.[Клиент],
+          src.[ТипДоставки],
+          src.[ПримерСоставногоТипа],
+          src.[ПримерСоставногоТипа_ТипЗначения],
+          src.[NKey]
+        EXCEPT
+        SELECT
+          trg.[RefID],
+          trg.[DeletionMark],
+          trg.[Number],
+          trg.[Posted],
+          trg.[Date],
+          trg.[DateID],
+          trg.[ДатаОтгрузки],
+          trg.[ДатаОтгрузкиID],
+          trg.[Клиент],
+          trg.[ТипДоставки],
+          trg.[ПримерСоставногоТипа],
+          trg.[ПримерСоставногоТипа_ТипЗначения],
+          trg.[NKey]
+      )
     THEN UPDATE SET
-      [NKey] = src.[NKey],
       [RefID] = src.[RefID],
       [DeletionMark] = src.[DeletionMark],
       [Number] = src.[Number],
@@ -35,10 +62,10 @@ END
       [ТипДоставки] = src.[ТипДоставки],
       [ПримерСоставногоТипа] = src.[ПримерСоставногоТипа],
       [ПримерСоставногоТипа_ТипЗначения] = src.[ПримерСоставногоТипа_ТипЗначения],
-      [UpdatedAt] = GetDate()
+      [UpdatedAt] = @UpdateDate
     WHEN NOT MATCHED BY TARGET
     THEN INSERT (
-      [NKey] ,
+      [NKey],
       [RefID],
       [DeletionMark],
       [Number],
@@ -55,7 +82,7 @@ END
   )
     VALUES
   (
-      src.[NKey] ,
+      src.[NKey],
       src.[RefID],
       src.[DeletionMark],
       src.[Number],
@@ -77,7 +104,10 @@ END
 
 
   ;WITH XMLNAMESPACES (DEFAULT 'http://v8.1c.ru/8.1/data/enterprise/current-config')
-  INSERT [odins].[FACT_Продажи.Товары] ([NKey], [FACT_ПродажиRefID], [Доставка], [Товар], [Колличество], [Цена],  [UpdatedAt])  SELECT   [NKey] = CAST(SUBSTRING(HASHBYTES('SHA2_256', COALESCE(CAST(b.RefID AS varchar(36)), '00000000-0000-0000-0000-000000000000')+ 
+  INSERT [odins].[FACT_Продажи.Товары] ([NKey], 
+[FACT_ПродажиRefID], [Доставка], [Товар], [Колличество], [Цена],  [UpdatedAt])
+  SELECT 
+  [NKey] = CAST(SUBSTRING(HASHBYTES('SHA2_256', COALESCE(CAST(b.RefID AS varchar(36)), '00000000-0000-0000-0000-000000000000')+ 
     '|' + COALESCE(CAST(STR(LTRIM(ROW_NUMBER() OVER (PARTITION BY b.RefID ORDER BY b.Id))) AS varchar(36)), '00000000-0000-0000-0000-000000000000' ) )
       , 0,16) as uniqueidentifier),
   [FACT_ПродажиRefID] = b.RefID,
@@ -85,7 +115,7 @@ END
   [Товар] = X.C.value('(Товар/text())[1]', 'varchar(36)'),
   [Колличество] = X.C.value('(Колличество/text())[1]', 'decimal(12,0)'),
   [Цена] = X.C.value('(Цена/text())[1]', 'decimal(16,4)'),
-  [UpdatedAt]
+  [UpdatedAt] = @UpdateDate
   FROM staging.[FACT_Продажи] b
   CROSS APPLY b.[FACT_Продажи.Товары].nodes('/Товары') AS X(C);
 SET @RowCount = @@ROWCOUNT
