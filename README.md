@@ -16,14 +16,17 @@
 
 ## Стек стенда
 
-| Сервис | Адрес | Учётка |
-|--------|-------|--------|
-| Панель NevaDWH | http://localhost:8100 | первый пользователь — через UI |
-| Airflow 3 UI / API | http://localhost:8080 | **admin / admin** |
-| RabbitMQ Management | http://localhost:15672 | **admin / admin** |
-| MQ WebService | http://localhost:8090/v1/mq/swagger | — |
-| Landing WebService | http://localhost:8092/v1/landing/swagger | — |
-| Traefik (опц.) | http://localhost/ | — |
+Публичный вход с хоста — **Traefik `:80`** (PathPrefix, без StripPrefix). Прямые порты контейнеров оставлены для отладки / `db-tests.ps1`.
+
+| Сервис | Через Traefik | Прямой порт (debug) | Учётка |
+|--------|---------------|---------------------|--------|
+| Панель NevaDWH | http://localhost/ | http://localhost:8100 | первый пользователь — через UI |
+| MQ WebService | http://localhost/v1/mq/swagger | http://localhost:8090/v1/mq/swagger | — |
+| Landing | http://localhost/v1/landing/swagger | http://localhost:8092/v1/landing/swagger | — |
+| Generator | http://localhost/v1/xdto/api/swagger | http://localhost:8110/api/swagger | — |
+| RabbitMQ Management | http://localhost/rabbit/ | http://localhost:15672 | **admin / admin** |
+| Airflow 3 UI / API | — (не за Traefik) | http://localhost:8080 | **admin / admin** |
+| Traefik dashboard | http://traefik.localhost | — | — |
 
 **dbpsql (Postgres):** ODS `newadwh_ods`, DWH `newadwh_dwh`, Landing `newadwh_landing`  
 (хост с машины: `localhost:54321`, user/password `postgres` / `postgres`).
@@ -143,7 +146,7 @@ docker compose build
 
 ### Ручной сценарий (UI) — то же, что делает тест
 
-1. Панель http://localhost:8100 → ODS Service: включить обработку Rabbit, Reset MQ, **Send unresolved messages**.
+1. Панель http://localhost/ → ODS Service: включить обработку Rabbit, Reset MQ, **Send unresolved messages**.
 2. Airflow http://localhost:8080 (**admin/admin**) → запустить DAG **`dwh_etl_start`**.
 3. Проверить ODS `odins.*` и DWH `staging` / `target`.
 
@@ -151,13 +154,15 @@ docker compose build
 
 ## Полезные ссылки в стенде
 
-| | |
-|--|--|
-| Admin | http://localhost:8100 |
-| Airflow | http://localhost:8080 |
-| RabbitMQ | http://localhost:15672 |
-| MQ Swagger | http://localhost:8090/v1/mq/swagger |
-| Landing Swagger | http://localhost:8092/v1/landing/swagger |
+| | Через Traefik | Прямой (debug) |
+|--|---------------|----------------|
+| Admin | http://localhost/ | http://localhost:8100 |
+| MQ Swagger | http://localhost/v1/mq/swagger | http://localhost:8090/v1/mq/swagger |
+| Landing Swagger | http://localhost/v1/landing/swagger | http://localhost:8092/v1/landing/swagger |
+| Generator Swagger | http://localhost/v1/xdto/api/swagger | http://localhost:8110/api/swagger |
+| RabbitMQ | http://localhost/rabbit/ | http://localhost:15672 |
+| Airflow | — | http://localhost:8080 |
+| Traefik dashboard | http://traefik.localhost | — |
 
 ![Admin](./doc/Admin.png)
 
