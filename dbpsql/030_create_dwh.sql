@@ -219,7 +219,7 @@ END;
 $$;
 /*
 call mq."sp_SaveSessionState" (null::bigint, 1::bigint, 1::bigint, 1::smallint, 1::smallint, now()::timestamp, null::varchar(4000) ) 
-SELECT * FROM session
+SELECT * FROM mq.session
 SELECT COALESE(par_create_session, now())
 */
 CREATE OR REPLACE PROCEDURE mq."sp_SaveSessionState" (
@@ -243,7 +243,7 @@ BEGIN
         INSERT INTO mq.session (data_source_id, session_state_id, rows_count, create_session, dwh_session_id)
         VALUES(par_data_source_id, par_session_state_id, par_rows_count, par_create_session, par_dwh_session_id);
         
-        SELECT currval(pg_get_serial_sequence('session','session_id')) into par_session_id;
+        SELECT currval(pg_get_serial_sequence('mq.session','session_id')) into par_session_id;
         RETURN;
     ELSE
     
@@ -784,7 +784,7 @@ DECLARE
   val_LocalCount bigint;
 BEGIN
 
-  SELECT create_session INTO val_start_date FROM session WHERE session_id = par_session_id;
+  SELECT create_session INTO val_start_date FROM mq.session WHERE session_id = par_session_id;
   DROP TABLE IF EXISTS "tmp_DIM_Валюты";
   CREATE TEMPORARY TABLE "tmp_DIM_Валюты"(
     identificator uuid
@@ -893,9 +893,9 @@ BEGIN
   val_LastTargetID := COALESCE(val_LastTargetID, 0) + 1;
   PERFORM setval(val_tmp, val_LastTargetID );
   
-  SELECT name INTO val_source_name FROM data_source d WHERE d.data_source_id =  1;
-  SELECT dwh_session_id INTO val_dwh_session_id FROM session s WHERE session_id = par_session_id;
-  SELECT create_session INTO val_start_date FROM session s WHERE session_id = par_session_id;
+  SELECT name INTO val_source_name FROM mq.data_source d WHERE d.data_source_id =  1;
+  SELECT dwh_session_id INTO val_dwh_session_id FROM mq.session s WHERE session_id = par_session_id;
+  SELECT create_session INTO val_start_date FROM mq.session s WHERE session_id = par_session_id;
 
   INSERT INTO staging."DIM_Валюты" (
     "session_id",
@@ -924,7 +924,7 @@ BEGIN
     "nkey",
     nkey AS "vkey",
     val_start_date AS "start_date",
-    "fn_GetMaxDate"() AS "end_date",
+    mq."fn_GetMaxDate"() AS "end_date",
     "RefID",
     "DeletionMark",
     "Code",
@@ -971,7 +971,7 @@ BEGIN
     "nkey",
     nkey AS "vkey",
     val_start_date AS "start_date",
-    "fn_GetMaxDate"() AS "end_date",
+    mq."fn_GetMaxDate"() AS "end_date",
     "DIM_ВалютыRefID",
     "КодЯзыка",
     "ПараметрыПрописи",
@@ -1074,7 +1074,7 @@ DECLARE
   val_LocalCount bigint;
 BEGIN
 
-  SELECT create_session INTO val_start_date FROM session WHERE session_id = par_session_id;
+  SELECT create_session INTO val_start_date FROM mq.session WHERE session_id = par_session_id;
   DROP TABLE IF EXISTS "tmp_DIM_Клиенты";
   CREATE TEMPORARY TABLE "tmp_DIM_Клиенты"(
     identificator uuid
@@ -1165,9 +1165,9 @@ BEGIN
   val_LastTargetID := COALESCE(val_LastTargetID, 0) + 1;
   PERFORM setval(val_tmp, val_LastTargetID );
   
-  SELECT name INTO val_source_name FROM data_source d WHERE d.data_source_id =  1;
-  SELECT dwh_session_id INTO val_dwh_session_id FROM session s WHERE session_id = par_session_id;
-  SELECT create_session INTO val_start_date FROM session s WHERE session_id = par_session_id;
+  SELECT name INTO val_source_name FROM mq.data_source d WHERE d.data_source_id =  1;
+  SELECT dwh_session_id INTO val_dwh_session_id FROM mq.session s WHERE session_id = par_session_id;
+  SELECT create_session INTO val_start_date FROM mq.session s WHERE session_id = par_session_id;
 
   INSERT INTO staging."DIM_Клиенты" (
     "session_id",
@@ -1190,7 +1190,7 @@ BEGIN
     "nkey",
     nkey AS "vkey",
     val_start_date AS "start_date",
-    "fn_GetMaxDate"() AS "end_date",
+    mq."fn_GetMaxDate"() AS "end_date",
     "RefID",
     "DeletionMark",
     "Code",
@@ -1296,7 +1296,7 @@ DECLARE
   val_LocalCount bigint;
 BEGIN
 
-  SELECT create_session INTO val_start_date FROM session WHERE session_id = par_session_id;
+  SELECT create_session INTO val_start_date FROM mq.session WHERE session_id = par_session_id;
   DROP TABLE IF EXISTS "tmp_DIM_Товары";
   CREATE TEMPORARY TABLE "tmp_DIM_Товары"(
     identificator uuid
@@ -1387,9 +1387,9 @@ BEGIN
   val_LastTargetID := COALESCE(val_LastTargetID, 0) + 1;
   PERFORM setval(val_tmp, val_LastTargetID );
   
-  SELECT name INTO val_source_name FROM data_source d WHERE d.data_source_id =  1;
-  SELECT dwh_session_id INTO val_dwh_session_id FROM session s WHERE session_id = par_session_id;
-  SELECT create_session INTO val_start_date FROM session s WHERE session_id = par_session_id;
+  SELECT name INTO val_source_name FROM mq.data_source d WHERE d.data_source_id =  1;
+  SELECT dwh_session_id INTO val_dwh_session_id FROM mq.session s WHERE session_id = par_session_id;
+  SELECT create_session INTO val_start_date FROM mq.session s WHERE session_id = par_session_id;
 
   INSERT INTO staging."DIM_Товары" (
     "session_id",
@@ -1412,7 +1412,7 @@ BEGIN
     "nkey",
     nkey AS "vkey",
     val_start_date AS "start_date",
-    "fn_GetMaxDate"() AS "end_date",
+    mq."fn_GetMaxDate"() AS "end_date",
     "RefID",
     "DeletionMark",
     "Code",
@@ -1588,7 +1588,7 @@ DECLARE
   val_LocalCount bigint;
 BEGIN
 
-  SELECT create_session INTO val_start_date FROM session WHERE session_id = par_session_id;
+  SELECT create_session INTO val_start_date FROM mq.session WHERE session_id = par_session_id;
   DROP TABLE IF EXISTS "tmp_FACT_Продажи";
   CREATE TEMPORARY TABLE "tmp_FACT_Продажи"(
     identificator uuid
@@ -1699,9 +1699,9 @@ BEGIN
   val_LastTargetID := COALESCE(val_LastTargetID, 0) + 1;
   PERFORM setval(val_tmp, val_LastTargetID );
   
-  SELECT name INTO val_source_name FROM data_source d WHERE d.data_source_id =  1;
-  SELECT dwh_session_id INTO val_dwh_session_id FROM session s WHERE session_id = par_session_id;
-  SELECT create_session INTO val_start_date FROM session s WHERE session_id = par_session_id;
+  SELECT name INTO val_source_name FROM mq.data_source d WHERE d.data_source_id =  1;
+  SELECT dwh_session_id INTO val_dwh_session_id FROM mq.session s WHERE session_id = par_session_id;
+  SELECT create_session INTO val_start_date FROM mq.session s WHERE session_id = par_session_id;
 
   INSERT INTO staging."FACT_Продажи" (
     "session_id",
@@ -1731,7 +1731,7 @@ BEGIN
     "nkey",
     nkey AS "vkey",
     val_start_date AS "start_date",
-    "fn_GetMaxDate"() AS "end_date",
+    mq."fn_GetMaxDate"() AS "end_date",
     "RefID",
     "DeletionMark",
     "Number",
@@ -1781,7 +1781,7 @@ BEGIN
     "nkey",
     nkey AS "vkey",
     val_start_date AS "start_date",
-    "fn_GetMaxDate"() AS "end_date",
+    mq."fn_GetMaxDate"() AS "end_date",
     "FACT_ПродажиRefID",
     "Доставка",
     "Товар",

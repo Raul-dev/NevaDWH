@@ -10,7 +10,7 @@ call etl.dwh_SaveSessionState (null::bigint, 1::smallint, 1::smallint, 'ok'::var
 call etl.dwh_SaveSessionState (1::bigint, 1::smallint, 1::smallint, 'ok'::varchar(4000) )
 SELECT * FROM etl.dwh_session
 */
-CREATE OR REPLACE PROCEDURE etl."dwh_SaveSessionState" (
+CREATE OR REPLACE PROCEDURE etl.dwh_SaveSessionState (
     par_dwh_session_id inout bigint DEFAULT NULL,
     par_data_source_id in smallint DEFAULT NULL,
     par_dwh_session_state_id in smallint DEFAULT NULL,

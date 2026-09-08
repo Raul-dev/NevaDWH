@@ -221,6 +221,12 @@ services:
     ports:
       - "8090:8080"
       - "8091:8081"
+    healthcheck:
+      test: ["CMD", "curl", "-fsS", "http://127.0.0.1:8080/v1/mq/health/live"]
+      interval: 10s
+      timeout: 5s
+      retries: 12
+      start_period: 40s
     labels:
       - "traefik.enable=true"
       - "traefik.http.routers.mq.rule=PathPrefix(`/v1/mq`)"

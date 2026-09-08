@@ -88,6 +88,7 @@ with DAG(
         task_id="Run_dwh_etl_Star_Launcher",
         trigger_dag_id="dwh_etl_Star_Launcher",
         wait_for_completion=True,
+        poke_interval=5,
     )
 
     @dag.task(task_id="finish_dwh_session")

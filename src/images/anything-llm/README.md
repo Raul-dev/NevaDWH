@@ -20,7 +20,7 @@ src/images/anything-llm/
 ## Сборка и запуск
 
 ```powershell
-cd F:\Work\GitLab\gitlab26.neva.loc\shop\publicdwh_nodejs
+cd .
 
 docker compose -f docker-compose-WebAI.yml build anything-llm ollama
 docker compose -f docker-compose-WebAI.yml up -d traefik ollama anything-llm

@@ -7,7 +7,7 @@ END;
 $$;
 /*
 call mq."sp_SaveSessionState" (null::bigint, 1::bigint, 1::bigint, 1::smallint, 1::smallint, now()::timestamp, null::varchar(4000) ) 
-SELECT * FROM session
+SELECT * FROM mq.session
 SELECT COALESE(par_create_session, now())
 */
 CREATE OR REPLACE PROCEDURE mq."sp_SaveSessionState" (
@@ -31,7 +31,7 @@ BEGIN
         INSERT INTO mq.session (data_source_id, session_state_id, rows_count, create_session, dwh_session_id)
         VALUES(par_data_source_id, par_session_state_id, par_rows_count, par_create_session, par_dwh_session_id);
         
-        SELECT currval(pg_get_serial_sequence('session','session_id')) into par_session_id;
+        SELECT currval(pg_get_serial_sequence('mq.session','session_id')) into par_session_id;
         RETURN;
     ELSE
     

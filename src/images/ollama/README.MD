@@ -9,7 +9,7 @@ GPU: **NVIDIA GeForce RTX 3070 8GB**. Systemd в WSL не используетс
 В **PowerShell** из этой папки:
 
 ```powershell
-cd F:\Work\GitLab\gitlab26.neva.loc\shop\publicdwh_nodejs\src\images\ollama
+cd .\src\images\ollama
 .\start-ollama-wsl.ps1
 ```
 

@@ -1,6 +1,6 @@
 import datetime as dt
 from airflow import DAG
-from airflow.hooks.postgres_hook import PostgresHook
+from airflow.providers.postgres.hooks.postgres import PostgresHook
 from airflow.sdk import Variable
 
 import logging

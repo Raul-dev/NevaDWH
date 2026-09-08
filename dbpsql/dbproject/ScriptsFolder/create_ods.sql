@@ -514,7 +514,7 @@ call etl.dwh_SaveSessionState (null::bigint, 1::smallint, 1::smallint, 'ok'::var
 call etl.dwh_SaveSessionState (1::bigint, 1::smallint, 1::smallint, 'ok'::varchar(4000) )
 SELECT * FROM etl.dwh_session
 */
-CREATE OR REPLACE PROCEDURE etl."dwh_SaveSessionState" (
+CREATE OR REPLACE PROCEDURE etl.dwh_SaveSessionState (
     par_dwh_session_id inout bigint DEFAULT NULL,
     par_data_source_id in smallint DEFAULT NULL,
     par_dwh_session_state_id in smallint DEFAULT NULL,
@@ -1208,7 +1208,7 @@ BEGIN
 
   INSERT INTO "DIM_Валюты_lock" (buffer_id, "RefID")
   SELECT buffer_id AS buffer_id,
-    CAST((xpath('/nva:Data/nva:Реквизиты/nva:CatalogObject.Клиенты/nva:Ref/text()', msg::xml, var_xmlns ))[1]::text as uuid) ref
+    CAST((xpath('/nva:Data/nva:Реквизиты/nva:CatalogObject.Валюты/nva:Ref/text()', msg::xml, var_xmlns ))[1]::text as uuid) ref
   FROM "odins"."DIM_Валюты_buffer" b
   WHERE b.dt_update = var_mindate;
 
@@ -1220,11 +1220,11 @@ BEGIN
   END IF;
 
   BEGIN
-    INSERT INTO "DIM_Валюты_tmp1" (buffer_id, "RefND")
+    INSERT INTO "DIM_Валюты_tmp1" (buffer_id, "RefID")
     SELECT MAX(buffer_id) AS buffer_id,
-      "RefND"
+      "RefID"
     FROM "DIM_Валюты_lock" b
-    GROUP BY "RefND";
+    GROUP BY "RefID";
 
     GET DIAGNOSTICS var_rowcount = ROW_COUNT;
     par_rowcount := var_rowcount;
@@ -1250,9 +1250,7 @@ BEGIN
     INSERT INTO "DIM_Валюты_tmp2"
     (
     SELECT
-      CAST(md5(CONVERT(
-          CAST((xpath('/nva:Data/nva:Реквизиты/nva:CatalogObject.Валюты/nva:Ref/text()', msg::xml, var_xmlns ))[1] as VARCHAR)          
-          ::bytea,'UTF8','UHC')) AS UUND) AS "nkey",
+      CAST((xpath('/nva:Data/nva:Реквизиты/nva:CatalogObject.Валюты/nva:Ref/text()', msg::xml, var_xmlns ))[1]::text as uuid) AS "nkey",
 
       (xpath('/nva:Data/nva:Реквизиты/nva:CatalogObject.Валюты/nva:DIM_Валюты.Представления/text()', msg::xml, var_xmlns ))[1]::xml  AS "DIM_Валюты_Представления",
       CAST((xpath('/nva:Data/nva:Реквизиты/nva:CatalogObject.Валюты/nva:Ref/text()', msg::xml, var_xmlns ))[1]::text as uuid)  AS "RefID",
@@ -1273,16 +1271,49 @@ BEGIN
 
     UPDATE "odins"."DIM_Валюты" AS org SET
       "nkey" = src."nkey",
+      "RefID" = src."RefID",
+      "DeletionMark" = src."DeletionMark",
+      "Code" = src."Code",
+      "Description" = src."Description",
+      "ЗагружаетсяИзИнтернета" = src."ЗагружаетсяИзИнтернета",
+      "НаименованиеПолное" = src."НаименованиеПолное",
+      "Наценка" = src."Наценка",
+      "ОсновнаяВалюта" = src."ОсновнаяВалюта",
+      "ПараметрыПрописи" = src."ПараметрыПрописи",
+      "ФормулаРасчетаКурса" = src."ФормулаРасчетаКурса",
+      "СпособУстановкиКурса" = src."СпособУстановкиКурса",
       dt_update = var_updatedate
     FROM "DIM_Валюты_tmp2" AS src 
     WHERE org."nkey" = src."nkey" ;
 
     INSERT INTO "odins"."DIM_Валюты" (
       "nkey" ,
+      "RefID",
+      "DeletionMark",
+      "Code",
+      "Description",
+      "ЗагружаетсяИзИнтернета",
+      "НаименованиеПолное",
+      "Наценка",
+      "ОсновнаяВалюта",
+      "ПараметрыПрописи",
+      "ФормулаРасчетаКурса",
+      "СпособУстановкиКурса",
       dt_update
     )
     SELECT 
       src."nkey" ,
+      src."RefID",
+      src."DeletionMark",
+      src."Code",
+      src."Description",
+      src."ЗагружаетсяИзИнтернета",
+      src."НаименованиеПолное",
+      src."Наценка",
+      src."ОсновнаяВалюта",
+      src."ПараметрыПрописи",
+      src."ФормулаРасчетаКурса",
+      src."СпособУстановкиКурса",
       src."dt_update"
     FROM "DIM_Валюты_tmp2" AS src 
       LEFT JOIN "odins"."DIM_Валюты" AS org ON org."nkey" = src."nkey" 
@@ -1315,7 +1346,7 @@ BEGIN
     par_errmessage = MESSAGE_TEXT;
 
     SELECT COALESCE(par_session_id, 0) INTO var_err_session_id;
-    INSERT INTO session_log (session_id, session_state_id, error_message)
+    INSERT INTO mq.session_log (session_id, session_state_id, error_message)
     SELECT var_err_session_id,
       3 AS session_state_id,
       'Table odins.DIM_Валюты. Error: ' || par_errmessage AS error_message;
@@ -1435,11 +1466,11 @@ BEGIN
   END IF;
 
   BEGIN
-    INSERT INTO "DIM_Клиенты_tmp1" (buffer_id, "RefND")
+    INSERT INTO "DIM_Клиенты_tmp1" (buffer_id, "RefID")
     SELECT MAX(buffer_id) AS buffer_id,
-      "RefND"
+      "RefID"
     FROM "DIM_Клиенты_lock" b
-    GROUP BY "RefND";
+    GROUP BY "RefID";
 
     GET DIAGNOSTICS var_rowcount = ROW_COUNT;
     par_rowcount := var_rowcount;
@@ -1458,9 +1489,7 @@ BEGIN
     INSERT INTO "DIM_Клиенты_tmp2"
     (
     SELECT
-      CAST(md5(CONVERT(
-          CAST((xpath('/nva:Data/nva:Реквизиты/nva:CatalogObject.Клиенты/nva:Ref/text()', msg::xml, var_xmlns ))[1] as VARCHAR)          
-          ::bytea,'UTF8','UHC')) AS UUND) AS "nkey",
+      CAST((xpath('/nva:Data/nva:Реквизиты/nva:CatalogObject.Клиенты/nva:Ref/text()', msg::xml, var_xmlns ))[1]::text as uuid) AS "nkey",
 
       CAST((xpath('/nva:Data/nva:Реквизиты/nva:CatalogObject.Клиенты/nva:Ref/text()', msg::xml, var_xmlns ))[1]::text as uuid)  AS "RefID",
       CAST((xpath('/nva:Data/nva:Реквизиты/nva:CatalogObject.Клиенты/nva:DeletionMark/text()', msg::xml, var_xmlns ))[1]::text as boolean)  AS "DeletionMark",
@@ -1474,16 +1503,31 @@ BEGIN
 
     UPDATE "odins"."DIM_Клиенты" AS org SET
       "nkey" = src."nkey",
+      "RefID" = src."RefID",
+      "DeletionMark" = src."DeletionMark",
+      "Code" = src."Code",
+      "Description" = src."Description",
+      "Контакт" = src."Контакт",
       dt_update = var_updatedate
     FROM "DIM_Клиенты_tmp2" AS src 
     WHERE org."nkey" = src."nkey" ;
 
     INSERT INTO "odins"."DIM_Клиенты" (
       "nkey" ,
+      "RefID",
+      "DeletionMark",
+      "Code",
+      "Description",
+      "Контакт",
       dt_update
     )
     SELECT 
       src."nkey" ,
+      src."RefID",
+      src."DeletionMark",
+      src."Code",
+      src."Description",
+      src."Контакт",
       src."dt_update"
     FROM "DIM_Клиенты_tmp2" AS src 
       LEFT JOIN "odins"."DIM_Клиенты" AS org ON org."nkey" = src."nkey" 
@@ -1516,7 +1560,7 @@ BEGIN
     par_errmessage = MESSAGE_TEXT;
 
     SELECT COALESCE(par_session_id, 0) INTO var_err_session_id;
-    INSERT INTO session_log (session_id, session_state_id, error_message)
+    INSERT INTO mq.session_log (session_id, session_state_id, error_message)
     SELECT var_err_session_id,
       3 AS session_state_id,
       'Table odins.DIM_Клиенты. Error: ' || par_errmessage AS error_message;
@@ -1624,7 +1668,7 @@ BEGIN
 
   INSERT INTO "DIM_Товары_lock" (buffer_id, "RefID")
   SELECT buffer_id AS buffer_id,
-    CAST((xpath('/nva:Data/nva:Реквизиты/nva:CatalogObject.Клиенты/nva:Ref/text()', msg::xml, var_xmlns ))[1]::text as uuid) ref
+    CAST((xpath('/nva:Data/nva:Реквизиты/nva:CatalogObject.Товары/nva:Ref/text()', msg::xml, var_xmlns ))[1]::text as uuid) ref
   FROM "odins"."DIM_Товары_buffer" b
   WHERE b.dt_update = var_mindate;
 
@@ -1636,11 +1680,11 @@ BEGIN
   END IF;
 
   BEGIN
-    INSERT INTO "DIM_Товары_tmp1" (buffer_id, "RefND")
+    INSERT INTO "DIM_Товары_tmp1" (buffer_id, "RefID")
     SELECT MAX(buffer_id) AS buffer_id,
-      "RefND"
+      "RefID"
     FROM "DIM_Товары_lock" b
-    GROUP BY "RefND";
+    GROUP BY "RefID";
 
     GET DIAGNOSTICS var_rowcount = ROW_COUNT;
     par_rowcount := var_rowcount;
@@ -1659,9 +1703,7 @@ BEGIN
     INSERT INTO "DIM_Товары_tmp2"
     (
     SELECT
-      CAST(md5(CONVERT(
-          CAST((xpath('/nva:Data/nva:Реквизиты/nva:CatalogObject.Товары/nva:Ref/text()', msg::xml, var_xmlns ))[1] as VARCHAR)          
-          ::bytea,'UTF8','UHC')) AS UUND) AS "nkey",
+      CAST((xpath('/nva:Data/nva:Реквизиты/nva:CatalogObject.Товары/nva:Ref/text()', msg::xml, var_xmlns ))[1]::text as uuid) AS "nkey",
 
       CAST((xpath('/nva:Data/nva:Реквизиты/nva:CatalogObject.Товары/nva:Ref/text()', msg::xml, var_xmlns ))[1]::text as uuid)  AS "RefID",
       CAST((xpath('/nva:Data/nva:Реквизиты/nva:CatalogObject.Товары/nva:DeletionMark/text()', msg::xml, var_xmlns ))[1]::text as boolean)  AS "DeletionMark",
@@ -1675,16 +1717,31 @@ BEGIN
 
     UPDATE "odins"."DIM_Товары" AS org SET
       "nkey" = src."nkey",
+      "RefID" = src."RefID",
+      "DeletionMark" = src."DeletionMark",
+      "Code" = src."Code",
+      "Description" = src."Description",
+      "Описание" = src."Описание",
       dt_update = var_updatedate
     FROM "DIM_Товары_tmp2" AS src 
     WHERE org."nkey" = src."nkey" ;
 
     INSERT INTO "odins"."DIM_Товары" (
       "nkey" ,
+      "RefID",
+      "DeletionMark",
+      "Code",
+      "Description",
+      "Описание",
       dt_update
     )
     SELECT 
       src."nkey" ,
+      src."RefID",
+      src."DeletionMark",
+      src."Code",
+      src."Description",
+      src."Описание",
       src."dt_update"
     FROM "DIM_Товары_tmp2" AS src 
       LEFT JOIN "odins"."DIM_Товары" AS org ON org."nkey" = src."nkey" 
@@ -1717,7 +1774,7 @@ BEGIN
     par_errmessage = MESSAGE_TEXT;
 
     SELECT COALESCE(par_session_id, 0) INTO var_err_session_id;
-    INSERT INTO session_log (session_id, session_state_id, error_message)
+    INSERT INTO mq.session_log (session_id, session_state_id, error_message)
     SELECT var_err_session_id,
       3 AS session_state_id,
       'Table odins.DIM_Товары. Error: ' || par_errmessage AS error_message;
@@ -1825,7 +1882,7 @@ BEGIN
 
   INSERT INTO "FACT_Продажи_lock" (buffer_id, "RefID")
   SELECT buffer_id AS buffer_id,
-    CAST((xpath('/nva:Data/nva:Реквизиты/nva:CatalogObject.Клиенты/nva:Ref/text()', msg::xml, var_xmlns ))[1]::text as uuid) ref
+    CAST((xpath('/nva:Data/nva:Реквизиты/nva:DocumentObject.Продажи/nva:Ref/text()', msg::xml, var_xmlns ))[1]::text as uuid) ref
   FROM "odins"."FACT_Продажи_buffer" b
   WHERE b.dt_update = var_mindate;
 
@@ -1837,11 +1894,11 @@ BEGIN
   END IF;
 
   BEGIN
-    INSERT INTO "FACT_Продажи_tmp1" (buffer_id, "RefND")
+    INSERT INTO "FACT_Продажи_tmp1" (buffer_id, "RefID")
     SELECT MAX(buffer_id) AS buffer_id,
-      "RefND"
+      "RefID"
     FROM "FACT_Продажи_lock" b
-    GROUP BY "RefND";
+    GROUP BY "RefID";
 
     GET DIAGNOSTICS var_rowcount = ROW_COUNT;
     par_rowcount := var_rowcount;
@@ -1868,9 +1925,7 @@ BEGIN
     INSERT INTO "FACT_Продажи_tmp2"
     (
     SELECT
-      CAST(md5(CONVERT(
-          CAST((xpath('/nva:Data/nva:Реквизиты/nva:DocumentObject.Продажи/nva:Ref/text()', msg::xml, var_xmlns ))[1] as VARCHAR)          
-          ::bytea,'UTF8','UHC')) AS UUND) AS "nkey",
+      CAST((xpath('/nva:Data/nva:Реквизиты/nva:DocumentObject.Продажи/nva:Ref/text()', msg::xml, var_xmlns ))[1]::text as uuid) AS "nkey",
 
       (xpath('/nva:Data/nva:Реквизиты/nva:DocumentObject.Продажи/nva:FACT_Продажи.Товары/text()', msg::xml, var_xmlns ))[1]::xml  AS "FACT_Продажи_Товары",
       CAST((xpath('/nva:Data/nva:Реквизиты/nva:DocumentObject.Продажи/nva:Ref/text()', msg::xml, var_xmlns ))[1]::text as uuid)  AS "RefID",
@@ -1892,16 +1947,52 @@ BEGIN
 
     UPDATE "odins"."FACT_Продажи" AS org SET
       "nkey" = src."nkey",
+      "RefID" = src."RefID",
+      "DeletionMark" = src."DeletionMark",
+      "Number" = src."Number",
+      "Posted" = src."Posted",
+      "Date" = src."Date",
+      "DateID" = src."DateID",
+      "ДатаОтгрузки" = src."ДатаОтгрузки",
+      "ДатаОтгрузкиID" = src."ДатаОтгрузкиID",
+      "Клиент" = src."Клиент",
+      "ТипДоставки" = src."ТипДоставки",
+      "ПримерСоставногоТипа" = src."ПримерСоставногоТипа",
+      "ПримерСоставногоТипа_ТипЗначения" = src."ПримерСоставногоТипа_ТипЗначения",
       dt_update = var_updatedate
     FROM "FACT_Продажи_tmp2" AS src 
     WHERE org."nkey" = src."nkey" ;
 
     INSERT INTO "odins"."FACT_Продажи" (
       "nkey" ,
+      "RefID",
+      "DeletionMark",
+      "Number",
+      "Posted",
+      "Date",
+      "DateID",
+      "ДатаОтгрузки",
+      "ДатаОтгрузкиID",
+      "Клиент",
+      "ТипДоставки",
+      "ПримерСоставногоТипа",
+      "ПримерСоставногоТипа_ТипЗначения",
       dt_update
     )
     SELECT 
       src."nkey" ,
+      src."RefID",
+      src."DeletionMark",
+      src."Number",
+      src."Posted",
+      src."Date",
+      src."DateID",
+      src."ДатаОтгрузки",
+      src."ДатаОтгрузкиID",
+      src."Клиент",
+      src."ТипДоставки",
+      src."ПримерСоставногоТипа",
+      src."ПримерСоставногоТипа_ТипЗначения",
       src."dt_update"
     FROM "FACT_Продажи_tmp2" AS src 
       LEFT JOIN "odins"."FACT_Продажи" AS org ON org."nkey" = src."nkey" 
@@ -1934,7 +2025,7 @@ BEGIN
     par_errmessage = MESSAGE_TEXT;
 
     SELECT COALESCE(par_session_id, 0) INTO var_err_session_id;
-    INSERT INTO session_log (session_id, session_state_id, error_message)
+    INSERT INTO mq.session_log (session_id, session_state_id, error_message)
     SELECT var_err_session_id,
       3 AS session_state_id,
       'Table odins.FACT_Продажи. Error: ' || par_errmessage AS error_message;

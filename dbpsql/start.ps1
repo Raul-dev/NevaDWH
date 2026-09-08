@@ -1,6 +1,8 @@
 ﻿Param (
   [Parameter(Mandatory=$false)][string]$IsUpdate=$false,
-  [Parameter(Mandatory = $false)][string]$ServerName = 'localhost'
+  [Parameter(Mandatory = $false)][string]$ServerName = 'localhost',
+  # Only run dbdeploy concatenate + write 005..070 init SQL for compose; skip Docker/SMB.
+  [switch]$ScriptsOnly
 )
 function Test-Administrator  
 {  
@@ -168,6 +170,25 @@ $OutputDumpFile ="060_dictionaries_landing.sql"
 Remove-Item -Path $OutputDumpFile -Force -ErrorAction SilentlyContinue
 "\c $ClientDBLandingName;`r`n" | Out-File -FilePath $OutputDumpFile -Encoding "UTF8" -Append
 Get-Content -Encoding "UTF8" $SqlFile | Out-File -FilePath $OutputDumpFile -Encoding "UTF8" -Append
+
+# Demo MQ seed (1C messages → mq.msgqueue) for compose initdb / fresh ODS
+$SqlFile = $CurrentPath.ToString()+"/dbproject/ods/Dictionaries/messagequeue.sql"
+if (-not (Test-Path $SqlFile)) {
+  $SqlFile = $CurrentPath.ToString()+"/dbproject/ScriptsFolder/messagequeue.sql"
+}
+$OutputDumpFile ="070_msgqueue.sql"
+Remove-Item -Path $OutputDumpFile -Force -ErrorAction SilentlyContinue
+"\c $ClientDBODSName;`r`n" | Out-File -FilePath $OutputDumpFile -Encoding "UTF8" -Append
+if (Test-Path $SqlFile) {
+  Get-Content -Encoding "UTF8" $SqlFile | Out-File -FilePath $OutputDumpFile -Encoding "UTF8" -Append
+} else {
+  Write-Warning "messagequeue.sql not found — 070_msgqueue.sql will only switch DB"
+}
+
+if ($ScriptsOnly) {
+  Write-Host "ScriptsOnly: assembled 005..070 init SQL (compose docker-entrypoint-initdb.d)." -ForegroundColor Green
+  exit 0
+}
 
 if($IsUpdate -eq $true){
   try {

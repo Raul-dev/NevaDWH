@@ -101,6 +101,7 @@ services:
       - ./040_dictionaries_dwh.sql:/docker-entrypoint-initdb.d/040_dictionaries_dwh.sql
       - ./050_create_landing.sql:/docker-entrypoint-initdb.d/050_create_landing.sql
       - ./060_dictionaries_landing.sql:/docker-entrypoint-initdb.d/060_dictionaries_landing.sql
+      - ./070_msgqueue.sql:/docker-entrypoint-initdb.d/070_msgqueue.sql
     env_file:
       - .env
 
@@ -232,6 +233,12 @@ services:
     ports:
       - "8090:8080"
       - "8091:8081"
+    healthcheck:
+      test: ["CMD", "curl", "-fsS", "http://127.0.0.1:8080/v1/mq/health/live"]
+      interval: 10s
+      timeout: 5s
+      retries: 12
+      start_period: 40s
     labels:
       - "traefik.enable=true"
       - "traefik.http.routers.mq.rule=PathPrefix(`/v1/mq`)"

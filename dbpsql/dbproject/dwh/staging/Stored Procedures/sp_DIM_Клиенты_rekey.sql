@@ -16,7 +16,7 @@ DECLARE
   val_LocalCount bigint;
 BEGIN
 
-  SELECT create_session INTO val_start_date FROM session WHERE session_id = par_session_id;
+  SELECT create_session INTO val_start_date FROM mq.session WHERE session_id = par_session_id;
   DROP TABLE IF EXISTS "tmp_DIM_Клиенты";
   CREATE TEMPORARY TABLE "tmp_DIM_Клиенты"(
     identificator uuid

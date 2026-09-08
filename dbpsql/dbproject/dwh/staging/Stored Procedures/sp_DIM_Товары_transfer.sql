@@ -28,9 +28,9 @@ BEGIN
   val_LastTargetID := COALESCE(val_LastTargetID, 0) + 1;
   PERFORM setval(val_tmp, val_LastTargetID );
   
-  SELECT name INTO val_source_name FROM data_source d WHERE d.data_source_id =  1;
-  SELECT dwh_session_id INTO val_dwh_session_id FROM session s WHERE session_id = par_session_id;
-  SELECT create_session INTO val_start_date FROM session s WHERE session_id = par_session_id;
+  SELECT name INTO val_source_name FROM mq.data_source d WHERE d.data_source_id =  1;
+  SELECT dwh_session_id INTO val_dwh_session_id FROM mq.session s WHERE session_id = par_session_id;
+  SELECT create_session INTO val_start_date FROM mq.session s WHERE session_id = par_session_id;
 
   INSERT INTO staging."DIM_Товары" (
     "session_id",
@@ -53,7 +53,7 @@ BEGIN
     "nkey",
     nkey AS "vkey",
     val_start_date AS "start_date",
-    "fn_GetMaxDate"() AS "end_date",
+    mq."fn_GetMaxDate"() AS "end_date",
     "RefID",
     "DeletionMark",
     "Code",

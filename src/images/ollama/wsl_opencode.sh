@@ -32,14 +32,14 @@ EOF
 
 
 # 1. Переходим в папку вашего Node.js проекта
-cd /mnt/f/Work/GitLab/gitlab26.neva.loc/shop/publicdwh_nodejs
+cd /mnt/f/Work/GitLab/./shop/publicdwh_nodejs
 
 # 2. Создаем файл opencode.json внутри папки проекта
 cat << 'EOF' > opencode.json
 {
   "$schema": "https://opencode.ai/config.json",
   "project": {
-    "root": "/mnt/f/Work/GitLab/gitlab26.neva.loc/shop/publicdwh_nodejs"
+    "root": "/mnt/f/Work/GitLab/./shop/publicdwh_nodejs"
   }
 }
 EOF
