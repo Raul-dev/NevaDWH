@@ -1,77 +1,184 @@
 # NevaDWH
 
-Generated DWH sample by NevaDWH generator. PostgreSql (folder dbpsql) and MSSQL (folder dbmssqll) version.
+Результат генерации DWH из XML/JSON-метаданных 1С (выгрузка `1cv8.exe /DumpConfigToFiles`, Бит.Адаптер и др.).  
+В репозитории две готовые версии стенда:
 
-For start run ./start.ps1 batch on PowerShell 7.4 in Admin mode.
+| Папка | СУБД ODS / DWH / Landing | Compose |
+|-------|--------------------------|---------|
+| [`dbpsql/`](./dbpsql) | **PostgreSQL** в Docker (`client-postgresdb17`) | полный стек в контейнерах |
+| [`dbmssql/`](./dbmssql) | **MS SQL Server** на хосте | Airflow / Rabbit / MQ / UI в Docker |
 
-![text for image](./doc/forweb.png)
+Цель генератора — при изменении структуры 1С автоматически перестраивать схемы ODS/DWH и ETL (Airflow), добавляя новые поля в конечные таблицы.
 
-В этом проекте предствален результат генерации DWH из xml метаданных 1С, которые можно получить запустив 1cv8.exe /DumpConfigToFiles. Так же в качестве метаданных может быть использован формат json/xml из Бит.Адаптера компании 1Bit https://spb.1cbit.ru/ или любой другой при небольшой доработке.
+![overview](./doc/forweb.png)
 
-Целью проекта является минимизация затрат при переходе на новые версии структуры 1С, добавляя новое поле в любой формочке 1С генератор перестраивает автоматически все базы и процессы ETL (SSIS или Airflow) добавляя его в конечные таблицы DWH.Данный генератор можно использовать просто как конструктор DWH редактируя метаданные любым удобным способом. 
+---
 
-### Prerequisites
-- On Windows 10
-- Install [Docker](https://www.docker.com/)
-- Install [Docker Compose](https://docs.docker.com/compose/install/)
-- Setup powershell in admin mode
+## Стек стенда
+
+| Сервис | Адрес | Учётка |
+|--------|-------|--------|
+| Панель NevaDWH | http://localhost:8100 | первый пользователь — через UI |
+| Airflow 3 UI / API | http://localhost:8080 | **admin / admin** |
+| RabbitMQ Management | http://localhost:15672 | **admin / admin** |
+| MQ WebService | http://localhost:8090/v1/mq/swagger | — |
+| Landing WebService | http://localhost:8092/v1/landing/swagger | — |
+| Traefik (опц.) | http://localhost/ | — |
+
+**dbpsql (Postgres):** ODS `newadwh_ods`, DWH `newadwh_dwh`, Landing `newadwh_landing`  
+(хост с машины: `localhost:54321`, user/password `postgres` / `postgres`).
+
+**dbmssql:** ODS/DWH/Landing на локальном SQL Server (`NevaDWH-DEMO_*`, учётки из `dbmssql/.env`).
+
+Приложения MQ / Landing / Generator / Admin в этом репозитории берутся с Docker Hub (`raulamailru/nevadwh-*`). Airflow и Rabbit собираются из `dbpsql/images` / `dbmssql/images`.
+
+```mermaid
+flowchart LR
+  RMQ[RabbitMQ]
+  MQ[mq.webservice]
+  ODS[(ODS odins / mq)]
+  AF[Airflow dwh_etl_start]
+  STG[(DWH staging)]
+  TGT[(DWH target)]
+
+  RMQ --> MQ --> ODS
+  ODS --> AF --> STG --> TGT
 ```
-Set-ExecutionPolicy -ExecutionPolicy ByPass -Scope LocalMachine
-Get-ExecutionPolicy
-```
-- For MS-SQL install Server 2019 and Visual Studio Community 2022
-- Install powershell Visual Studio library for deployment script MSqlDeploymentFunc.psm1
-```
+
+**Поток данных**
+
+1. Сообщения из `mq.msgqueue` / `mq.MessageQueue` уходят в Rabbit (`send-unresolved-msg`).
+2. **MQ** пишет в ODS (`odins.*`).
+3. **Airflow** `dwh_etl_start` → `dwh_etl_Star_Launcher` → DIM/FACT publish в DWH **staging**, затем **target**.
+
+---
+
+## Prerequisites
+
+- Windows 10/11, PowerShell 5.1+ (рекомендуется 7.x)
+- [Docker Desktop](https://www.docker.com/)
+- Для **dbpsql**: достаточно Docker
+- Для **dbmssql**: SQL Server 2019/2022 на хосте, Visual Studio / MSBuild + SqlPackage, модуль `VSSetup`:
+
+```powershell
+Set-ExecutionPolicy -ExecutionPolicy Bypass -Scope LocalMachine
 Install-Module VSSetup -Scope AllUsers
-Or
-Save-Module -Name VSsetup -Path "C:\Program Files\WindowsPowerShell\Modules"
-Import-Module VSsetup
-Get-Module -ListAvailable
 ```
 
-## Панел управления
+Первый запуск `start.ps1` — **от администратора** (SMB share `Upload` для MSSQL XML-адаптера).
 
-[http://localhost:8100]()
+---
 
-![1714896554284](doc/Admin.png)
+## Быстрый старт
 
-Порядок тестирования версии PostgreSql в папке dbpsql:
+### PostgreSQL (`dbpsql`)
 
-Запустить docker-compose up, открыть административную панель, зарегистрировать первого пользователя Admin, перейти в раздел ODS Service.
+```powershell
+cd .\dbpsql
+docker compose build
+.\start.ps1
+```
 
-1) Включить чекбоксы для обработки сообщений из RabbitMQ сервисом ODS. Если выключить все чекбоксы, то сообщения будут поступать в таблицу необработанных сообщений msgqueue.
-2) Перезапустить сервис ODS обрабатывающий сообщения из RabbitMQ кнопкой "Reset ODS RabbitMQ service"
-3) Отправить сообщения из таблицы необработанных сообщений msgqueue в RabbitMQ кнопкой "Send unresolved messages to RabbitMQ"
+Обновление без полного пересоздания:
 
-RabbitMQ
-[http://localhost:15672]()
-admin
-admin
+```powershell
+.\start.ps1 -IsUpdate
+```
 
-## ETL Airflow
+Только пересборка init SQL для `docker-entrypoint-initdb.d` (без Docker):
 
-[http://localhost:8080]()
-airflow
-airflow
-![ETL image](./doc/airflow.png)
+```powershell
+.\start.ps1 -ScriptsOnly
+```
 
-4. Запустить в Airflow DAG dwh_etl_start, который архивирует накопленные данные в базе ODS и переносит их в DWH. В зависимости от интенсивности поступающих данных автоматический запуск ETL можно настроить на исполнение 1 раз в сутки, месяц или 5-20 мин.
-5. Проверить в базе загруженные данные. Преимущество решения разделения баз на ODS и DWH в том, что загрузка из рабита осуществляется максимально быстро, в небольшую базу ODS содержащую дневную активность, без существенных локов постоянно меняющихся данных в таблицах. База DWH работает в основном на чтение, данные в неё из ODS загружаются ночью или в период наименьшей пользовательской активности. При необходимости, отчеты можно строить выбирая данные из 2х баз ипользуя UNION и linked(foreign) tables обьединяя исторические данные с данными дневной активности:
+После смены major Airflow — сброс metadata volume:
 
-![1714898512266](./doc/dwh.png)
+```powershell
+docker compose down --volumes
+docker compose up airflow-init
+docker compose up -d
+```
 
-Для версии MSSQL все то же самое, за исключением того, что контейнер с сервером MSSQL не строится. Предполагается использование локального MS SQL Server 19 или 22. Batch файл start.ps1 компилирует проект dbproject.sln  Visual Studio 2022  созданный генератором и деплоит его на сервер создавая 3 базы. В версии MSSQL реализована обработка выгружаемых данных из 1C адаптером NevaDWH в файлы xml. Что позволяет оперативно перегружать любые обьемы данных не нагружая RabbitMQ. Для этих целей в batch файле start.ps1 создается File Share UPLOAD на которую нужно настроить 1C адаптер NevaDWH. Тестовая 1С база и 1С адаптер NevaDWH отсутствуют в данном репозитарии, тут представлен только результат работы генератора NevaDWH с тестовыми данными. Все сервисы написаны на .NET8.0 и опубликованы на Docker HUB как linux images.
+### MS SQL (`dbmssql`)
 
-![1714900362600](./doc/odinc.png)
+```powershell
+cd .\dbmssql
+docker compose build
+.\start.ps1          # dacpac deploy + compose
+.\start.ps1 -IsUpdate
+```
 
-В версии MSSQL есть отключаемый лог процедур для отладки процессов загрузки данных, который через Linked server LinkSRVLogLanding c опцией remote proc transaction promotion =false со всех 3х баз (Ods, Dwh, Landing)) сохраняется в общей таблице [nevadwh_landing].[audit].[LogProcedures]. Лог позволяет видеть подчиненые вызовы процедур, а так же их параметры для отладки.
+---
+
+## Автотесты пайплайна (`db-tests.ps1`)
+
+В корне репозитория:
+
+| Файл | Назначение |
+|------|------------|
+| [`db-tests.ps1`](./db-tests.ps1) | подъём compose + General pipeline |
+| [`db-tests.engines.ps1`](./db-tests.engines.ps1) | SQL/хелперы mssql и psql (UTF-8 BOM) |
+
+Отчёты: `.\TestReport\` (`latest-db-NevaDWH-dbpsql.md` и т.п.).
+
+### Что проверяет `-General` (по умолчанию)
+
+1. **Compose** — `up` стенда, health MQ и Airflow (при переключении `dbpsql` ↔ `dbmssql` оба проекта снимаются через `compose down`, тома сохраняются).
+2. **Phase 1** — `POST /v1/mq/service/send-unresolved-msg` → ожидание свежих строк в `odins` (DIM_Клиенты / Товары / FACT_Продажи; Валюты в seed может быть 0).
+3. **Phase 2** — trigger DAG `dwh_etl_start`, ожидание `success`.
+4. **Phase 3** — в DWH есть строки в `staging` и `target`.
+
+### Команды
+
+```powershell
+# из корня репозитория
+.\db-tests.ps1 dbpsql              # полный прогон Postgres
+.\db-tests.ps1 dbpsql -Build       # с пересборкой образов
+.\db-tests.ps1 dbpsql -SkipCompose # стенд уже поднят
+.\db-tests.ps1 dbpsql -ClearData   # truncate odins перед Phase 1
+
+.\db-tests.ps1 dbmssql -Build
+.\db-tests.ps1 dbmssql -SkipCompose
+```
+
+### Ручной сценарий (UI) — то же, что делает тест
+
+1. Панель http://localhost:8100 → ODS Service: включить обработку Rabbit, Reset MQ, **Send unresolved messages**.
+2. Airflow http://localhost:8080 (**admin/admin**) → запустить DAG **`dwh_etl_start`**.
+3. Проверить ODS `odins.*` и DWH `staging` / `target`.
+
+---
+
+## Полезные ссылки в стенде
+
+| | |
+|--|--|
+| Admin | http://localhost:8100 |
+| Airflow | http://localhost:8080 |
+| RabbitMQ | http://localhost:15672 |
+| MQ Swagger | http://localhost:8090/v1/mq/swagger |
+| Landing Swagger | http://localhost:8092/v1/landing/swagger |
+
+![Admin](./doc/Admin.png)
+
+![Airflow](./doc/airflow.png)
+
+![DWH](./doc/dwh.png)
+
+![1C](./doc/odinc.png)
 
 ![Proc log](./doc/log.png)
 
-Управление сервисами ODS и Landing:
+### MSSQL: audit / XML
 
-[http://localhost:8090/swagger]()
+В MSSQL есть лог процедур (через Linked Server `LinkSRVLogLanding`) в `[nevadwh_landing].[audit].[LogProcedures]` и загрузка XML с share **UPLOAD** (настраивается в `start.ps1`). Тестовая база 1С и адаптер в репозиторий не входят.
 
-[http://localhost:8092/swagger]()
+---
 
-Для связи и предложений по развитию проекта [newlogin396@gmail.com](mailto:newlogin396@gmail.com)
+## Замечания
+
+- Не держите одновременно оба стенда: общие `container_name` (`traefik`, `client-postgresdb17`, Airflow). `db-tests.ps1` перед `up` делает `compose down` для `dbpsql` и `dbmssql`.
+- Логин Airflow в UI и в тестах: **admin/admin** (файл `ETLAirflow/config/simple_auth_manager_passwords.json`). Учётка `airflow/airflow` тоже есть.
+- Seed msgqueue для Postgres: `070_msgqueue.sql` / `dbproject/ods/Dictionaries/messagequeue.sql`.
+
+Контакты: [newlogin396@gmail.com](mailto:newlogin396@gmail.com)

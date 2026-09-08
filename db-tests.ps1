@@ -1,11 +1,14 @@
 ﻿#Requires -Version 5.1
 <#
 .SYNOPSIS
-  Pipeline tests for generated client stands under this folder (dbmssql / dbpsql).
+  Pipeline tests for stands in this repo: .\dbmssql and .\dbpsql.
 
 .DESCRIPTION
-  Lives next to generated stands: src/dwhclients/<client>/db-tests.ps1
-  Stand dir = <this script folder>/<Stand> (e.g. .\dbmssql).
+  Repo layout:
+    ./db-tests.ps1
+    ./db-tests.engines.ps1
+    ./dbpsql/          PostgreSQL stand (compose + start.ps1)
+    ./dbmssql/         MS SQL stand (SQL Server on host + compose)
 
   Brings up the stand docker-compose, then runs selected test groups.
 
@@ -14,12 +17,10 @@
     Phase 2) Airflow dwh_etl_start → DWH staging
     Phase 3) DWH target tables
 
-  Engine SQL: repo-root db-tests.engines.ps1 (shared with ./db-tests.ps1).
-
 .EXAMPLE
-  cd src\dwhclients\newadwh
-  .\db-tests.ps1
-  .\db-tests.ps1 -SkipCompose
+  .\db-tests.ps1 dbpsql
+  .\db-tests.ps1 dbpsql -SkipCompose
+  .\db-tests.ps1 dbmssql -Build
   .\db-tests.ps1 dbpsql -SkipCompose -ClearData
 #>
 [CmdletBinding()]
@@ -65,10 +66,10 @@ $script:Utf8NoBom = New-Object System.Text.UTF8Encoding $false
 [Console]::OutputEncoding = $script:Utf8NoBom
 $OutputEncoding = $script:Utf8NoBom
 
-# Client root = folder that contains this script and stand dirs (dbmssql / dbpsql)
+# This repo: tests + engines live at repo root; stands are ./dbpsql and ./dbmssql
+$RepoRoot = $PSScriptRoot
 $ClientRoot = $PSScriptRoot
 $ClientName = Split-Path $ClientRoot -Leaf
-$RepoRoot = (Resolve-Path (Join-Path $ClientRoot '..\..\..')).Path
 $EnginesPath = Join-Path $RepoRoot 'db-tests.engines.ps1'
 if (-not (Test-Path -LiteralPath $EnginesPath)) {
   throw "Engine module not found: $EnginesPath"

@@ -21,9 +21,11 @@ HTTP UI с хоста идёт через **Traefik** на порт **80** (`htt
 | **generator.api** | `raulamailru/nevadwh-generator` | — | Генератор DWH (xdto API) |
 | **nevadwh** | `raulamailru/nevadwh-admin` | — | Веб-приложение / оркестрация |
 
-Теги `raulamailru/nevadwh-{mq,landing,generator,admin}:X.Y.Z` в этом compose обновляет `src/publishimage.ps1` (см. корневой README).
+Теги `raulamailru/nevadwh-{mq,landing,generator,admin}:X.Y.Z` задаются в `docker-compose.yml` (образы с Docker Hub).
 
 Проект БД: `dbproject/` — landing, ods, dwh, log. Демо-сообщения 1С в ODS: PostDeploy `Dictionaries/messagequeue.sql` → `[mq].[MessageQueue]` (исходный dump — `070_msgqueue.sql`).
+
+Автотесты пайплайна — из корня репозитория: `..\db-tests.ps1 dbmssql` (см. [README.md](../README.md)).
 
 ---
 
@@ -251,7 +253,7 @@ docker compose logs -f traefik api-server mq.webservice nevadwh
 Get-NetTCPConnection -LocalPort 80 -State Listen
 docker ps --filter publish=80
 
-# Пересборка одного сервиса после правок в src/services
+# Пересборка одного сервиса (локальный Dockerfile / image tag в compose)
 docker compose build mq.webservice
 docker compose up -d mq.webservice
 
