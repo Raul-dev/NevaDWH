@@ -92,8 +92,8 @@ CREATE TABLE IF NOT EXISTS etl.dwh_session (
     dwh_session_state_id smallint         NOT NULL,
     create_session       timestamp with time zone,
     error_message        varchar(4000) NULL,
-    dt_update            timestamp with time zone NOT NULL default now(),
-    dt_create            timestamp with time zone NOT NULL default now()
+    updated_at            timestamp with time zone NOT NULL default now(),
+    created_at            timestamp with time zone NOT NULL default now()
     
 );
 
@@ -102,7 +102,7 @@ CREATE TABLE IF NOT EXISTS etl.dwh_session_log (
     dwh_session_id       bigint         NOT NULL,
     dwh_session_state_id smallint        NOT NULL,
     error_message        varchar(4000) NULL,
-    dt_create            timestamp with time zone NOT NULL 
+    created_at            timestamp with time zone NOT NULL 
 );
 
 CREATE TABLE IF NOT EXISTS etl.dwh_session_state (
@@ -116,7 +116,7 @@ RAISE NOTICE 'CREATE PROCEDURE etl.dwh_ArchiveTables';
 END;
 $$;
 
-CREATE OR REPLACE PROCEDURE etl.dwh_ArchiveTables (
+CREATE OR REPLACE PROCEDURE etl."dwh_ArchiveTables" (
     par_dwh_session_id inout int DEFAULT NULL
 )
 AS $BODY$
@@ -143,7 +143,7 @@ $$;
 
 -- SELECT * FROM etl.dwh_processing_details
 -- call etl.dwh_AssignSessionID (null, null)
-CREATE OR REPLACE PROCEDURE etl.dwh_AssignSessionID (
+CREATE OR REPLACE PROCEDURE etl."dwh_AssignSessionID" (
     INOUT par_dwh_session_id bigint DEFAULT NULL::bigint,
     INOUT par_rowcount bigint DEFAULT NULL::bigint,
     INOUT par_create_session timestamp DEFAULT NULL::timestamp
@@ -215,7 +215,7 @@ BEGIN
                 dwh_session_state_id = par_dwh_session_state_id,
                 error_message = par_error_message,
                 create_session = CASE WHEN par_dwh_session_state_id = 2 THEN now() ELSE create_session END,
-                dt_update = now()
+                updated_at = now()
         WHERE dwh_session_id = par_dwh_session_id;
     END IF;
 
@@ -242,8 +242,8 @@ CREATE TABLE IF NOT EXISTS mq.filequeue (
     filetype     character varying(4) COLLATE pg_catalog."default" NULL,
     error_msg    character varying(4000) COLLATE pg_catalog."default" NULL,
     state_id     smallint NOT NULL,
-    dt_create    timestamp with time zone  CONSTRAINT DF_filequeue_create_date_DEFAULT DEFAULT (now()) NOT NULL,
-    dt_update    timestamp with time zone  CONSTRAINT DF_filequeue_update_date_DEFAULT DEFAULT (now()) NOT NULL,
+    created_at    timestamp with time zone  CONSTRAINT DF_filequeue_create_date_DEFAULT DEFAULT (now()) NOT NULL,
+    updated_at    timestamp with time zone  CONSTRAINT DF_filequeue_update_date_DEFAULT DEFAULT (now()) NOT NULL,
     CONSTRAINT PK_filequeue PRIMARY KEY (filequeue_id)
 );
 
@@ -263,7 +263,7 @@ CREATE TABLE IF NOT EXISTS mq.metadata
     namespace_ver  character varying(256) COLLATE pg_catalog."default",
     msg            text COLLATE pg_catalog."default",
     metaadapter_id smallint NOT NULL,
-    dt_create      timestamp with time zone NOT NULL,
+    created_at      timestamp with time zone NOT NULL,
     CONSTRAINT "PK_metadata" PRIMARY KEY (nkey)
 )
 
@@ -278,8 +278,8 @@ CREATE TABLE IF NOT EXISTS mq.metadata_buffer
     msg_id      character varying(36) COLLATE pg_catalog."default",
     msg         text COLLATE pg_catalog."default",
     is_error    boolean       CONSTRAINT DF_metadata_buffer_is_error_DEFAULT DEFAULT ((false)) NOT NULL,
-    dt_create   timestamp with time zone NOT NULL default now(),
-    dt_update   timestamp without time zone NOT NULL DEFAULT to_date('19000101', 'YYYYMMDD')
+    created_at   timestamp with time zone NOT NULL default now(),
+    updated_at   timestamp without time zone NOT NULL DEFAULT to_date('19000101', 'YYYYMMDD')
 )
 
 TABLESPACE pg_default;
@@ -313,7 +313,7 @@ CREATE TABLE IF NOT EXISTS mq.msgqueue
     msg_id     uuid NOT NULL,
     msg        text COLLATE pg_catalog."default",
     msg_key    character varying(128) COLLATE pg_catalog."default",
-    dt_create  timestamp with time zone NOT NULL DEFAULT now(),
+    created_at  timestamp with time zone NOT NULL DEFAULT now(),
     CONSTRAINT "PK_msgqueue" PRIMARY KEY (buffer_id)
 )
 
@@ -327,8 +327,8 @@ CREATE TABLE IF NOT EXISTS mq.session (
     data_source_id   smallint        NOT NULL,
     session_state_id smallint    NOT NULL,
     error_message    character varying(4000) COLLATE pg_catalog."default" NULL,
-    dt_update        timestamp with time zone  CONSTRAINT DF_session_update_date_DEFAULT DEFAULT (now()) NOT NULL,
-    dt_create        timestamp with time zone  CONSTRAINT DF_session_create_date_DEFAULT DEFAULT (now()) NOT NULL,
+    updated_at        timestamp with time zone  CONSTRAINT DF_session_update_date_DEFAULT DEFAULT (now()) NOT NULL,
+    created_at        timestamp with time zone  CONSTRAINT DF_session_create_date_DEFAULT DEFAULT (now()) NOT NULL,
     CONSTRAINT PK_session PRIMARY KEY (session_id)
 );
 
@@ -341,7 +341,7 @@ CREATE TABLE IF NOT EXISTS mq.session_log
     session_id       bigint   NOT NULL,
     session_state_id smallint  NOT NULL,
     error_message    character varying(4000) COLLATE pg_catalog."default",
-    dt_create        timestamp with time zone  CONSTRAINT DF_session_log_date_DEFAULT DEFAULT (now()) NOT NULL,
+    created_at        timestamp with time zone  CONSTRAINT DF_session_log_date_DEFAULT DEFAULT (now()) NOT NULL,
     CONSTRAINT "PK_session_log" PRIMARY KEY (session_log_id)
 );
 
@@ -408,7 +408,7 @@ BEGIN
             namespace_ver character varying(256) ,
             msg text ,
             type character varying(128) ,
-            dt_create timestamp with time zone NOT NULL,
+            created_at timestamp with time zone NOT NULL,
             CONSTRAINT "PK_metadata" PRIMARY KEY (nkey)
         );
 
@@ -456,14 +456,14 @@ BEGIN
         ELSE
 
             UPDATE mq.metadata_buffer AS org SET
-                dt_update = var_updatedate
+                updated_at = var_updatedate
             FROM "metadata_tmp1" AS src
             WHERE org."buffer_id" = src."buffer_id" ;
 
             IF var_buffer_history_mode >= 2 AND NOT EXISTS (SELECT 1 FROM mq.metadata_buffer WHERE is_error = true) THEN
                 DELETE
                 FROM mq.metadata_buffer AS b
-                WHERE EXTRACT(DAY FROM  var_updatedate::timestamp - dt_update::timestamp) > var_bufferhistorydays;
+                WHERE EXTRACT(DAY FROM  var_updatedate::timestamp - updated_at::timestamp) > var_bufferhistorydays;
             END IF;
         END    IF;
 
@@ -480,7 +480,7 @@ BEGIN
 
         UPDATE mq.metadata_buffer AS org SET
             is_error  = true,
-            dt_update = var_updatedate
+            updated_at = var_updatedate
         FROM "metadata_tmp1" AS src
         WHERE org."buffer_id" = src."buffer_id" ;
 
@@ -497,10 +497,10 @@ RAISE NOTICE 'CREATE PROCEDURE mq.rb_SaveSessionState';
 END;
 $$;
 
-CREATE OR REPLACE PROCEDURE mq.rb_SaveSessionState (
+CREATE OR REPLACE PROCEDURE mq."rb_SaveSessionState" (
     par_session_id inout bigint DEFAULT NULL,
-    par_data_source_id in smallint = 1,
-    par_session_state_id in smallint = 1,
+    par_data_source_id in smallint DEFAULT 1,
+    par_session_state_id in smallint DEFAULT 1,
     par_error_message in varchar(4000) DEFAULT NULL
 )
 AS $BODY$
@@ -508,16 +508,23 @@ BEGIN
     IF par_session_id IS NULL THEN
 
         INSERT INTO mq.session (data_source_id, session_state_id, error_message)
-        VALUES(par_data_source_id, par_session_state_id, par_error_message);
+        VALUES (par_data_source_id, par_session_state_id, par_error_message)
+        RETURNING session_id INTO par_session_id;
 
-        SELECT currval(pg_get_serial_sequence('mq.session', 'session_id')) INTO par_session_id;
+        INSERT INTO mq.session_log (session_id, session_state_id, error_message)
+        VALUES (par_session_id, par_session_state_id, par_error_message);
+
         RETURN;
     ELSE
         UPDATE mq.session
         SET data_source_id = par_data_source_id,
             session_state_id = par_session_state_id,
-            dt_update = now()
+            error_message = par_error_message,
+            updated_at = now()
         WHERE session_id = par_session_id;
+
+        INSERT INTO mq.session_log (session_id, session_state_id, error_message)
+        VALUES (par_session_id, par_session_state_id, par_error_message);
     END IF;
 END;
 

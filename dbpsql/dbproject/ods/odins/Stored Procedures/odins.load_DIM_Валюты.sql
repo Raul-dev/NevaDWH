@@ -48,7 +48,7 @@ BEGIN
   SELECT buffer_id AS buffer_id,
     CAST((xpath('/nva:Data/nva:Реквизиты/nva:CatalogObject.Валюты/nva:Ref/text()', msg::xml, var_xmlns ))[1]::text as uuid) ref
   FROM "odins"."DIM_Валюты_buffer" b
-  WHERE b.dt_update = var_mindate;
+  WHERE b.updated_at = var_mindate;
 
   GET DIAGNOSTICS var_rowcount = ROW_COUNT;
   par_rowcount := var_rowcount;
@@ -82,7 +82,7 @@ BEGIN
       "ПараметрыПрописи" varchar(200),
       "ФормулаРасчетаКурса" varchar(100),
       "СпособУстановкиКурса" varchar(500),
-      "dt_update" timestamp without time zone 
+      "updated_at" timestamp without time zone 
     );
 
     INSERT INTO "DIM_Валюты_tmp2"
@@ -90,7 +90,7 @@ BEGIN
     SELECT
       CAST((xpath('/nva:Data/nva:Реквизиты/nva:CatalogObject.Валюты/nva:Ref/text()', msg::xml, var_xmlns ))[1]::text as uuid) AS "nkey",
 
-      (xpath('/nva:Data/nva:Реквизиты/nva:CatalogObject.Валюты/nva:DIM_Валюты.Представления/text()', msg::xml, var_xmlns ))[1]::xml  AS "DIM_Валюты_Представления",
+      (SELECT xmlelement(name "rows", xmlagg(x)) FROM unnest(xpath('/nva:Data/nva:Реквизиты/nva:CatalogObject.Валюты/nva:Представления', msg::xml, var_xmlns)) AS t(x)) AS "DIM_Валюты_Представления",
       CAST((xpath('/nva:Data/nva:Реквизиты/nva:CatalogObject.Валюты/nva:Ref/text()', msg::xml, var_xmlns ))[1]::text as uuid)  AS "RefID",
       CAST((xpath('/nva:Data/nva:Реквизиты/nva:CatalogObject.Валюты/nva:DeletionMark/text()', msg::xml, var_xmlns ))[1]::text as boolean)  AS "DeletionMark",
       CAST((xpath('/nva:Data/nva:Реквизиты/nva:CatalogObject.Валюты/nva:Code/text()', msg::xml, var_xmlns ))[1]::text as varchar(128))  AS "Code",
@@ -120,7 +120,7 @@ BEGIN
       "ПараметрыПрописи" = src."ПараметрыПрописи",
       "ФормулаРасчетаКурса" = src."ФормулаРасчетаКурса",
       "СпособУстановкиКурса" = src."СпособУстановкиКурса",
-      dt_update = var_updatedate
+      updated_at = var_updatedate
     FROM "DIM_Валюты_tmp2" AS src 
     WHERE org."nkey" = src."nkey" ;
 
@@ -137,7 +137,7 @@ BEGIN
       "ПараметрыПрописи",
       "ФормулаРасчетаКурса",
       "СпособУстановкиКурса",
-      dt_update
+      updated_at
     )
     SELECT 
       src."nkey" ,
@@ -152,10 +152,35 @@ BEGIN
       src."ПараметрыПрописи",
       src."ФормулаРасчетаКурса",
       src."СпособУстановкиКурса",
-      src."dt_update"
+      src."updated_at"
     FROM "DIM_Валюты_tmp2" AS src 
       LEFT JOIN "odins"."DIM_Валюты" AS org ON org."nkey" = src."nkey" 
     WHERE org."RefID" IS NULL ;
+
+    /* Sub tables (tabular sections) */
+    DELETE FROM "odins"."DIM_Валюты_Представления" AS trg
+    USING "DIM_Валюты_tmp2" AS tmp
+    WHERE
+      trg."DIM_ВалютыRefID" = tmp."RefID";
+
+    INSERT INTO "odins"."DIM_Валюты_Представления" (
+      "nkey",
+      "DIM_ВалютыRefID",
+      "КодЯзыка",
+      "ПараметрыПрописи",
+      updated_at
+    )
+    SELECT
+      CAST(md5(CONVERT(
+        (CAST(tmp."RefID" AS varchar(36)) || '|' || COALESCE(CAST(line_ord AS varchar), '0'))
+        ::bytea, 'UTF8', 'UHC')) AS uuid) AS "nkey",
+      tmp."RefID" AS "DIM_ВалютыRefID",
+      CAST((xpath('//*[local-name()="КодЯзыка"]/text()', line_xml))[1]::text AS varchar(10)) AS "КодЯзыка",
+      CAST((xpath('//*[local-name()="ПараметрыПрописи"]/text()', line_xml))[1]::text AS varchar(200)) AS "ПараметрыПрописи",
+      var_updatedate AS updated_at
+    FROM "DIM_Валюты_tmp2" AS tmp
+    CROSS JOIN LATERAL unnest(xpath('/*[local-name()="rows"]/*', tmp."DIM_Валюты_Представления")) WITH ORDINALITY AS line(line_xml, line_ord)
+    WHERE tmp."DIM_Валюты_Представления" IS NOT NULL;
 
     -- Clear buffer table
     IF var_buffer_history_mode = 1 AND NOT EXISTS (SELECT 1 FROM "odins"."DIM_Валюты_buffer" WHERE is_error = true) THEN
@@ -167,14 +192,14 @@ BEGIN
     ELSE
 
       UPDATE "odins"."DIM_Валюты_buffer" AS org SET
-        dt_update = var_updatedate
+        updated_at = var_updatedate
       FROM "DIM_Валюты_lock" AS src
       WHERE org."buffer_id" = src."buffer_id";
 
       IF var_buffer_history_mode >= 2 AND NOT EXISTS (SELECT 1 FROM "odins"."DIM_Валюты_buffer" WHERE is_error = true) THEN
         DELETE
         FROM "odins"."DIM_Валюты_buffer" AS b
-        WHERE EXTRACT(DAY FROM var_updatedate::timestamp - dt_update::timestamp) > var_bufferhistorydays;
+        WHERE EXTRACT(DAY FROM var_updatedate::timestamp - updated_at::timestamp) > var_bufferhistorydays;
       END IF;
     END IF;
 
@@ -191,7 +216,7 @@ BEGIN
 
     UPDATE "odins"."DIM_Валюты_buffer" AS org SET
       is_error  = true,
-      dt_update = var_updatedate
+      updated_at = var_updatedate
     FROM "DIM_Валюты_lock" AS src
     WHERE org."buffer_id" = src."buffer_id";
 

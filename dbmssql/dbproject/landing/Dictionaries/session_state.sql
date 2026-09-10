@@ -1,5 +1,5 @@
 IF NOT EXISTS(SELECT 1 FROM [mq].[DataSource] WHERE [DataSourceId] = 1)
-  INSERT [mq].[DataSource] ([DataSourceId], [Name]) VALUES (1, N'landing1c')
+  INSERT [mq].[DataSource] ([DataSourceId], [Name]) VALUES (1, N'ods1c')
 
 IF NOT EXISTS(SELECT 1 FROM [mq].[MessageType] WHERE [MessageTypeId] = 1)
 BEGIN
@@ -44,10 +44,26 @@ END
 IF NOT EXISTS(SELECT 1 FROM [config].[Setting] WHERE SettingId = 'AuditProcAll')
   INSERT INTO [config].[Setting] (SettingId, StrValue) VALUES ('AuditProcAll', N'AuditProcAll')
 
+IF EXISTS (SELECT * FROM sys.servers WHERE NAME = N'LinkSRVOds')
+  EXECUTE sp_dropserver @server = 'LinkSRVOds'
+
+IF NOT EXISTS (SELECT * FROM sys.servers WHERE NAME = N'LinkSRVOds')
+BEGIN
+  DECLARE @database VARCHAR(200) = DB_NAME();
+
+  EXECUTE sp_addlinkedserver @server = 'LinkSRVOds',
+               @srvproduct = ' ',
+               @provider = 'SQLNCLI',
+               @datasrc = @@SERVERNAME,
+               @catalog = @database
+END
+
+EXEC sp_serveroption LinkSRVOds, 'RPC OUT', 'TRUE'
+EXEC sp_serveroption LinkSRVOds, 'remote proc transaction promotion', 'FALSE'
+
 IF EXISTS (SELECT * FROM sys.servers WHERE NAME = N'LinkSRVLogLanding')
   EXECUTE sp_dropserver @server = 'LinkSRVLogLanding', @droplogins = 'droplogins'
 
-DECLARE @database VARCHAR(200) = DB_NAME();
 IF NOT EXISTS (SELECT * FROM sys.servers WHERE NAME = N'LinkSRVLogLanding')
 BEGIN
   EXECUTE sp_addlinkedserver @server = 'LinkSRVLogLanding',
@@ -74,3 +90,5 @@ END
 
 EXEC sp_serveroption LinkSRVLog, 'RPC OUT', 'TRUE'
 EXEC sp_serveroption LinkSRVLog, 'remote proc transaction promotion', 'FALSE'
+
+EXEC [target].[sp_FillDimDate] @FromDate = '20240101', @ToDate = '20300101'

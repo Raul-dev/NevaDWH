@@ -3,6 +3,6 @@ CREATE TABLE IF NOT EXISTS etl.dwh_session_log (
     dwh_session_id       bigint         NOT NULL,
     dwh_session_state_id smallint        NOT NULL,
     error_message        varchar(4000) NULL,
-    dt_create            timestamp with time zone NOT NULL 
+    created_at            timestamp with time zone NOT NULL 
 );
 

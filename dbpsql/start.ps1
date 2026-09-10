@@ -128,23 +128,23 @@ $SqlScript = ("DROP DATABASE IF EXISTS $ClientDBODSName;",
 "\c $ClientDBDWHName;")
 
 $OutputDumpFile ="005_create_db.sql"
-Remove-Item -Path $OutputDumpFile -Force -ErrorAction SilentlyContinue
+if (Test-Path $OutputDumpFile) { Remove-Item -Path $OutputDumpFile -Recurse -Force -ErrorAction SilentlyContinue }
 $SqlScript | Out-String | Out-File -FilePath $OutputDumpFile -Encoding "UTF8" -Append
 $SqlFile = $CurrentPath.ToString()+"/dbproject/ScriptsFolder/create_ods.sql"
 $OutputDumpFile ="010_create_ods.sql"
-Remove-Item -Path $OutputDumpFile -Force -ErrorAction SilentlyContinue
+if (Test-Path $OutputDumpFile) { Remove-Item -Path $OutputDumpFile -Recurse -Force -ErrorAction SilentlyContinue }
 "\c $ClientDBODSName;`r`n" | Out-File -FilePath $OutputDumpFile -Encoding "UTF8" -Append
 Get-Content -Encoding "UTF8" $SqlFile | Out-File -FilePath $OutputDumpFile -Encoding "UTF8" -Append
 $SqlFile = $CurrentPath.ToString()+"/dbproject/ScriptsFolder/dictionaries_ods.sql"
 $OutputDumpFile ="020_dictionaries_ods.sql"
-Remove-Item -Path $OutputDumpFile -Force -ErrorAction SilentlyContinue
+if (Test-Path $OutputDumpFile) { Remove-Item -Path $OutputDumpFile -Recurse -Force -ErrorAction SilentlyContinue }
 "\c $ClientDBODSName;`r`n" | Out-File -FilePath $OutputDumpFile -Encoding "UTF8" -Append
 Get-Content -Encoding "UTF8" $SqlFile | Out-File -FilePath $OutputDumpFile -Encoding "UTF8" -Append
 
 # dwh
 $SqlFile = $CurrentPath.ToString()+"/dbproject/ScriptsFolder/create_dwh.sql"
 $OutputDumpFile ="030_create_dwh.sql"
-Remove-Item -Path $OutputDumpFile -Force -ErrorAction SilentlyContinue
+if (Test-Path $OutputDumpFile) { Remove-Item -Path $OutputDumpFile -Recurse -Force -ErrorAction SilentlyContinue }
 "\c $ClientDBDWHName;`r`n" | Out-File -FilePath $OutputDumpFile -Encoding "UTF8" -Append
 "CREATE extension postgres_fdw;`r`n" | Out-File -FilePath $OutputDumpFile -Encoding "UTF8" -Append
 "CREATE SERVER client_ods FOREIGN DATA WRAPPER postgres_fdw OPTIONS (dbname 'newadwh_ods', host '127.0.0.1', port '5432');`r`n" | Out-File -FilePath $OutputDumpFile -Encoding "UTF8" -Append
@@ -153,7 +153,7 @@ Get-Content -Encoding "UTF8" $SqlFile | Out-File -FilePath $OutputDumpFile -Enco
 #"SELECT 2;" | Out-File -FilePath $OutputDumpFile -Encoding "UTF8" -Append
 $SqlFile = $CurrentPath.ToString()+"/dbproject/ScriptsFolder/dictionaries_dwh.sql"
 $OutputDumpFile ="040_dictionaries_dwh.sql"
-Remove-Item -Path $OutputDumpFile -Force -ErrorAction SilentlyContinue
+if (Test-Path $OutputDumpFile) { Remove-Item -Path $OutputDumpFile -Recurse -Force -ErrorAction SilentlyContinue }
 "\c $ClientDBDWHName;`r`n" | Out-File -FilePath $OutputDumpFile -Encoding "UTF8" -Append
 
 Get-Content -Encoding "UTF8" $SqlFile | Out-File -FilePath $OutputDumpFile -Encoding "UTF8" -Append
@@ -162,12 +162,12 @@ Get-Content -Encoding "UTF8" $SqlFile | Out-File -FilePath $OutputDumpFile -Enco
 # Landing
 $SqlFile = $CurrentPath.ToString()+"/dbproject/ScriptsFolder/create_landing.sql"
 $OutputDumpFile ="050_create_landing.sql"
-Remove-Item -Path $OutputDumpFile -Force -ErrorAction SilentlyContinue
+if (Test-Path $OutputDumpFile) { Remove-Item -Path $OutputDumpFile -Recurse -Force -ErrorAction SilentlyContinue }
 "\c $ClientDBLandingName;`r`n" | Out-File -FilePath $OutputDumpFile -Encoding "UTF8" -Append
 Get-Content -Encoding "UTF8" $SqlFile | Out-File -FilePath $OutputDumpFile -Encoding "UTF8" -Append
 $SqlFile = $CurrentPath.ToString()+"/dbproject/ScriptsFolder/dictionaries_landing.sql"
 $OutputDumpFile ="060_dictionaries_landing.sql"
-Remove-Item -Path $OutputDumpFile -Force -ErrorAction SilentlyContinue
+if (Test-Path $OutputDumpFile) { Remove-Item -Path $OutputDumpFile -Recurse -Force -ErrorAction SilentlyContinue }
 "\c $ClientDBLandingName;`r`n" | Out-File -FilePath $OutputDumpFile -Encoding "UTF8" -Append
 Get-Content -Encoding "UTF8" $SqlFile | Out-File -FilePath $OutputDumpFile -Encoding "UTF8" -Append
 
@@ -177,7 +177,7 @@ if (-not (Test-Path $SqlFile)) {
   $SqlFile = $CurrentPath.ToString()+"/dbproject/ScriptsFolder/messagequeue.sql"
 }
 $OutputDumpFile ="070_msgqueue.sql"
-Remove-Item -Path $OutputDumpFile -Force -ErrorAction SilentlyContinue
+if (Test-Path $OutputDumpFile) { Remove-Item -Path $OutputDumpFile -Recurse -Force -ErrorAction SilentlyContinue }
 "\c $ClientDBODSName;`r`n" | Out-File -FilePath $OutputDumpFile -Encoding "UTF8" -Append
 if (Test-Path $SqlFile) {
   Get-Content -Encoding "UTF8" $SqlFile | Out-File -FilePath $OutputDumpFile -Encoding "UTF8" -Append

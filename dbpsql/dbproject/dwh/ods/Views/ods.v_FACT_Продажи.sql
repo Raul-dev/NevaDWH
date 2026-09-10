@@ -30,7 +30,7 @@ SELECT
   "ПримерСоставногоТипа",
   "ПримерСоставногоТипа_ТипЗначения",
   0::bigint AS session_id_update,
-  dt_update::timestamp without time zone,
-  dt_create::timestamp without time zone
+  updated_at::timestamp without time zone,
+  created_at::timestamp without time zone
 FROM ods."odins_FACT_Продажи";
 

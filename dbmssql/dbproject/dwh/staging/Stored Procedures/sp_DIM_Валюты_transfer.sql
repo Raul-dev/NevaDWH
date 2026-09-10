@@ -119,7 +119,7 @@ BEGIN TRY
     [ПараметрыПрописи],
     @session_id AS session_id_update,
     @start_date AS dt_update
-  FROM [$(ods)].[odins].[DIM_Валюты.Представления_history] tmp
+  FROM [$(LinkSRVOds)].[$(ods)].[odins].[DIM_Валюты.Представления_history] tmp
   WHERE tmp.[DwhSessionId] = @dwh_session_id
   EXEC [audit].[sp_LogFinish] @LogID = @LogID, @RowCount = @RowCount
 END TRY

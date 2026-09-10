@@ -6,7 +6,7 @@
   <Name>ods</Name>
   <SchemaVersion>2.0</SchemaVersion>
   <ProjectVersion>4.1</ProjectVersion>
-  <ProjectGuid>{622e77ef-2e99-4fb8-aa03-f84361b27f07}</ProjectGuid>
+  <ProjectGuid>{622E77EF-2E99-4FB8-AA03-F84361B27F07}</ProjectGuid>
   <DSP>Microsoft.Data.Tools.Schema.Sql.Sql150DatabaseSchemaProvider</DSP>
   <OutputType>Database</OutputType>
   <RootPath>
@@ -219,14 +219,6 @@
   </SqlCmdVariable>
   </ItemGroup>
   <ItemGroup>
-  <ProjectReference Include="..\landing\landing.sqlproj">
-   <Name>landing</Name>
-   <Project>{c2ebe3c4-9129-4aff-b058-f9a5f7cd5273}</Project>
-   <Private>True</Private>
-   <SuppressMissingDependenciesErrors>False</SuppressMissingDependenciesErrors>
-   <DatabaseSqlCmdVariable>landing</DatabaseSqlCmdVariable>
-   <ServerSqlCmdVariable>LinkSRVLogLanding</ServerSqlCmdVariable>
-  </ProjectReference>
   <ProjectReference Include="..\log\log.sqlproj">
    <Name>log</Name>
    <Project>{8f4e2a1b-3c5d-4e6f-9a0b-1c2d3e4f5a6b}</Project>

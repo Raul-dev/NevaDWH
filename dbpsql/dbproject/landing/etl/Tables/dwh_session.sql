@@ -4,8 +4,8 @@ CREATE TABLE IF NOT EXISTS etl.dwh_session (
     dwh_session_state_id smallint         NOT NULL,
     create_session       timestamp with time zone,
     error_message        varchar(4000) NULL,
-    dt_update            timestamp with time zone NOT NULL default now(),
-    dt_create            timestamp with time zone NOT NULL default now()
+    updated_at            timestamp with time zone NOT NULL default now(),
+    created_at            timestamp with time zone NOT NULL default now()
     
 );
 

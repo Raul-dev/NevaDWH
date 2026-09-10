@@ -48,10 +48,11 @@ services:
   # Traefik v3, config via command + Docker labels (no traefik.yml / configurations/).
   # http://localhost/              NevaDWH admin
   # http://localhost/v1/xdto       generator.api (PathBase)
-  # http://localhost/v1/mq         mq.webservice (без StripPrefix)
-  # http://localhost/v1/landing    landing.webservice (без StripPrefix)
+  # http://localhost:8090/v1/mq    mq.webservice (первый ODS); доп. ODS → localhost:8092, 8094, … тот же /v1/mq
+  # http://localhost/v1/mq         Traefik → первый MQ; доп. → Host mq-{sourceKey}.localhost/v1/mq
   # http://localhost:8080          Airflow UI (не за Traefik)
   # http://localhost/rabbit/       RabbitMQ management (path_prefix, без StripPrefix)
+  # http://bi.localhost            Metabase BI (отчёты DWH)
   # http://traefik.localhost       Traefik dashboard
   traefik:
     image: traefik:v3.0
@@ -95,6 +96,7 @@ services:
     volumes:
       - postgres-clientdata:/var/lib/postgresql
       - ./005_create_db.sql:/docker-entrypoint-initdb.d/005_create_db.sql
+      - ./008_metabase.sql:/docker-entrypoint-initdb.d/008_metabase.sql
       - ./010_create_ods.sql:/docker-entrypoint-initdb.d/010_create_ods.sql
       - ./020_dictionaries_ods.sql:/docker-entrypoint-initdb.d/020_dictionaries_ods.sql
       - ./030_create_dwh.sql:/docker-entrypoint-initdb.d/030_create_dwh.sql
@@ -124,6 +126,7 @@ services:
     volumes:
       # Always apply path_prefix from the repo file (cached images omit it → Object Not Found).
       - ./images/Rabbit/rabbitmq.conf:/etc/rabbitmq/rabbitmq.conf:ro
+      - ./images/Rabbit/definitions.json:/etc/rabbitmq/definitions.json:ro
     labels:
       - "traefik.enable=true"
       - "traefik.http.middlewares.rabbit-slash.redirectregex.regex=^https?://[^/]+/rabbit$$"
@@ -207,6 +210,7 @@ services:
       postgresdb:
         condition: service_healthy
 
+
   mq.webservice:
     <<: *host-mssql
     image: raulamailru/nevadwh-mq:0.0.3
@@ -220,7 +224,7 @@ services:
       - DataBaseSettings__Port=5432
       - DataBaseSettings__SessionMode=${MQ_SESSION_MODE:-FullMode}
       - DataBaseSettings__ClientName=${MQ_CLIENTNAME:-client1}
-      - DataBaseSettings__DataBase=${MQ_DATABASE:-client1_ods}
+      - DataBaseSettings__DataBase=${MQ_DATABASE:-newadwh_ods}
       - DataBaseSettings__User=${MQ_USER:-postgres}
       - DataBaseSettings__Password=${MQ_PASSWORD:-postgres}
       - RabbitMQSettings__Host=rabbit
@@ -230,6 +234,7 @@ services:
       - RabbitMQSettings__UserName=${RABBITMQ_USER:-admin}
       - RabbitMQSettings__UserPassword=${RABBITMQ_PASSWORD:-admin}
       - RabbitMQSettings__DefaultQueue=${RABBITMQ_DEFAULT_QUEUE:-InfoBase}
+      - RabbitMQSettings__Enabled=${MQ_RABBIT_ENABLED:-true}
     ports:
       - "8090:8080"
       - "8091:8081"
@@ -241,7 +246,9 @@ services:
       start_period: 40s
     labels:
       - "traefik.enable=true"
+
       - "traefik.http.routers.mq.rule=PathPrefix(`/v1/mq`)"
+
       - "traefik.http.routers.mq.entrypoints=web"
       - "traefik.http.routers.mq.priority=100"
       - "traefik.http.services.mq.loadbalancer.server.port=8080"
@@ -253,31 +260,51 @@ services:
       postgresdb:
         condition: service_healthy
       rabbit:
-        condition: service_healthy
+        condition: service_started
+        required: false
 
-  landing.webservice:
+
+  mq.webservice.landing:
     <<: *host-mssql
-    image: raulamailru/nevadwh-landing:0.0.3
+    image: raulamailru/nevadwh-mq:0.0.3
     environment:
       - ASPNETCORE_ENVIRONMENT=Development
       - ASPNETCORE_HTTP_PORTS=8080
+      - ASPNETCORE_HTTPS_PORTS=8081
       - DataBaseSettings__ServerName=postgresdb
       - DataBaseSettings__ServerType=psql
       - DataBaseSettings__NamingStyle=Snake
       - DataBaseSettings__Port=5432
+      - DataBaseSettings__SessionMode=${MQ_SESSION_MODE:-FullMode}
       - DataBaseSettings__ClientName=${MQ_CLIENTNAME:-client1}
-      - DataBaseSettings__DataBase=${LANDING_DATABASE:-client1_landing}
-      - DataBaseSettings__User=${LANDING_USER:-postgres}
-      - DataBaseSettings__Password=${LANDING_PASSWORD:-postgres}
+      - DataBaseSettings__DataBase=${MQ_DATABASE_LANDING:-newadwh_landing}
+      - DataBaseSettings__User=${MQ_USER:-postgres}
+      - DataBaseSettings__Password=${MQ_PASSWORD:-postgres}
+      - RabbitMQSettings__Host=rabbit
+      - RabbitMQSettings__Port=5672
+      - RabbitMQSettings__VirtualHost=${RABBITMQ_VIRTUAL_HOST:-/}
+      - RabbitMQSettings__Exchange=${RABBITMQ_EXCHANGE:-amq.fanout}
+      - RabbitMQSettings__UserName=${RABBITMQ_USER:-admin}
+      - RabbitMQSettings__UserPassword=${RABBITMQ_PASSWORD:-admin}
+      - RabbitMQSettings__DefaultQueue=${RABBITMQ_LANDING_QUEUE:-InfoBase_landing}
+      - RabbitMQSettings__Enabled=${MQ_RABBIT_ENABLED:-true}
     ports:
       - "8092:8080"
       - "8093:8081"
+    healthcheck:
+      test: ["CMD", "curl", "-fsS", "http://127.0.0.1:8080/v1/mq/health/live"]
+      interval: 10s
+      timeout: 5s
+      retries: 12
+      start_period: 40s
     labels:
       - "traefik.enable=true"
-      - "traefik.http.routers.landing.rule=PathPrefix(`/v1/landing`)"
-      - "traefik.http.routers.landing.entrypoints=web"
-      - "traefik.http.routers.landing.priority=100"
-      - "traefik.http.services.landing.loadbalancer.server.port=8080"
+
+      - "traefik.http.routers.mq-landing.rule=Host(`mq-landing.localhost`) && PathPrefix(`/v1/mq`)"
+
+      - "traefik.http.routers.mq-landing.entrypoints=web"
+      - "traefik.http.routers.mq-landing.priority=100"
+      - "traefik.http.services.mq-landing.loadbalancer.server.port=8080"
     volumes:
       - ${APPDATA}/Microsoft/UserSecrets:/home/app/.microsoft/usersecrets:ro
       - ${APPDATA}/ASP.NET/Https:/home/app/.aspnet/https:ro
@@ -286,7 +313,9 @@ services:
       postgresdb:
         condition: service_healthy
       rabbit:
-        condition: service_healthy
+        condition: service_started
+        required: false
+
 
   generator.api:
     <<: *host-mssql
@@ -297,7 +326,7 @@ services:
       - DataBaseSettings__ServerName=host.docker.internal
       - DataBaseSettings__ServerType=mssql
       - DataBaseSettings__ClientName=${MQ_CLIENTNAME:-client1}
-      - DataBaseSettings__DataBase=${MQ_DATABASE:-client1_ods}
+      - DataBaseSettings__DataBase=${MQ_DATABASE:-ods}
       - DataBaseSettings__User=${MQ_USER:-postgres}
       - DataBaseSettings__Password=${MQ_PASSWORD:-postgres}
     ports:
@@ -324,14 +353,38 @@ services:
       - ConnectionStrings__DefaultConnection=Host=postgresdb;Port=5432;Database=nevadwh;Username=${POSTGRES_USER:-postgres};Password=${POSTGRES_PASSWORD:-postgres}
       - ConnectionStrings__GeneratorConnection=http://generator.api:8080
       - ConnectionStrings__mqWebServiceConnectionString=http://mq.webservice:8080
-      - ConnectionStrings__LandingWebServiceConnectionString=http://landing.webservice:8080
+
+
+
+
+      - ConnectionStrings__LandingWebServiceConnectionString=http://mq.webservice.landing:8080
+
+
       # Browser menu URLs (Traefik public routes). Override via EXTERNAL_* in .env
       - ExternalLinks__Airflow=${EXTERNAL_AIRFLOW_URL:-http://localhost:8080}
       - ExternalLinks__RabbitMQ=${EXTERNAL_RABBITMQ_URL:-http://localhost/rabbit/}
-      - ExternalLinks__MqWebService=${EXTERNAL_MQ_URL:-http://localhost/v1/mq/swagger}
-      - ExternalLinks__LandingWebService=${EXTERNAL_LANDING_URL:-http://localhost/v1/landing/swagger}
+      - ExternalLinks__LandingWebService=
       - ExternalLinks__GeneratorApi=${EXTERNAL_GENERATOR_URL:-http://localhost/v1/xdto/api/swagger}
       - ExternalLinks__Traefik=${EXTERNAL_TRAEFIK_URL:-http://traefik.localhost}
+      - ExternalLinks__Metabase=${EXTERNAL_METABASE_URL:-http://bi.localhost}
+
+      - ExternalLinks__MqSources__0__Title=ODS
+      - ExternalLinks__MqSources__0__Url=/Ods
+
+      - ExternalLinks__MqSources__1__Title=landing
+      - ExternalLinks__MqSources__1__Url=/Landing
+
+      - Metabase__ApiUrl=http://metabase:3000
+      - Metabase__PublicBaseUrl=${EXTERNAL_METABASE_URL:-http://bi.localhost}
+      - Metabase__AdminEmail=${METABASE_ADMIN_EMAIL:-admin@neva.loc}
+      - Metabase__AdminPassword=${METABASE_ADMIN_PASSWORD:-admin}
+      - Metabase__DashboardName=${METABASE_DASHBOARD_NAME:-Продажи и товары}
+      - Stand__IsDemo=${DEMO_STAND:-false}
+      - Localization__DefaultCulture=${NEVADWH_DEFAULT_CULTURE:-ru}
+      - SeedAdmin__User=${NEVADWH_ADMIN_USER:-Admin}
+      - SeedAdmin__Password=${NEVADWH_ADMIN_PASSWORD:-admin}
+      - SeedAdmin__Email=${NEVADWH_ADMIN_EMAIL:-admin@neva.loc}
+      - LogProcedures__Enabled=false
     ports:
       - "8100:8080"
     labels:
@@ -349,12 +402,77 @@ services:
         condition: service_healthy
       rabbit:
         condition: service_healthy
+
       mq.webservice:
         condition: service_started
-      landing.webservice:
+
+      mq.webservice.landing:
         condition: service_started
+
       generator.api:
         condition: service_started
+
+  # BI: отчёты по DWH target.v_rpt_* (Postgres в этом же postgresdb)
+  # Login после metabase-init: admin@neva.loc / admin (как Rabbit admin/admin)
+  metabase:
+    image: metabase/metabase:v0.55.2
+    container_name: metabase
+    restart: unless-stopped
+    ports:
+      - "3000:3000"
+    environment:
+      MB_DB_TYPE: postgres
+      MB_DB_DBNAME: metabase
+      MB_DB_PORT: 5432
+      MB_DB_USER: ${POSTGRES_USER:-postgres}
+      MB_DB_PASS: ${POSTGRES_PASSWORD:-postgres}
+      MB_DB_HOST: postgresdb
+      MB_SITE_URL: ${EXTERNAL_METABASE_URL:-http://bi.localhost}
+      MB_SITE_LOCALE: ru
+      JAVA_TIMEZONE: Europe/Moscow
+      MB_ENABLE_PUBLIC_SHARING: "true"
+      MB_PASSWORD_COMPLEXITY: weak
+      MB_PASSWORD_LENGTH: 1
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost:3000/api/health || exit 1"]
+      interval: 15s
+      timeout: 10s
+      retries: 20
+      start_period: 120s
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.metabase.rule=Host(`bi.localhost`)"
+      - "traefik.http.routers.metabase.entrypoints=web"
+      - "traefik.http.services.metabase.loadbalancer.server.port=3000"
+    depends_on:
+      postgresdb:
+        condition: service_healthy
+
+  metabase-init:
+    image: python:3.12-alpine
+    container_name: metabase-init
+    restart: "no"
+    volumes:
+      - ./images/metabase/setup.py:/setup.py:ro
+    environment:
+      MB_URL: http://metabase:3000
+      METABASE_ADMIN_EMAIL: ${METABASE_ADMIN_EMAIL:-admin@neva.loc}
+      METABASE_ADMIN_PASSWORD: ${METABASE_ADMIN_PASSWORD:-admin}
+      METABASE_SITE_NAME: ${METABASE_SITE_NAME:-NevaDWH}
+      METABASE_SITE_LOCALE: ru
+      METABASE_DWH_ENGINE: postgres
+      METABASE_DWH_NAME: DWH
+      METABASE_DWH_HOST: postgresdb
+      METABASE_DWH_PORT: 5432
+      METABASE_DWH_DB: ${DWH_DATABASE:-dwh}
+      METABASE_DWH_USER: ${POSTGRES_USER:-postgres}
+      METABASE_DWH_PASSWORD: ${POSTGRES_PASSWORD:-postgres}
+      # true → create v_rpt_* dashboards; false/omit → admin+DWH only
+      METABASE_DEMO: ${METABASE_DEMO:-false}
+    command: ["python", "/setup.py"]
+    depends_on:
+      metabase:
+        condition: service_healthy
 
 volumes:
   postgres-clientdata:

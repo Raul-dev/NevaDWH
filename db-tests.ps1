@@ -1,44 +1,42 @@
 ﻿#Requires -Version 5.1
 <#
 .SYNOPSIS
-  Pipeline tests for stands in this repo: .\dbmssql and .\dbpsql.
+  Pipeline tests for src/dbprojects stands (dbmssql / dbpsql).
 
 .DESCRIPTION
-  Repo layout:
-    ./db-tests.ps1
-    ./db-tests.engines.ps1
-    ./dbpsql/          PostgreSQL stand (compose + start.ps1)
-    ./dbmssql/         MS SQL stand (SQL Server on host + compose)
+  Brings up the stand docker-compose (same idea as run-tests.ps1 stand rebuild),
+  then runs selected test groups.
 
-  Brings up the stand docker-compose, then runs selected test groups.
-
-    -General (default if no group switch):
-    Phase 1) POST send-unresolved-msg → Rabbit → MQ → odins (fresh rows or ClearData)
+  -General (default if no group switch):
+    Phase 1) POST send-unresolved-msg → Rabbit → MQ → odins *_buffer / entity tables
+             (main odins.* may be emptied later by Airflow — that is OK)
     Phase 2) Airflow dwh_etl_start → DWH staging
     Phase 3) DWH target tables
 
+  Default Stand is dbpsql (Postgres). For MSSQL use: .\db-tests.ps1 dbmssql
+  -SkipCompose requires that stand's compose project already up (mq.webservice).
+
+  Engine-specific SQL lives in db-tests.engines.ps1 (mssql / psql; extend there for new DBs).
+
 .EXAMPLE
-  .\db-tests.ps1 dbpsql
-  .\db-tests.ps1 dbpsql -SkipCompose
-  .\db-tests.ps1 dbmssql -Build
-  .\db-tests.ps1 dbpsql -SkipCompose -ClearData
+  .\db-tests.ps1
+  .\db-tests.ps1 dbmssql
+  .\db-tests.ps1 dbmssql -SkipCompose
+  .\db-tests.ps1 -SkipCompose -ClearData
 #>
 [CmdletBinding()]
 param(
   [Parameter(Position = 0)]
   [ValidateSet('dbmssql', 'dbpsql')]
-  [string]$Stand = 'dbmssql',
+  [string]$Stand ,
 
   [switch]$All,
   [switch]$General,
 
   [switch]$SkipCompose,
   [switch]$Build,
-  # When set: truncate odins entity tables before Phase 1. Default: detect fresh rows by engine timestamp cols.
+  # When set: truncate odins entity tables before Phase 1. Default: keep data, detect fresh rows by engine timestamp cols.
   [switch]$ClearData,
-
-  # Docker Compose project name. Default = stand folder name (matches `docker compose up` from start.ps1).
-  [string]$ComposeProject = '',
 
   [string]$MqBaseUrl = 'http://127.0.0.1:8090',
   [string]$AirflowUrl = 'http://127.0.0.1:8080',
@@ -66,30 +64,23 @@ $script:Utf8NoBom = New-Object System.Text.UTF8Encoding $false
 [Console]::OutputEncoding = $script:Utf8NoBom
 $OutputEncoding = $script:Utf8NoBom
 
-# This repo: tests + engines live at repo root; stands are ./dbpsql and ./dbmssql
-$RepoRoot = $PSScriptRoot
-$ClientRoot = $PSScriptRoot
-$ClientName = Split-Path $ClientRoot -Leaf
-$EnginesPath = Join-Path $RepoRoot 'db-tests.engines.ps1'
+$Root = $PSScriptRoot
+$EnginesPath = Join-Path $Root 'db-tests.engines.ps1'
 if (-not (Test-Path -LiteralPath $EnginesPath)) {
   throw "Engine module not found: $EnginesPath"
 }
 . $EnginesPath
 $Engine = Get-DbTestEngine -Stand $Stand
 
-$StandDir = Join-Path $ClientRoot $Stand
+$StandDir = Join-Path (Join-Path (Join-Path $Root 'src') 'dbprojects') $Stand
 $ComposeFile = Join-Path $StandDir 'docker-compose.yml'
 $EnvFile = Join-Path $StandDir '.env'
-# Align with start.ps1 (`docker compose up` → project name = stand directory leaf)
-if ([string]::IsNullOrWhiteSpace($ComposeProject)) {
-  $ComposeProject = $Stand
-}
 
 if (-not (Test-Path $ComposeFile)) {
   throw "Compose not found: $ComposeFile"
 }
 if (-not (Test-Path $EnvFile)) {
-  throw ".env not found: $EnvFile (run stand start.ps1 / generator first)"
+  throw ".env not found: $EnvFile (generate via start.ps1 / template)"
 }
 
 $runGeneral = [bool]$General -or (-not $All -and -not $General)
@@ -98,15 +89,14 @@ if ($All) {
 }
 
 $Stamp = Get-Date -Format 'yyyy-MM-dd_HHmmss'
-$ReportRoot = Join-Path $ClientRoot 'TestReport'
-$RunDir = Join-Path $ReportRoot ("db-{0}-{1}-{2}" -f $ClientName, $Stand, $Stamp)
+$ReportRoot = Join-Path $Root 'TestReport'
+$RunDir = Join-Path $ReportRoot ("db-{0}-{1}" -f $Stand, $Stamp)
 New-Item -ItemType Directory -Force -Path $RunDir | Out-Null
-# Alias used by helper that still references $Root for WorkDir of docker stop-all
-$Root = $ClientRoot
 
 $Results = New-Object System.Collections.Generic.List[object]
 
 $OdinsTables = @($Engine.OdinsTables)
+$OdinsBufferTables = @($Engine.OdinsBufferTables)
 $DwhEntityTables = @($Engine.DwhEntityTables)
 
 function Get-Tool {
@@ -184,7 +174,7 @@ function Invoke-Logged {
     $sw.Stop()
   }
   if ($null -eq $exit) { $exit = 0 }
-  $rel = Join-Path ("db-{0}-{1}-{2}" -f $ClientName, $Stand, $Stamp) $LogName
+  $rel = Join-Path ("db-{0}-{1}" -f $Stand, $Stamp) $LogName
   if ($exit -eq 0) {
     Add-Result -Name $Name -Status PASS -Detail ("exit 0, {0} ms" -f $sw.ElapsedMilliseconds) -Log $rel -Ms $sw.ElapsedMilliseconds
   } else {
@@ -286,6 +276,22 @@ function Get-OdinsFreshCounts {
     $counts[$t] = $n
   }
   return $counts
+}
+
+function Get-CountSum {
+  param($Counts)
+  $sum = 0
+  if ($null -eq $Counts) { return 0 }
+  foreach ($k in $Counts.Keys) { $sum += [int]$Counts[$k] }
+  return $sum
+}
+
+function Get-PositiveTableCount {
+  param($Counts)
+  $n = 0
+  if ($null -eq $Counts) { return 0 }
+  foreach ($k in $Counts.Keys) { if ([int]$Counts[$k] -gt 0) { $n++ } }
+  return $n
 }
 
 function Clear-OdinsTargetTables {
@@ -476,7 +482,7 @@ function Get-ComposeContainerId {
   $prev = Get-Location
   try {
     Set-Location $StandDir
-    $id = (& $Docker compose -p $ComposeProject -f $ComposeFile ps -q $Service 2>$null | Select-Object -First 1)
+    $id = (& $Docker compose -p $Stand -f $ComposeFile ps -q $Service 2>$null | Select-Object -First 1)
   } finally {
     Set-Location $prev
     $ErrorActionPreference = $oldEap
@@ -581,7 +587,7 @@ function Invoke-StandComposeUp {
   Add-Result -Name 'stand.docker' -Status PASS -Detail 'daemon reachable'
 
   Write-Host ""
-  Write-Host ("=== stand compose up ({0} project={1}) ===" -f $StandDir, $ComposeProject) -ForegroundColor Cyan
+  Write-Host ("=== stand compose up ({0}) ===" -f $Stand) -ForegroundColor Cyan
 
   # Free ports: stop every running container (no down -v — keep volumes).
   $oldEap = $ErrorActionPreference
@@ -594,9 +600,11 @@ function Invoke-StandComposeUp {
     Add-Result -Name 'stand.stop-all' -Status SKIP -Detail 'no running containers'
   }
 
-  # Shared container_name collide when switching dbpsql <-> dbmssql after a mere `docker stop`.
+  # Shared container_name (traefik, client-postgresdb17, airflow-*) collide when switching
+  # dbpsql <-> dbmssql after a mere `docker stop`. Tear down both compose projects (keep volumes).
+  $dbProjectsRoot = Join-Path (Join-Path $Root 'src') 'dbprojects'
   foreach ($proj in @('dbpsql', 'dbmssql')) {
-    $otherCompose = Join-Path (Join-Path $ClientRoot $proj) 'docker-compose.yml'
+    $otherCompose = Join-Path (Join-Path $dbProjectsRoot $proj) 'docker-compose.yml'
     if (-not (Test-Path -LiteralPath $otherCompose)) { continue }
     $oldEap = $ErrorActionPreference
     $ErrorActionPreference = 'Continue'
@@ -611,9 +619,9 @@ function Invoke-StandComposeUp {
 
   # Do not use --wait on the whole stack: airflow-dag-processor healthcheck is flaky
   # and blocks even when MQ / Airflow API are already usable for General tests.
-  $upArgs = @('compose', '-p', $ComposeProject, '-f', $ComposeFile, 'up', '-d')
+  $upArgs = @('compose', '-p', $Stand, '-f', $ComposeFile, 'up', '-d')
   if ($Build) {
-    $upArgs = @('compose', '-p', $ComposeProject, '-f', $ComposeFile, 'up', '-d', '--build')
+    $upArgs = @('compose', '-p', $Stand, '-f', $ComposeFile, 'up', '-d', '--build')
   }
 
   $ok = Invoke-Logged -Name 'stand.compose-up' -File $docker -WorkDir $StandDir -LogName 'stand-up.log' -Arguments $upArgs
@@ -710,11 +718,12 @@ function Invoke-GeneralPipeline {
       return
     }
   } else {
-    Add-Result -Name 'general.clear-odins' -Status SKIP -Detail 'ClearData off; detect by engine timestamp cols'
+    Add-Result -Name 'general.clear-odins' -Status SKIP -Detail 'ClearData off; detect by engine timestamp cols + buffers'
   }
 
   $beforeCounts = Get-TableCounts -DatabaseKind ods -Schema 'odins' -Tables $OdinsTables
-  Add-Result -Name 'general.odins-before' -Status PASS -Detail (Format-Counts $beforeCounts)
+  $beforeBuffers = Get-TableCounts -DatabaseKind ods -Schema 'odins' -Tables $OdinsBufferTables
+  Add-Result -Name 'general.odins-before' -Status PASS -Detail ("main={0}; buffer={1}" -f (Format-Counts $beforeCounts), (Format-Counts $beforeBuffers))
 
   $queueBefore = Get-MsgQueueCount
 
@@ -727,7 +736,7 @@ function Invoke-GeneralPipeline {
     Add-Result -Name 'general.send-unresolved-msg' -Status FAIL -Detail ("{0} ({1} ms) {2}" -f $send.Detail, $swSend.ElapsedMilliseconds, $send.Body) -Ms $swSend.ElapsedMilliseconds
     return
   }
-  Add-Result -Name 'general.send-unresolved-msg' -Status PASS -Detail ("{0}, {1} ms (queue before={2})" -f $send.Detail, $swSend.ElapsedMilliseconds, $queueBefore) -Ms $swSend.ElapsedMilliseconds
+  Add-Result -Name 'general.send-unresolved-msg' -Status PASS -Detail ("{0}, {1} ms (queue before={2}; MessageQueue is seed — not drained by design)" -f $send.Detail, $swSend.ElapsedMilliseconds, $queueBefore) -Ms $swSend.ElapsedMilliseconds
 
   # send-unresolved stops MQ, publishes to Rabbit, then Start() — clock from worker listen start
   $marker = $null
@@ -738,35 +747,36 @@ function Invoke-GeneralPipeline {
     return
   }
   $swListen = [Diagnostics.Stopwatch]::StartNew()
-  Write-Host ("  MQ worker listening - waiting until odins fresh rows catch up (marker={0})" -f $marker) -ForegroundColor DarkGray
+  Write-Host ("  MQ worker listening — waiting until odins main/buffer catch up (marker={0})" -f $marker) -ForegroundColor DarkGray
 
   $deadline = (Get-Date).AddSeconds($OdinsTimeoutSec)
   $fresh = $null
   $filled = $false
   $stableHits = 0
   $prevFreshSum = -1
+  $afterBuffers = $null
   while ((Get-Date) -lt $deadline) {
     Start-Sleep -Seconds $PollSec
     try {
       $fresh = Get-OdinsFreshCounts -Marker $marker
-      $freshSum = 0
-      $freshTables = 0
-      foreach ($k in $fresh.Keys) {
-        $n = [int]$fresh[$k]
-        $freshSum += $n
-        if ($n -gt 0) { $freshTables++ }
-      }
+      $afterBuffers = Get-TableCounts -DatabaseKind ods -Schema 'odins' -Tables $OdinsBufferTables
+      $freshSum = Get-CountSum $fresh
+      $freshTables = Get-PositiveTableCount $fresh
+      $bufferGrowth = (Get-CountSum $afterBuffers) - (Get-CountSum $beforeBuffers)
+      $bufferTables = Get-PositiveTableCount $afterBuffers
       $elapsedSec = [Math]::Round($swListen.Elapsed.TotalSeconds, 1)
-      Write-Host ("  t+{0}s odins fresh: {1}" -f $elapsedSec, (Format-Counts $fresh)) -ForegroundColor DarkGray
+      Write-Host ("  t+{0}s odins fresh: {1}; buffers: {2} (growth={3})" -f $elapsedSec, (Format-Counts $fresh), (Format-Counts $afterBuffers), $bufferGrowth) -ForegroundColor DarkGray
 
-      if ($freshSum -gt 0 -and $freshTables -ge 1) {
-        # Wait until load settles (same fresh sum twice) so "all" messages of the batch are in
-        if ($freshSum -eq $prevFreshSum) {
+      # Pass when MQ wrote into main (fresh) and/or buffer tables grew — buffer is the durable MQ footprint
+      $mqEvidence = ($freshSum -gt 0 -and $freshTables -ge 1) -or ($bufferGrowth -gt 0 -and $bufferTables -ge 1)
+      if ($mqEvidence) {
+        $signalSum = $freshSum + [Math]::Max(0, $bufferGrowth)
+        if ($signalSum -eq $prevFreshSum) {
           $stableHits++
         } else {
           $stableHits = 0
         }
-        $prevFreshSum = $freshSum
+        $prevFreshSum = $signalSum
         if ($stableHits -ge 1) {
           $filled = $true
           break
@@ -785,16 +795,53 @@ function Invoke-GeneralPipeline {
 
   if (-not $filled) {
     $detail = if ($fresh) { Format-Counts $fresh } else { 'no counts' }
-    Add-Result -Name 'general.phase1-mq-odins' -Status FAIL -Detail ("timeout {0}s after worker start; fresh: {1}" -f $OdinsTimeoutSec, $detail) -Ms $listenMs
+    $bufDetail = if ($afterBuffers) { Format-Counts $afterBuffers } else { 'no buffers' }
+    Add-Result -Name 'general.phase1-mq-odins' -Status FAIL -Detail ("timeout {0}s after worker start; fresh: {1}; buffers: {2}" -f $OdinsTimeoutSec, $detail, $bufDetail) -Ms $listenMs
     return
   }
 
   $afterCounts = Get-TableCounts -DatabaseKind ods -Schema 'odins' -Tables $OdinsTables
-  $phase1Detail = ("Rabbit→odins in {0}s (from worker listen); fresh rows: {1}; totals: {2}" -f $listenSec, (Format-Counts $fresh), (Format-Counts $afterCounts))
+  if (-not $afterBuffers) {
+    $afterBuffers = Get-TableCounts -DatabaseKind ods -Schema 'odins' -Tables $OdinsBufferTables
+  }
+  $mainGrowth = (Get-CountSum $afterCounts) - (Get-CountSum $beforeCounts)
+  $bufferGrowthFinal = (Get-CountSum $afterBuffers) - (Get-CountSum $beforeBuffers)
+
+  # Hard fail: green without any MQ footprint in ODS (common confusion: empty main after ETL, or wrong engine DB)
+  if ($mainGrowth -le 0 -and $bufferGrowthFinal -le 0 -and (Get-CountSum $fresh) -le 0) {
+    Add-Result -Name 'general.phase1-mq-odins' -Status FAIL -Detail ("no ODS growth after MQ; main={0}; buffer={1}; engine={2} db={3}" -f (Format-Counts $afterCounts), (Format-Counts $afterBuffers), $Engine.Label, $OdsDb) -Ms $listenMs
+    return
+  }
+
+  # Prefer evidence that MQ wrote buffers (survives Airflow clearing main odins.*)
+  if ($bufferGrowthFinal -le 0 -and (Get-CountSum $afterBuffers) -le 0 -and $mainGrowth -le 0) {
+    Add-Result -Name 'general.phase1-mq-odins' -Status FAIL -Detail ("buffers empty and no main growth — Rabbit→ODS likely skipped; check mq logs / RabbitMQSettings__Enabled") -Ms $listenMs
+    return
+  }
+
+  $phase1Detail = ("Rabbit→odins in {0}s; fresh={1}; main Δ={2} ({3}); buffer Δ={4} ({5})" -f `
+    $listenSec, (Format-Counts $fresh), $mainGrowth, (Format-Counts $afterCounts), $bufferGrowthFinal, (Format-Counts $afterBuffers))
   Add-Result -Name 'general.phase1-mq-odins' -Status PASS -Detail $phase1Detail -Ms $listenMs
+
+  $salesParent = [string]$Engine.SalesParentTable
+  $salesChild = [string]$Engine.SalesChildTable
+  if ($salesParent -and $salesChild -and $afterCounts.Contains($salesParent) -and $afterCounts.Contains($salesChild)) {
+    $p = [int]$afterCounts[$salesParent]
+    $c = [int]$afterCounts[$salesChild]
+    $pf = if ($fresh -and $fresh.Contains($salesParent)) { [int]$fresh[$salesParent] } else { 0 }
+    $cf = if ($fresh -and $fresh.Contains($salesChild)) { [int]$fresh[$salesChild] } else { 0 }
+    # Main may already be cleared by ETL; treat fresh child or absolute child as evidence
+    if (($p -gt 0 -or $pf -gt 0) -and ($c -le 0 -and $cf -le 0)) {
+      Add-Result -Name 'general.odins-sales-lines' -Status FAIL -Detail ("parent {0} main/fresh={1}/{2} but child {3} main/fresh={4}/{5}" -f $salesParent, $p, $pf, $salesChild, $c, $cf) -Ms $listenMs
+      return
+    }
+    Add-Result -Name 'general.odins-sales-lines' -Status PASS -Detail ("{0} main/fresh={1}/{2}; {3} main/fresh={4}/{5}" -f $salesParent, $p, $pf, $salesChild, $c, $cf) -Ms $listenMs
+  }
+
   Write-Host ""
   Write-Host ('[PASS] Phase 1: MQ consumed Rabbit and loaded odins in {0}s' -f $listenSec) -ForegroundColor Green
   Write-Host ('       {0}' -f $phase1Detail) -ForegroundColor Green
+  Write-Host ('       Note: MessageQueue seed rows stay in mq.*; after Airflow, main odins.* may be 0 — check *_buffer / DWH.') -ForegroundColor DarkGray
   Write-Host ""
 
   # --- Phase 2–3: Airflow ETL ---
@@ -826,7 +873,7 @@ function Invoke-GeneralPipeline {
       return
     }
     $okCli = Invoke-Logged -Name 'general.airflow-trigger-cli' -File $docker -WorkDir $StandDir -LogName 'airflow-trigger.log' -Arguments @(
-      'compose', '-p', $ComposeProject, '-f', $ComposeFile, 'exec', '-T', 'api-server',
+      'compose', '-p', $Stand, '-f', $ComposeFile, 'exec', '-T', 'api-server',
       '/entrypoint', 'airflow', 'dags', 'trigger', $dagId, '--run-id', $runId
     )
     if (-not $okCli) {
@@ -904,6 +951,46 @@ function Invoke-GeneralPipeline {
     }
     Add-Result -Name 'general.target-filled' -Status PASS -Detail ("tables_with_rows={0}; {1}" -f $trgPositive, (Format-Counts $target))
     Write-Host ('[PASS] Phase 3b: DWH target has rows ({0} tables)' -f $trgPositive) -ForegroundColor Green
+
+    $salesParent = [string]$Engine.SalesParentTable
+    $salesChild = [string]$Engine.SalesChildTable
+    if ($salesParent -and $salesChild -and $target.Contains($salesParent) -and $target.Contains($salesChild)) {
+      $parentN = [int]$target[$salesParent]
+      $childN = [int]$target[$salesChild]
+      if ($parentN -gt 0 -and $childN -le 0) {
+        Add-Result -Name 'general.target-sales-lines' -Status FAIL -Detail ("{0}={1} but tabular {2}={3} (reports need line items)" -f $salesParent, $parentN, $salesChild, $childN)
+        return
+      }
+      if ($parentN -gt 0) {
+        Add-Result -Name 'general.target-sales-lines' -Status PASS -Detail ("{0}={1}, {2}={3}" -f $salesParent, $parentN, $salesChild, $childN)
+        Write-Host ('[PASS] Phase 3c: sales lines {0}={1} (parent {2}={3})' -f $salesChild, $childN, $salesParent, $parentN) -ForegroundColor Green
+        if ($Engine.GetSalesLinesQualitySql) {
+          try {
+            $qRaw = Invoke-SqlScalar -DatabaseKind dwh -Sql (& $Engine.GetSalesLinesQualitySql 'target')
+            # mssql may return one cell oddly; psql returns rows|with_product|sum_qty
+            $parts = ("$qRaw").Trim() -split '\|'
+            if ($parts.Count -ge 3) {
+              $rowsTotal = 0; $withProd = 0; $sumQty = 0.0
+              [void][int]::TryParse($parts[0], [ref]$rowsTotal)
+              [void][int]::TryParse($parts[1], [ref]$withProd)
+              [void][double]::TryParse($parts[2], [ref]$sumQty)
+              if ($rowsTotal -gt 0 -and $withProd -le 0) {
+                Add-Result -Name 'general.target-sales-line-fields' -Status FAIL -Detail ("{0} rows={1} but Товар empty (xpath/load bug); sum_qty={2}" -f $salesChild, $rowsTotal, $sumQty)
+                return
+              }
+              Add-Result -Name 'general.target-sales-line-fields' -Status PASS -Detail ("rows={0}, with_Товар={1}, sum_Колличество={2}" -f $rowsTotal, $withProd, $sumQty)
+            } else {
+              Add-Result -Name 'general.target-sales-line-fields' -Status SKIP -Detail ("unparsed quality: {0}" -f $qRaw)
+            }
+          } catch {
+            Add-Result -Name 'general.target-sales-line-fields' -Status FAIL -Detail $_.Exception.Message
+            return
+          }
+        }
+      } else {
+        Add-Result -Name 'general.target-sales-lines' -Status SKIP -Detail ("{0}=0" -f $salesParent)
+      }
+    }
     Write-Host ""
   } catch {
     Add-Result -Name 'general.target-filled' -Status FAIL -Detail $_.Exception.Message
@@ -912,22 +999,40 @@ function Invoke-GeneralPipeline {
 }
 
 # --- Main ---
-Write-Host ("db-tests client={0} stand={1} StandDir={2}" -f $ClientName, $Stand, $StandDir) -ForegroundColor Cyan
-Write-Host ("All={0} General={1} SkipCompose={2} ComposeProject={3}" -f [bool]$All, $runGeneral, [bool]$SkipCompose, $ComposeProject) -ForegroundColor Cyan
-Write-Host ("ODS={0} DWH={1} engine={2}" -f $OdsDb, $DwhDb, $Engine.Label) -ForegroundColor DarkCyan
+Write-Host ("db-tests stand={0} All={1} General={2} SkipCompose={3}" -f $Stand, [bool]$All, $runGeneral, [bool]$SkipCompose) -ForegroundColor Cyan
+if ($Engine.Label -eq 'mssql') {
+  Write-Host ("ODS={0} DWH={1}  engine=SQL Server (sqlcmd → localhost,1433)" -f $OdsDb, $DwhDb) -ForegroundColor DarkCyan
+} else {
+  Write-Host ("ODS={0} DWH={1}  engine=PostgreSQL (docker → client-postgresdb17)" -f $OdsDb, $DwhDb) -ForegroundColor DarkCyan
+}
 
 $standOk = $true
 if ($SkipCompose) {
   Add-Result -Name 'stand.compose-up' -Status SKIP -Detail 'SkipCompose'
   $docker = Get-Tool @('docker')
+  $liveUrl = ($MqBaseUrl.TrimEnd('/') + '/v1/mq/health/live')
   if (-not $docker -or -not (Test-DockerDaemon)) {
     Add-Result -Name 'stand.mq-ready' -Status FAIL -Detail 'docker not available'
     $standOk = $false
-  } elseif (-not (Wait-DockerHealthy -Docker $docker -Service 'mq.webservice' -Name 'mq' -TimeoutSec 60 -RequireHealthcheck -HttpFallbackUrl ($MqBaseUrl.TrimEnd('/') + '/v1/mq/health/live'))) {
-    Add-Result -Name 'stand.mq-ready' -Status FAIL -Detail 'mq.webservice not healthy'
-    $standOk = $false
   } else {
-    Add-Result -Name 'stand.mq-ready' -Status PASS -Detail 'docker health=healthy (mq.webservice)'
+    # Prefer compose container for this stand; fall back to HTTP (ports may be from another stand).
+    $mqId = Get-ComposeContainerId -Docker $docker -Service 'mq.webservice'
+    $liveUrl = ($MqBaseUrl.TrimEnd('/') + '/v1/mq/health/live')
+    $httpOk = (Test-HttpOk -Url $liveUrl -Method 'GET' -TimeoutMs 3000).Ok
+    if (-not [string]::IsNullOrWhiteSpace($mqId)) {
+      if (Wait-DockerHealthy -Docker $docker -Service 'mq.webservice' -Name 'mq' -TimeoutSec 60 -RequireHealthcheck -HttpFallbackUrl $liveUrl) {
+        Add-Result -Name 'stand.mq-ready' -Status PASS -Detail ("docker health=healthy (compose project {0})" -f $Stand)
+      } else {
+        Add-Result -Name 'stand.mq-ready' -Status FAIL -Detail ("mq.webservice in project '{0}' is not healthy" -f $Stand)
+        $standOk = $false
+      }
+    } elseif ($httpOk) {
+      Add-Result -Name 'stand.mq-ready' -Status FAIL -Detail ("HTTP {0} is up, but mq.webservice is not in compose project '{1}' (another stand owns :8090). Run without -SkipCompose: .\db-tests.ps1 {1}" -f $liveUrl, $Stand)
+      $standOk = $false
+    } else {
+      Add-Result -Name 'stand.mq-ready' -Status FAIL -Detail ("mq.webservice missing for project '{0}'. Start it: .\db-tests.ps1 {0}   (do not use -SkipCompose until that stand is up)" -f $Stand)
+      $standOk = $false
+    }
   }
 } else {
   $standOk = Invoke-StandComposeUp
@@ -948,10 +1053,9 @@ $md = New-Object System.Collections.Generic.List[string]
 $md.Add('# DB test report') | Out-Null
 $md.Add('') | Out-Null
 $md.Add(('Date: `{0}`' -f $Stamp)) | Out-Null
-$md.Add(('Client: `{0}`' -f $ClientName)) | Out-Null
-$md.Add(('Stand: `{0}` (`{1}`)' -f $Stand, $StandDir)) | Out-Null
+$md.Add(('Stand: `{0}`' -f $Stand)) | Out-Null
 $md.Add(('ODS / DWH: `{0}` / `{1}`' -f $OdsDb, $DwhDb)) | Out-Null
-$md.Add(('Flags: All={0} General={1} SkipCompose={2} Build={3} ClearData={4} ComposeProject={5}' -f [bool]$All, $runGeneral, [bool]$SkipCompose, [bool]$Build, [bool]$ClearData, $ComposeProject)) | Out-Null
+$md.Add(('Flags: All={0} General={1} SkipCompose={2} Build={3} ClearData={4}' -f [bool]$All, $runGeneral, [bool]$SkipCompose, [bool]$Build, [bool]$ClearData)) | Out-Null
 $md.Add('') | Out-Null
 $md.Add(('Totals: **PASS {0}** / **FAIL {1}** / **SKIP {2}**' -f $passCount, $failCount, $skipCount)) | Out-Null
 $md.Add('') | Out-Null
@@ -965,7 +1069,7 @@ foreach ($row in $Results) {
 }
 
 $summaryPath = Join-Path $RunDir 'summary.md'
-$latestPath = Join-Path $ReportRoot ('latest-db-{0}-{1}.md' -f $ClientName, $Stand)
+$latestPath = Join-Path $ReportRoot ('latest-db-{0}.md' -f $Stand)
 $utf8 = New-Object System.Text.UTF8Encoding $false
 [System.IO.File]::WriteAllLines($summaryPath, $md, $utf8)
 Copy-Item -Force $summaryPath $latestPath

@@ -88,7 +88,7 @@ BEGIN
     "ПараметрыПрописи",
     "ФормулаРасчетаКурса",
     "СпособУстановкиКурса",
-    dt_create
+    created_at
   )
   SELECT
     b.nkey,
@@ -104,7 +104,7 @@ BEGIN
     b."ПараметрыПрописи",
     b."ФормулаРасчетаКурса",
     b."СпособУстановкиКурса",
-    now() AS dt_create
+    now() AS created_at
   FROM odins."DIM_Валюты" b
     INNER JOIN "tmp_DIM_Валюты" ll ON b.ods_id = ll.ods_id;
 
@@ -117,7 +117,7 @@ BEGIN
     "DIM_ВалютыRefID",
     "КодЯзыка",
     "ПараметрыПрописи",
-    dt_create
+    created_at
   )
   SELECT
     b.nkey,
@@ -125,7 +125,7 @@ BEGIN
     b."DIM_ВалютыRefID",
     b."КодЯзыка",
     b."ПараметрыПрописи",
-    now() AS dt_create
+    now() AS created_at
   FROM odins."DIM_Валюты_Представления" b
     INNER JOIN "tmp_DIM_Валюты" ll ON b."DIM_ВалютыRefID" = ll."RefID";
 
@@ -169,7 +169,7 @@ BEGIN
     "Code",
     "Description",
     "Контакт",
-    dt_create
+    created_at
   )
   SELECT
     b.nkey,
@@ -179,7 +179,7 @@ BEGIN
     b."Code",
     b."Description",
     b."Контакт",
-    now() AS dt_create
+    now() AS created_at
   FROM odins."DIM_Клиенты" b
     INNER JOIN "tmp_DIM_Клиенты" ll ON b.ods_id = ll.ods_id;
 
@@ -214,7 +214,7 @@ BEGIN
     "Code",
     "Description",
     "Описание",
-    dt_create
+    created_at
   )
   SELECT
     b.nkey,
@@ -224,7 +224,7 @@ BEGIN
     b."Code",
     b."Description",
     b."Описание",
-    now() AS dt_create
+    now() AS created_at
   FROM odins."DIM_Товары" b
     INNER JOIN "tmp_DIM_Товары" ll ON b.ods_id = ll.ods_id;
 
@@ -266,7 +266,7 @@ BEGIN
     "ТипДоставки",
     "ПримерСоставногоТипа",
     "ПримерСоставногоТипа_ТипЗначения",
-    dt_create
+    created_at
   )
   SELECT
     b.nkey,
@@ -283,7 +283,7 @@ BEGIN
     b."ТипДоставки",
     b."ПримерСоставногоТипа",
     b."ПримерСоставногоТипа_ТипЗначения",
-    now() AS dt_create
+    now() AS created_at
   FROM odins."FACT_Продажи" b
     INNER JOIN "tmp_FACT_Продажи" ll ON b.ods_id = ll.ods_id;
 
@@ -298,7 +298,7 @@ BEGIN
     "Товар",
     "Колличество",
     "Цена",
-    dt_create
+    created_at
   )
   SELECT
     b.nkey,
@@ -308,7 +308,7 @@ BEGIN
     b."Товар",
     b."Колличество",
     b."Цена",
-    now() AS dt_create
+    now() AS created_at
   FROM odins."FACT_Продажи_Товары" b
     INNER JOIN "tmp_FACT_Продажи" ll ON b."FACT_ПродажиRefID" = ll."RefID";
 

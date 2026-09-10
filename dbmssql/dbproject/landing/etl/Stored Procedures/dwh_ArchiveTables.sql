@@ -1,4 +1,4 @@
-  CREATE PROCEDURE [etl].[dwh_ArchiveTables]
+CREATE PROCEDURE [etl].[dwh_ArchiveTables]
   @DwhSessionId bigint = NULL,
   @ErrorMessage nvarchar(4000) = NULL OUTPUT
 AS
@@ -18,8 +18,8 @@ BEGIN TRY
 
   BEGIN TRANSACTION
 
-    UPDATE [etl].[DwhSession] SET [DwhSessionStateId] = 6
-    WHERE [DwhSessionId] = @DwhSessionId
+  UPDATE [etl].[DwhSession] SET [DwhSessionStateId] = 6
+  WHERE [DwhSessionId] = @DwhSessionId
   COMMIT TRANSACTION
   IF @ErrorMessage IS NULL SET @ErrorMessage = ''
 END TRY

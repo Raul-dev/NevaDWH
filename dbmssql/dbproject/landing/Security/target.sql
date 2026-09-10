@@ -1,0 +1,12 @@
+CREATE SCHEMA [target]
+  AUTHORIZATION [dbo];
+
+GO
+
+GRANT SELECT ON SCHEMA::[target] TO [etl];
+
+GO
+
+GRANT SELECT ON SCHEMA::[target] TO [mq];
+
+GO

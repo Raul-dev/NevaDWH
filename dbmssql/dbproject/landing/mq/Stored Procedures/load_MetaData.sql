@@ -2,7 +2,9 @@ CREATE PROCEDURE [mq].[load_MetaData]
   @SessionId          bigint         = NULL,
   @BufferHistoryMode  tinyint        = 0,
   @RowCount           int            = NULL OUTPUT,
-  @ErrorMessage       varchar(4000)  = NULL OUTPUT
+  @BufferId           bigint         = NULL OUTPUT,
+  @ErrorMessage       varchar(4000)  = NULL OUTPUT,
+  @Debug              bit            = 0
 AS
 BEGIN
   SET XACT_ABORT OFF
@@ -17,8 +19,9 @@ BEGIN
       SELECT * INTO #LogProc FROM [audit].[Template_LogProc]()
     SET @ProcedureName = '[mq].[load_MetaData]'
     SET @ProcedureParams =
-      '@SessionId='+ISNULL(LTRIM(STR(@SessionId)),'NULL') + ', ' +
-      '@BufferHistoryMode='+ISNULL(LTRIM(STR(@BufferHistoryMode)),'NULL')
+      '@SessionId=' + ISNULL(LTRIM(STR(@SessionId, 30)),'NULL') + ', ' +
+      '@BufferHistoryMode=' + ISNULL(LTRIM(STR(@BufferHistoryMode, 30)),'NULL') + ', ' +
+      '@BufferId=' + ISNULL(LTRIM(STR(@BufferId, 30)),'NULL') 
     EXEC [audit].[sp_LogStart] @AuditEnable = @AuditEnable, @ProcedureName = @ProcedureName, @ProcedureParams = @ProcedureParams, @LogID = @LogID OUTPUT
   END
 
@@ -27,10 +30,7 @@ BEGIN
     @BufferHistoryDays int
 
   SET @BufferHistoryDays = IIF(@BufferHistoryMode = 2, 10, 30)
-
-  BEGIN TRY
-  BEGIN TRANSACTION
-    DECLARE @tmp_metadata AS TABLE(
+  DECLARE @tmp_metadata AS TABLE(
       [Namespace]         nvarchar(256)     COLLATE Cyrillic_General_CI_AS NOT NULL,
       [NamespaceVersion]  nvarchar(256)     COLLATE Cyrillic_General_CI_AS NOT NULL,
       [MessageBody]       nvarchar(max)     COLLATE Cyrillic_General_CI_AS NULL,
@@ -40,6 +40,9 @@ BEGIN
       [MessageKey]        nvarchar(256)     COLLATE Cyrillic_General_CI_AS NULL,
       [MetaAdapterId]     tinyint           
     );
+  BEGIN TRY
+  BEGIN TRANSACTION
+
 
     ;WITH XMLNAMESPACES (DEFAULT 'http://v8.1c.ru/8.3/MDClasses','http://v8.1c.ru/8.3/xcf/readable' as xr)
     INSERT @tmp_metadata ([MessageBody], [BufferId], [SessionId], [MessageId], [MessageKey], [MetaAdapterId], [Namespace], [NamespaceVersion])
@@ -62,7 +65,10 @@ BEGIN
     FROM [mq].[MetaDataBuffer] WITH (XLOCK)
     WHERE [IsError] = 0;
     SET @RowCount = @@ROWCOUNT
-
+    IF @Debug = 1 BEGIN
+      SELECT [@RowCount] = @RowCount, [@BufferId] = @BufferId
+      SELECT '@tmp_metadata', * FROM @tmp_metadata
+    END
     IF (@RowCount = 0)
     BEGIN
       COMMIT

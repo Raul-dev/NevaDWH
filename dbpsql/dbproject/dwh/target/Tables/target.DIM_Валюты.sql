@@ -25,7 +25,7 @@ CREATE TABLE IF NOT EXISTS target."DIM_Валюты" (
   "ФормулаРасчетаКурса"         varchar(100)  NULL ,
   "СпособУстановкиКурса"         varchar(500)  NULL ,
   session_id_update bigint NOT NULL,
-  dt_update         timestamp without time zone NOT NULL default now(),
-  dt_create         timestamp without time zone NOT NULL default now(),
+  updated_at         timestamp without time zone NOT NULL default now(),
+  created_at         timestamp without time zone NOT NULL default now(),
   CONSTRAINT "PK_target_DIM_Валюты" PRIMARY KEY (id));
 CREATE UNIQUE INDEX IF NOT EXISTS "IDX_target_DIM_Валюты" ON target."DIM_Валюты" (nkey);

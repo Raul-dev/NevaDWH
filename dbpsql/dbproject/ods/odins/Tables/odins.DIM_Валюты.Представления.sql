@@ -11,8 +11,8 @@ CREATE TABLE IF NOT EXISTS odins."DIM_Валюты_Представления" (
     "DIM_ВалютыRefID"             uuid  NOT NULL  ,
     "КодЯзыка"                    varchar(10)   NULL  ,
     "ПараметрыПрописи"            varchar(200)   NULL  ,
-    dt_update                     timestamp without time zone default now(),
-    dt_create                     timestamp without time zone default now()
+    updated_at                    timestamp without time zone default now(),
+    created_at                    timestamp without time zone default now()
 );
 
 COMMENT ON TABLE "odins"."DIM_Валюты_Представления" IS '{"Description":"DIM_Валюты.Представления"}';

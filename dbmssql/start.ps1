@@ -142,28 +142,28 @@ if($IsUpdate -eq $true){
   } catch {
   }
 }
-.\dbdeploy.ps1 -TargetServerName localhost -TargetLogDBname "NevaDWH-DEMO_log" -TargetODSDBname "NevaDWH-DEMO_ods" -TargetLandingDBname "NevaDWH-DEMO_landing" -TargetDWHDBname "NevaDWH-DEMO_dwh" -PublishOnly -IsRebuild
+.\dbdeploy.ps1 -TargetServerName localhost -PublishOnly -IsRebuild
 if ($LASTEXITCODE -ne 0)
 {
   Set-Location $CurrentPath
 
   exit
 }
-$res = MergeUser NevaDWH-DEMO_log localhost "NevaDWH-DEMOuser" "MyPassword321"
+$res = MergeUser newadwh_log localhost "newadwhuser" "MyPassword321"
 IF ($LASTEXITCODE -ne 0 -or $res -ne 0){
-  throw "Create log user NevaDWH-DEMOuser failed."
+  throw "Create log user newadwhuser failed."
 }
-$res = MergeUser NevaDWH-DEMO_ods localhost "NevaDWH-DEMOuser" "MyPassword321"
-IF ($LASTEXITCODE -ne 0 -or $res -ne 0){
-  throw "Create user NevaDWH-DEMOuser failed."
+$res = MergeUser newadwh_ods localhost "newadwhuser" "MyPassword321"
+IF ($LASTEXITCODE -ne 0 -or $res -ne 0) {
+  throw "Create user newadwhuser on newadwh_ods failed."
 }
-$res = MergeUser NevaDWH-DEMO_landing localhost "NevaDWH-DEMOuser" "MyPassword321"
-IF ($LASTEXITCODE -ne 0 -or $res -ne 0){
-  throw "Create landing user NevaDWH-DEMOuser failed."
+$res = MergeUser newadwh_landing localhost "newadwhuser" "MyPassword321"
+IF ($LASTEXITCODE -ne 0 -or $res -ne 0) {
+  throw "Create user newadwhuser on newadwh_landing failed."
 }
-$res = MergeUser NevaDWH-DEMO_dwh localhost "NevaDWH-DEMOuser" "MyPassword321"
-IF ($LASTEXITCODE -ne 0 -or $res -ne 0){
-  throw "Create dwh user NevaDWH-DEMOuser failed."
+$res = MergeUser newadwh_dwh localhost "newadwhuser" "MyPassword321"
+IF ($LASTEXITCODE -ne 0 -or $res -ne 0) {
+  throw "Create user newadwhuser on newadwh_dwh failed."
 }
 Set-Location $CurrentPath
 

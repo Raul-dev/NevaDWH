@@ -26,5 +26,5 @@ CREATE TABLE IF NOT EXISTS staging."FACT_Продажи" (
   "ПримерСоставногоТипа"            varchar(36)  NULL,
   "ПримерСоставногоТипа_ТипЗначения"            varchar(128)  NULL,
   session_id_update bigint NOT NULL,
-  dt_update         timestamp without time zone        NULL
+  updated_at         timestamp without time zone        NULL
 );

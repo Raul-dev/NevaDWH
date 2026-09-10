@@ -51,7 +51,7 @@ BEGIN
     "ФормулаРасчетаКурса",
     "СпособУстановкиКурса",
     session_id_update,
-    dt_update
+    updated_at
   )
   SELECT
     par_session_id AS "session_id",
@@ -72,7 +72,7 @@ BEGIN
     "ФормулаРасчетаКурса",
     "СпособУстановкиКурса",
     par_session_id AS session_id_update,
-    val_start_date AS dt_update
+    val_start_date AS updated_at
   FROM fdw."odins_DIM_Валюты" tmp
   WHERE dwh_session_id = val_dwh_session_id;
   GET DIAGNOSTICS var_RowCount = ROW_COUNT;
@@ -98,7 +98,7 @@ BEGIN
     "КодЯзыка",
     "ПараметрыПрописи",
     session_id_update,
-    dt_update
+    updated_at
   )
   SELECT
     par_session_id AS "session_id",
@@ -111,7 +111,7 @@ BEGIN
     "КодЯзыка",
     "ПараметрыПрописи",
     par_session_id AS session_id_update,
-    val_start_date AS dt_update
+    val_start_date AS updated_at
   FROM fdw."odins_DIM_Валюты_Представления" tmp
   WHERE dwh_session_id = val_dwh_session_id;
   GET DIAGNOSTICS var_RowCount = ROW_COUNT;

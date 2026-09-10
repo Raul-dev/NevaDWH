@@ -20,7 +20,7 @@ CREATE FOREIGN TABLE IF NOT EXISTS fdw."odins_DIM_Валюты" (
   "ПараметрыПрописи"        varchar(200),
   "ФормулаРасчетаКурса"        varchar(100),
   "СпособУстановкиКурса"        varchar(500),
-  dt_create        timestamp without time zone default now()
+  created_at        timestamp without time zone default now()
 )
 SERVER client_ods OPTIONS (schema_name 'odins', table_name 'DIM_Валюты_history');
 COMMENT ON FOREIGN TABLE fdw."odins_DIM_Валюты" IS '{"Description":"DIM_Валюты_history"}';

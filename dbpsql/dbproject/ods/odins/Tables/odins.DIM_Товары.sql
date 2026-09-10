@@ -13,8 +13,8 @@ CREATE TABLE IF NOT EXISTS odins."DIM_Товары" (
     "Code"                        varchar(128)   NULL  ,
     "Description"                 varchar(128)   NULL  ,
     "Описание"                    varchar(255)   NULL  ,
-    dt_update                     timestamp without time zone default now(),
-    dt_create                     timestamp without time zone default now()
+    updated_at                    timestamp without time zone default now(),
+    created_at                    timestamp without time zone default now()
 );
 
 COMMENT ON TABLE "odins"."DIM_Товары" IS '{"Description":"DIM_Товары"}';

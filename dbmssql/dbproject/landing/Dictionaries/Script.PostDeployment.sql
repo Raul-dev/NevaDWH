@@ -15,3 +15,4 @@ Post-Deployment Script Template
 :r .\metamap.sql
 :r .\codegen.sql
 :r .\dwh_session_state.sql
+:r .\messagequeue.sql

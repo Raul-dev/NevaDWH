@@ -12,4 +12,4 @@ CREATE TABLE IF NOT EXISTS "odins"."FACT_Продажи_Товары_history" (
   "Товар"            varchar(36)  NULL,
   "Колличество"            decimal(12, 0)  NULL,
   "Цена"            decimal(16, 4)  NULL,
-  "dt_create"              timestamp without time zone         NULL default now());
+  "created_at"              timestamp without time zone         NULL default now());

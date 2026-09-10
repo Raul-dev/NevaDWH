@@ -19,4 +19,4 @@ CREATE TABLE IF NOT EXISTS "staging"."FACT_Продажи" (
   "ТипДоставки"            varchar(500)  NULL,
   "ПримерСоставногоТипа"            varchar(36)  NULL,
   "ПримерСоставногоТипа_ТипЗначения"            varchar(128)  NULL,
-  "dt_update"              timestamp without time zone);
+  "updated_at"              timestamp without time zone);

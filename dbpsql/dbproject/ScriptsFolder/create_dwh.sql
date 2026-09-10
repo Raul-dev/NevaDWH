@@ -27,7 +27,7 @@ CREATE FOREIGN TABLE IF NOT EXISTS fdw."odins_DIM_Валюты" (
   "ПараметрыПрописи"        varchar(200),
   "ФормулаРасчетаКурса"        varchar(100),
   "СпособУстановкиКурса"        varchar(500),
-  dt_create        timestamp without time zone default now()
+  created_at        timestamp without time zone default now()
 )
 SERVER client_ods OPTIONS (schema_name 'odins', table_name 'DIM_Валюты_history');
 COMMENT ON FOREIGN TABLE fdw."odins_DIM_Валюты" IS '{"Description":"DIM_Валюты_history"}';
@@ -46,7 +46,7 @@ CREATE FOREIGN TABLE IF NOT EXISTS fdw."odins_DIM_Валюты_Представ�
   "DIM_ВалютыRefID"        uuid,
   "КодЯзыка"        varchar(10),
   "ПараметрыПрописи"        varchar(200),
-  dt_create        timestamp without time zone default now()
+  created_at        timestamp without time zone default now()
 )
 SERVER client_ods OPTIONS (schema_name 'odins', table_name 'DIM_Валюты_Представления_history');
 COMMENT ON FOREIGN TABLE fdw."odins_DIM_Валюты_Представления" IS '{"Description":"DIM_Валюты.Представления_history"}';
@@ -67,7 +67,7 @@ CREATE FOREIGN TABLE IF NOT EXISTS fdw."odins_DIM_Клиенты" (
   "Code"        varchar(128),
   "Description"        varchar(128),
   "Контакт"        varchar(500),
-  dt_create        timestamp without time zone default now()
+  created_at        timestamp without time zone default now()
 )
 SERVER client_ods OPTIONS (schema_name 'odins', table_name 'DIM_Клиенты_history');
 COMMENT ON FOREIGN TABLE fdw."odins_DIM_Клиенты" IS '{"Description":"DIM_Клиенты_history"}';
@@ -88,7 +88,7 @@ CREATE FOREIGN TABLE IF NOT EXISTS fdw."odins_DIM_Товары" (
   "Code"        varchar(128),
   "Description"        varchar(128),
   "Описание"        varchar(255),
-  dt_create        timestamp without time zone default now()
+  created_at        timestamp without time zone default now()
 )
 SERVER client_ods OPTIONS (schema_name 'odins', table_name 'DIM_Товары_history');
 COMMENT ON FOREIGN TABLE fdw."odins_DIM_Товары" IS '{"Description":"DIM_Товары_history"}';
@@ -116,7 +116,7 @@ CREATE FOREIGN TABLE IF NOT EXISTS fdw."odins_FACT_Продажи" (
   "ТипДоставки"        varchar(500),
   "ПримерСоставногоТипа"        varchar(36),
   "ПримерСоставногоТипа_ТипЗначения"        varchar(128),
-  dt_create        timestamp without time zone default now()
+  created_at        timestamp without time zone default now()
 )
 SERVER client_ods OPTIONS (schema_name 'odins', table_name 'FACT_Продажи_history');
 COMMENT ON FOREIGN TABLE fdw."odins_FACT_Продажи" IS '{"Description":"FACT_Продажи_history"}';
@@ -137,7 +137,7 @@ CREATE FOREIGN TABLE IF NOT EXISTS fdw."odins_FACT_Продажи_Товары" 
   "Товар"        varchar(36),
   "Колличество"        decimal(12, 0),
   "Цена"        decimal(16, 4),
-  dt_create        timestamp without time zone default now()
+  created_at        timestamp without time zone default now()
 )
 SERVER client_ods OPTIONS (schema_name 'odins', table_name 'FACT_Продажи_Товары_history');
 COMMENT ON FOREIGN TABLE fdw."odins_FACT_Продажи_Товары" IS '{"Description":"FACT_Продажи.Товары_history"}';
@@ -158,8 +158,8 @@ CREATE TABLE IF NOT EXISTS mq.session (
     rows_count         bigint  NULL,
     create_session     timestamp with time zone NULL,    
     error_message      character varying(4000) COLLATE pg_catalog."default" NULL,
-    dt_update          timestamp with time zone  CONSTRAINT DF_session_update_date_DEFAULT DEFAULT (now()) NOT NULL,
-    dt_create          timestamp with time zone  CONSTRAINT DF_session_create_date_DEFAULT DEFAULT (now()) NOT NULL,
+    updated_at          timestamp with time zone  CONSTRAINT DF_session_update_date_DEFAULT DEFAULT (now()) NOT NULL,
+    created_at          timestamp with time zone  CONSTRAINT DF_session_create_date_DEFAULT DEFAULT (now()) NOT NULL,
     CONSTRAINT PK_session PRIMARY KEY (session_id)
 );
 
@@ -171,7 +171,7 @@ CREATE TABLE IF NOT EXISTS mq.session_log
     session_id       bigint   NOT NULL,
     session_state_id smallint  NOT NULL,
     error_message    character varying(4000) COLLATE pg_catalog."default",
-    dt_create        timestamp with time zone  CONSTRAINT DF_session_log_date_DEFAULT DEFAULT (now()) NOT NULL,
+    created_at        timestamp with time zone  CONSTRAINT DF_session_log_date_DEFAULT DEFAULT (now()) NOT NULL,
     CONSTRAINT "PK_session_log" PRIMARY KEY (session_log_id)
 );
 
@@ -243,7 +243,7 @@ BEGIN
             SET 
                 session_state_id = par_session_state_id,    
                 error_message = par_error_message,
-                dt_update = now()
+                updated_at = now()
         WHERE session_id = par_session_id;
     END IF;
 
@@ -273,8 +273,8 @@ CREATE FOREIGN TABLE IF NOT EXISTS ods."odins_DIM_Валюты" (
   "ПараметрыПрописи"        varchar(200),
   "ФормулаРасчетаКурса"        varchar(100),
   "СпособУстановкиКурса"        varchar(500),
-  dt_update        timestamp without time zone, 
-  dt_create        timestamp without time zone 
+  updated_at        timestamp without time zone, 
+  created_at        timestamp without time zone 
 )
 SERVER client_ods OPTIONS (schema_name 'odins', table_name 'DIM_Валюты');
 COMMENT ON FOREIGN TABLE ods."odins_DIM_Валюты" IS '{"Description":"DIM_Валюты"}';
@@ -294,8 +294,8 @@ CREATE FOREIGN TABLE IF NOT EXISTS ods."odins_DIM_Клиенты" (
   "Code"        varchar(128),
   "Description"        varchar(128),
   "Контакт"        varchar(500),
-  dt_update        timestamp without time zone, 
-  dt_create        timestamp without time zone 
+  updated_at        timestamp without time zone, 
+  created_at        timestamp without time zone 
 )
 SERVER client_ods OPTIONS (schema_name 'odins', table_name 'DIM_Клиенты');
 COMMENT ON FOREIGN TABLE ods."odins_DIM_Клиенты" IS '{"Description":"DIM_Клиенты"}';
@@ -315,8 +315,8 @@ CREATE FOREIGN TABLE IF NOT EXISTS ods."odins_DIM_Товары" (
   "Code"        varchar(128),
   "Description"        varchar(128),
   "Описание"        varchar(255),
-  dt_update        timestamp without time zone, 
-  dt_create        timestamp without time zone 
+  updated_at        timestamp without time zone, 
+  created_at        timestamp without time zone 
 )
 SERVER client_ods OPTIONS (schema_name 'odins', table_name 'DIM_Товары');
 COMMENT ON FOREIGN TABLE ods."odins_DIM_Товары" IS '{"Description":"DIM_Товары"}';
@@ -343,8 +343,8 @@ CREATE FOREIGN TABLE IF NOT EXISTS ods."odins_FACT_Продажи" (
   "ТипДоставки"        varchar(500),
   "ПримерСоставногоТипа"        varchar(36),
   "ПримерСоставногоТипа_ТипЗначения"        varchar(128),
-  dt_update        timestamp without time zone, 
-  dt_create        timestamp without time zone 
+  updated_at        timestamp without time zone, 
+  created_at        timestamp without time zone 
 )
 SERVER client_ods OPTIONS (schema_name 'odins', table_name 'FACT_Продажи');
 COMMENT ON FOREIGN TABLE ods."odins_FACT_Продажи" IS '{"Description":"FACT_Продажи"}';
@@ -380,8 +380,8 @@ SELECT
   "ФормулаРасчетаКурса",
   "СпособУстановкиКурса",
   0::bigint AS session_id_update,
-  dt_update::timestamp without time zone,
-  dt_create::timestamp without time zone
+  updated_at::timestamp without time zone,
+  created_at::timestamp without time zone
 FROM ods."odins_DIM_Валюты";
 
 do
@@ -409,8 +409,8 @@ SELECT
   "Description",
   "Контакт",
   0::bigint AS session_id_update,
-  dt_update::timestamp without time zone,
-  dt_create::timestamp without time zone
+  updated_at::timestamp without time zone,
+  created_at::timestamp without time zone
 FROM ods."odins_DIM_Клиенты";
 
 do
@@ -438,8 +438,8 @@ SELECT
   "Description",
   "Описание",
   0::bigint AS session_id_update,
-  dt_update::timestamp without time zone,
-  dt_create::timestamp without time zone
+  updated_at::timestamp without time zone,
+  created_at::timestamp without time zone
 FROM ods."odins_DIM_Товары";
 
 do
@@ -474,8 +474,8 @@ SELECT
   "ПримерСоставногоТипа",
   "ПримерСоставногоТипа_ТипЗначения",
   0::bigint AS session_id_update,
-  dt_update::timestamp without time zone,
-  dt_create::timestamp without time zone
+  updated_at::timestamp without time zone,
+  created_at::timestamp without time zone
 FROM ods."odins_FACT_Продажи";
 
 do
@@ -505,7 +505,7 @@ CREATE TABLE IF NOT EXISTS staging."DIM_Валюты" (
   "ФормулаРасчетаКурса"            varchar(100)  NULL,
   "СпособУстановкиКурса"            varchar(500)  NULL,
   session_id_update bigint NOT NULL,
-  dt_update         timestamp without time zone        NULL
+  updated_at         timestamp without time zone        NULL
 );
 do
 $$
@@ -526,7 +526,7 @@ CREATE TABLE IF NOT EXISTS staging."DIM_Валюты_Представления"
   "КодЯзыка"            varchar(10)  NULL,
   "ПараметрыПрописи"            varchar(200)  NULL,
   session_id_update bigint NOT NULL,
-  dt_update         timestamp without time zone        NULL
+  updated_at         timestamp without time zone        NULL
 );
 do
 $$
@@ -549,7 +549,7 @@ CREATE TABLE IF NOT EXISTS staging."DIM_Клиенты" (
   "Description"            varchar(128)  NULL,
   "Контакт"            varchar(500)  NULL,
   session_id_update bigint NOT NULL,
-  dt_update         timestamp without time zone        NULL
+  updated_at         timestamp without time zone        NULL
 );
 do
 $$
@@ -572,7 +572,7 @@ CREATE TABLE IF NOT EXISTS staging."DIM_Товары" (
   "Description"            varchar(128)  NULL,
   "Описание"            varchar(255)  NULL,
   session_id_update bigint NOT NULL,
-  dt_update         timestamp without time zone        NULL
+  updated_at         timestamp without time zone        NULL
 );
 do
 $$
@@ -602,7 +602,7 @@ CREATE TABLE IF NOT EXISTS staging."FACT_Продажи" (
   "ПримерСоставногоТипа"            varchar(36)  NULL,
   "ПримерСоставногоТипа_ТипЗначения"            varchar(128)  NULL,
   session_id_update bigint NOT NULL,
-  dt_update         timestamp without time zone        NULL
+  updated_at         timestamp without time zone        NULL
 );
 do
 $$
@@ -625,7 +625,7 @@ CREATE TABLE IF NOT EXISTS staging."FACT_Продажи_Товары" (
   "Колличество"            decimal(12, 0)  NULL,
   "Цена"            decimal(16, 4)  NULL,
   session_id_update bigint NOT NULL,
-  dt_update         timestamp without time zone        NULL
+  updated_at         timestamp without time zone        NULL
 );
 do
 $$
@@ -648,7 +648,7 @@ BEGIN
     start_date = stg.start_date,
     end_date = stg.end_date,
     session_id_update = stg.session_id_update,
-    dt_update = stg.dt_update,
+    updated_at = stg.updated_at,
     "RefID" = stg."RefID",
     "DeletionMark" = stg."DeletionMark",
     "Code" = stg."Code",
@@ -672,8 +672,8 @@ BEGIN
     start_date,
     end_date,
     session_id_update,
-    dt_update,
-    dt_create,
+    updated_at,
+    created_at,
     "RefID",
     "DeletionMark",
     "Code",
@@ -695,8 +695,8 @@ BEGIN
     start_date,
     end_date,
     session_id_update,
-    dt_update,
-    now() as dt_create,
+    updated_at,
+    now() as created_at,
     "RefID",
     "DeletionMark",
     "Code",
@@ -715,7 +715,7 @@ BEGIN
     start_date = stg.start_date,
     end_date = stg.end_date,
     session_id_update = stg.session_id_update,
-    dt_update = stg.dt_update,
+    updated_at = stg.updated_at,
     "DIM_ВалютыRefID" = stg."DIM_ВалютыRefID",
     "КодЯзыка" = stg."КодЯзыка",
     "ПараметрыПрописи" = stg."ПараметрыПрописи"
@@ -731,8 +731,8 @@ BEGIN
     start_date,
     end_date,
     session_id_update,
-    dt_update,
-    dt_create,
+    updated_at,
+    created_at,
     "DIM_ВалютыRefID",
     "КодЯзыка",
     "ПараметрыПрописи"
@@ -746,8 +746,8 @@ BEGIN
     start_date,
     end_date,
     session_id_update,
-    dt_update,
-    now() as dt_create,
+    updated_at,
+    now() as created_at,
     "DIM_ВалютыRefID",
     "КодЯзыка",
     "ПараметрыПрописи"
@@ -813,7 +813,7 @@ BEGIN
     "ФормулаРасчетаКурса",
     "СпособУстановкиКурса",
     session_id_update,
-    dt_update
+    updated_at
   )
   SELECT
     id,
@@ -835,7 +835,7 @@ BEGIN
     "ФормулаРасчетаКурса",
     "СпособУстановкиКурса",
     par_session_id AS session_id_update,
-    val_start_date AS dt_update
+    val_start_date AS updated_at
   FROM (
     SELECT source.*
       FROM target."DIM_Валюты" source
@@ -844,7 +844,7 @@ BEGIN
     ) a;
   GET DIAGNOSTICS var_rowcount = ROW_COUNT;
   par_rowcount := par_rowcount + var_rowcount;
-  -- Child 
+  -- Child DIM_Валюты.Представления
   DELETE FROM target."DIM_Валюты_Представления" AS b
   USING "tmp_DIM_Валюты" ll
   WHERE b."DIM_ВалютыRefID" = ll.identificator;
@@ -908,7 +908,7 @@ BEGIN
     "ФормулаРасчетаКурса",
     "СпособУстановкиКурса",
     session_id_update,
-    dt_update
+    updated_at
   )
   SELECT
     par_session_id AS "session_id",
@@ -929,7 +929,7 @@ BEGIN
     "ФормулаРасчетаКурса",
     "СпособУстановкиКурса",
     par_session_id AS session_id_update,
-    val_start_date AS dt_update
+    val_start_date AS updated_at
   FROM fdw."odins_DIM_Валюты" tmp
   WHERE dwh_session_id = val_dwh_session_id;
   GET DIAGNOSTICS var_RowCount = ROW_COUNT;
@@ -955,7 +955,7 @@ BEGIN
     "КодЯзыка",
     "ПараметрыПрописи",
     session_id_update,
-    dt_update
+    updated_at
   )
   SELECT
     par_session_id AS "session_id",
@@ -968,7 +968,7 @@ BEGIN
     "КодЯзыка",
     "ПараметрыПрописи",
     par_session_id AS session_id_update,
-    val_start_date AS dt_update
+    val_start_date AS updated_at
   FROM fdw."odins_DIM_Валюты_Представления" tmp
   WHERE dwh_session_id = val_dwh_session_id;
   GET DIAGNOSTICS var_RowCount = ROW_COUNT;
@@ -999,7 +999,7 @@ BEGIN
     start_date = stg.start_date,
     end_date = stg.end_date,
     session_id_update = stg.session_id_update,
-    dt_update = stg.dt_update,
+    updated_at = stg.updated_at,
     "RefID" = stg."RefID",
     "DeletionMark" = stg."DeletionMark",
     "Code" = stg."Code",
@@ -1017,8 +1017,8 @@ BEGIN
     start_date,
     end_date,
     session_id_update,
-    dt_update,
-    dt_create,
+    updated_at,
+    created_at,
     "RefID",
     "DeletionMark",
     "Code",
@@ -1034,8 +1034,8 @@ BEGIN
     start_date,
     end_date,
     session_id_update,
-    dt_update,
-    now() as dt_create,
+    updated_at,
+    now() as created_at,
     "RefID",
     "DeletionMark",
     "Code",
@@ -1097,7 +1097,7 @@ BEGIN
     "Description",
     "Контакт",
     session_id_update,
-    dt_update
+    updated_at
   )
   SELECT
     id,
@@ -1113,7 +1113,7 @@ BEGIN
     "Description",
     "Контакт",
     par_session_id AS session_id_update,
-    val_start_date AS dt_update
+    val_start_date AS updated_at
   FROM (
     SELECT source.*
       FROM target."DIM_Клиенты" source
@@ -1174,7 +1174,7 @@ BEGIN
     "Description",
     "Контакт",
     session_id_update,
-    dt_update
+    updated_at
   )
   SELECT
     par_session_id AS "session_id",
@@ -1189,7 +1189,7 @@ BEGIN
     "Description",
     "Контакт",
     par_session_id AS session_id_update,
-    val_start_date AS dt_update
+    val_start_date AS updated_at
   FROM fdw."odins_DIM_Клиенты" tmp
   WHERE dwh_session_id = val_dwh_session_id;
   GET DIAGNOSTICS var_RowCount = ROW_COUNT;
@@ -1221,7 +1221,7 @@ BEGIN
     start_date = stg.start_date,
     end_date = stg.end_date,
     session_id_update = stg.session_id_update,
-    dt_update = stg.dt_update,
+    updated_at = stg.updated_at,
     "RefID" = stg."RefID",
     "DeletionMark" = stg."DeletionMark",
     "Code" = stg."Code",
@@ -1239,8 +1239,8 @@ BEGIN
     start_date,
     end_date,
     session_id_update,
-    dt_update,
-    dt_create,
+    updated_at,
+    created_at,
     "RefID",
     "DeletionMark",
     "Code",
@@ -1256,8 +1256,8 @@ BEGIN
     start_date,
     end_date,
     session_id_update,
-    dt_update,
-    now() as dt_create,
+    updated_at,
+    now() as created_at,
     "RefID",
     "DeletionMark",
     "Code",
@@ -1319,7 +1319,7 @@ BEGIN
     "Description",
     "Описание",
     session_id_update,
-    dt_update
+    updated_at
   )
   SELECT
     id,
@@ -1335,7 +1335,7 @@ BEGIN
     "Description",
     "Описание",
     par_session_id AS session_id_update,
-    val_start_date AS dt_update
+    val_start_date AS updated_at
   FROM (
     SELECT source.*
       FROM target."DIM_Товары" source
@@ -1396,7 +1396,7 @@ BEGIN
     "Description",
     "Описание",
     session_id_update,
-    dt_update
+    updated_at
   )
   SELECT
     par_session_id AS "session_id",
@@ -1411,7 +1411,7 @@ BEGIN
     "Description",
     "Описание",
     par_session_id AS session_id_update,
-    val_start_date AS dt_update
+    val_start_date AS updated_at
   FROM fdw."odins_DIM_Товары" tmp
   WHERE dwh_session_id = val_dwh_session_id;
   GET DIAGNOSTICS var_RowCount = ROW_COUNT;
@@ -1443,7 +1443,7 @@ BEGIN
     start_date = stg.start_date,
     end_date = stg.end_date,
     session_id_update = stg.session_id_update,
-    dt_update = stg.dt_update,
+    updated_at = stg.updated_at,
     "RefID" = stg."RefID",
     "DeletionMark" = stg."DeletionMark",
     "Number" = stg."Number",
@@ -1468,8 +1468,8 @@ BEGIN
     start_date,
     end_date,
     session_id_update,
-    dt_update,
-    dt_create,
+    updated_at,
+    created_at,
     "RefID",
     "DeletionMark",
     "Number",
@@ -1492,8 +1492,8 @@ BEGIN
     start_date,
     end_date,
     session_id_update,
-    dt_update,
-    now() as dt_create,
+    updated_at,
+    now() as created_at,
     "RefID",
     "DeletionMark",
     "Number",
@@ -1513,7 +1513,7 @@ BEGIN
     start_date = stg.start_date,
     end_date = stg.end_date,
     session_id_update = stg.session_id_update,
-    dt_update = stg.dt_update,
+    updated_at = stg.updated_at,
     "FACT_ПродажиRefID" = stg."FACT_ПродажиRefID",
     "Доставка" = stg."Доставка",
     "Товар" = stg."Товар",
@@ -1531,8 +1531,8 @@ BEGIN
     start_date,
     end_date,
     session_id_update,
-    dt_update,
-    dt_create,
+    updated_at,
+    created_at,
     "FACT_ПродажиRefID",
     "Доставка",
     "Товар",
@@ -1548,8 +1548,8 @@ BEGIN
     start_date,
     end_date,
     session_id_update,
-    dt_update,
-    now() as dt_create,
+    updated_at,
+    now() as created_at,
     "FACT_ПродажиRefID",
     "Доставка",
     "Товар",
@@ -1618,7 +1618,7 @@ BEGIN
     "ПримерСоставногоТипа",
     "ПримерСоставногоТипа_ТипЗначения",
     session_id_update,
-    dt_update
+    updated_at
   )
   SELECT
     id,
@@ -1641,7 +1641,7 @@ BEGIN
     "ПримерСоставногоТипа",
     "ПримерСоставногоТипа_ТипЗначения",
     par_session_id AS session_id_update,
-    val_start_date AS dt_update
+    val_start_date AS updated_at
   FROM (
     SELECT source.*
       FROM target."FACT_Продажи" source
@@ -1650,7 +1650,7 @@ BEGIN
     ) a;
   GET DIAGNOSTICS var_rowcount = ROW_COUNT;
   par_rowcount := par_rowcount + var_rowcount;
-  -- Child 
+  -- Child FACT_Продажи.Товары
   DELETE FROM target."FACT_Продажи_Товары" AS b
   USING "tmp_FACT_Продажи" ll
   WHERE b."FACT_ПродажиRefID" = ll.identificator;
@@ -1715,7 +1715,7 @@ BEGIN
     "ПримерСоставногоТипа",
     "ПримерСоставногоТипа_ТипЗначения",
     session_id_update,
-    dt_update
+    updated_at
   )
   SELECT
     par_session_id AS "session_id",
@@ -1737,7 +1737,7 @@ BEGIN
     "ПримерСоставногоТипа",
     "ПримерСоставногоТипа_ТипЗначения",
     par_session_id AS session_id_update,
-    val_start_date AS dt_update
+    val_start_date AS updated_at
   FROM fdw."odins_FACT_Продажи" tmp
   WHERE dwh_session_id = val_dwh_session_id;
   GET DIAGNOSTICS var_RowCount = ROW_COUNT;
@@ -1765,7 +1765,7 @@ BEGIN
     "Колличество",
     "Цена",
     session_id_update,
-    dt_update
+    updated_at
   )
   SELECT
     par_session_id AS "session_id",
@@ -1780,7 +1780,7 @@ BEGIN
     "Колличество",
     "Цена",
     par_session_id AS session_id_update,
-    val_start_date AS dt_update
+    val_start_date AS updated_at
   FROM fdw."odins_FACT_Продажи_Товары" tmp
   WHERE dwh_session_id = val_dwh_session_id;
   GET DIAGNOSTICS var_RowCount = ROW_COUNT;
@@ -1817,8 +1817,8 @@ CREATE TABLE IF NOT EXISTS target."DIM_Валюты" (
   "ФормулаРасчетаКурса"         varchar(100)  NULL ,
   "СпособУстановкиКурса"         varchar(500)  NULL ,
   session_id_update bigint NOT NULL,
-  dt_update         timestamp without time zone NOT NULL default now(),
-  dt_create         timestamp without time zone NOT NULL default now(),
+  updated_at         timestamp without time zone NOT NULL default now(),
+  created_at         timestamp without time zone NOT NULL default now(),
   CONSTRAINT "PK_target_DIM_Валюты" PRIMARY KEY (id));
 CREATE UNIQUE INDEX IF NOT EXISTS "IDX_target_DIM_Валюты" ON target."DIM_Валюты" (nkey);
 do
@@ -1840,8 +1840,8 @@ CREATE TABLE IF NOT EXISTS target."DIM_Валюты_Представления" 
   "КодЯзыка"         varchar(10)  NULL ,
   "ПараметрыПрописи"         varchar(200)  NULL ,
   session_id_update bigint NOT NULL,
-  dt_update         timestamp without time zone NOT NULL default now(),
-  dt_create         timestamp without time zone NOT NULL default now(),
+  updated_at         timestamp without time zone NOT NULL default now(),
+  created_at         timestamp without time zone NOT NULL default now(),
   CONSTRAINT "PK_target_DIM_Валюты_Представления" PRIMARY KEY (id));
 CREATE UNIQUE INDEX IF NOT EXISTS "IDX_target_DIM_Валюты_Представления" ON target."DIM_Валюты_Представления" (nkey);
 do
@@ -1865,8 +1865,8 @@ CREATE TABLE IF NOT EXISTS target."DIM_Клиенты" (
   "Description"         varchar(128)  NULL ,
   "Контакт"         varchar(500)  NULL ,
   session_id_update bigint NOT NULL,
-  dt_update         timestamp without time zone NOT NULL default now(),
-  dt_create         timestamp without time zone NOT NULL default now(),
+  updated_at         timestamp without time zone NOT NULL default now(),
+  created_at         timestamp without time zone NOT NULL default now(),
   CONSTRAINT "PK_target_DIM_Клиенты" PRIMARY KEY (id));
 CREATE UNIQUE INDEX IF NOT EXISTS "IDX_target_DIM_Клиенты" ON target."DIM_Клиенты" (nkey);
 do
@@ -1890,8 +1890,8 @@ CREATE TABLE IF NOT EXISTS target."DIM_Товары" (
   "Description"         varchar(128)  NULL ,
   "Описание"         varchar(255)  NULL ,
   session_id_update bigint NOT NULL,
-  dt_update         timestamp without time zone NOT NULL default now(),
-  dt_create         timestamp without time zone NOT NULL default now(),
+  updated_at         timestamp without time zone NOT NULL default now(),
+  created_at         timestamp without time zone NOT NULL default now(),
   CONSTRAINT "PK_target_DIM_Товары" PRIMARY KEY (id));
 CREATE UNIQUE INDEX IF NOT EXISTS "IDX_target_DIM_Товары" ON target."DIM_Товары" (nkey);
 do
@@ -1922,8 +1922,8 @@ CREATE TABLE IF NOT EXISTS target."FACT_Продажи" (
   "ПримерСоставногоТипа"         varchar(36)  NULL ,
   "ПримерСоставногоТипа_ТипЗначения"         varchar(128)  NULL ,
   session_id_update bigint NOT NULL,
-  dt_update         timestamp without time zone NOT NULL default now(),
-  dt_create         timestamp without time zone NOT NULL default now(),
+  updated_at         timestamp without time zone NOT NULL default now(),
+  created_at         timestamp without time zone NOT NULL default now(),
   CONSTRAINT "PK_target_FACT_Продажи" PRIMARY KEY (id));
 CREATE UNIQUE INDEX IF NOT EXISTS "IDX_target_FACT_Продажи" ON target."FACT_Продажи" (nkey);
 do
@@ -1947,7 +1947,144 @@ CREATE TABLE IF NOT EXISTS target."FACT_Продажи_Товары" (
   "Колличество"         decimal(12, 0)  NULL ,
   "Цена"         decimal(16, 4)  NULL ,
   session_id_update bigint NOT NULL,
-  dt_update         timestamp without time zone NOT NULL default now(),
-  dt_create         timestamp without time zone NOT NULL default now(),
+  updated_at         timestamp without time zone NOT NULL default now(),
+  created_at         timestamp without time zone NOT NULL default now(),
   CONSTRAINT "PK_target_FACT_Продажи_Товары" PRIMARY KEY (id));
 CREATE UNIQUE INDEX IF NOT EXISTS "IDX_target_FACT_Продажи_Товары" ON target."FACT_Продажи_Товары" (nkey);
+do
+$$
+BEGIN
+  RAISE NOTICE 'Create view target.v_rpt_products';
+END;
+$$;
+
+DROP VIEW IF EXISTS target.v_rpt_products;
+
+CREATE VIEW target.v_rpt_products
+AS
+SELECT
+  p.id,
+  p."RefID",
+  p."Code",
+  p."Description",
+  p."Описание",
+  p."DeletionMark",
+  COALESCE(sales."SaleCount", 0) AS "SaleCount",
+  COALESCE(sales."Qty", 0) AS "Qty",
+  COALESCE(sales."Amount", 0) AS "Amount",
+  sales."FirstSaleDate",
+  sales."LastSaleDate"
+FROM target."DIM_Товары" AS p
+LEFT JOIN LATERAL (
+  SELECT
+    COUNT(DISTINCT s."RefID")::bigint AS "SaleCount",
+    SUM(COALESCE(l."Колличество", 0)) AS "Qty",
+    SUM(COALESCE(l."Колличество", 0) * COALESCE(l."Цена", 0)) AS "Amount",
+    MIN(s."Date"::date) AS "FirstSaleDate",
+    MAX(s."Date"::date) AS "LastSaleDate"
+  FROM target."FACT_Продажи_Товары" AS l
+  INNER JOIN target."FACT_Продажи" AS s
+    ON s."RefID" = l."FACT_ПродажиRefID"
+    AND s.end_date = mq."fn_GetMaxDate"()
+    AND COALESCE(s."DeletionMark", false) = false
+  WHERE l.end_date = mq."fn_GetMaxDate"()
+    AND p."RefID"::varchar(36) = l."Товар"
+) AS sales ON true
+WHERE p.end_date = mq."fn_GetMaxDate"()
+  AND COALESCE(p."DeletionMark", false) = false;
+do
+$$
+BEGIN
+  RAISE NOTICE 'Create view target.v_rpt_sales';
+END;
+$$;
+
+DROP VIEW IF EXISTS target.v_rpt_sales;
+
+CREATE VIEW target.v_rpt_sales
+AS
+SELECT
+  s.id,
+  s."RefID",
+  s."Number",
+  s."Posted",
+  s."Date",
+  s."DateID",
+  s."Date"::date AS "SaleDate",
+  EXTRACT(YEAR FROM s."Date")::smallint AS "CalendarYear",
+  EXTRACT(QUARTER FROM s."Date")::smallint AS "CalendarQuarter",
+  EXTRACT(MONTH FROM s."Date")::smallint AS "MonthNumberOfYear",
+  TO_CHAR(s."Date", 'Mon') AS "MonthName",
+  s."ДатаОтгрузки",
+  s."ДатаОтгрузкиID",
+  s."Клиент" AS "ClientRef",
+  c."Code" AS "ClientCode",
+  c."Description" AS "ClientName",
+  s."ТипДоставки",
+  COALESCE(lines."LineCount", 0) AS "LineCount",
+  COALESCE(lines."Qty", 0) AS "Qty",
+  COALESCE(lines."Amount", 0) AS "Amount"
+FROM target."FACT_Продажи" AS s
+LEFT JOIN target."DIM_Клиенты" AS c
+  ON c.end_date = mq."fn_GetMaxDate"()
+  AND COALESCE(c."DeletionMark", false) = false
+  AND c."RefID"::varchar(36) = s."Клиент"
+LEFT JOIN LATERAL (
+  SELECT
+    COUNT(*)::bigint AS "LineCount",
+    SUM(COALESCE(l."Колличество", 0)) AS "Qty",
+    SUM(COALESCE(l."Колличество", 0) * COALESCE(l."Цена", 0)) AS "Amount"
+  FROM target."FACT_Продажи_Товары" AS l
+  WHERE l.end_date = mq."fn_GetMaxDate"()
+    AND l."FACT_ПродажиRefID" = s."RefID"
+) AS lines ON true
+WHERE s.end_date = mq."fn_GetMaxDate"()
+  AND COALESCE(s."DeletionMark", false) = false;
+do
+$$
+BEGIN
+  RAISE NOTICE 'Create view target.v_rpt_sales_products';
+END;
+$$;
+
+DROP VIEW IF EXISTS target.v_rpt_sales_products;
+
+CREATE VIEW target.v_rpt_sales_products
+AS
+SELECT
+  s.id AS "SaleId",
+  s."RefID" AS "SaleRefID",
+  s."Number" AS "SaleNumber",
+  s."Date" AS "SaleDateTime",
+  s."DateID",
+  s."Date"::date AS "SaleDate",
+  EXTRACT(YEAR FROM s."Date")::smallint AS "CalendarYear",
+  EXTRACT(QUARTER FROM s."Date")::smallint AS "CalendarQuarter",
+  EXTRACT(MONTH FROM s."Date")::smallint AS "MonthNumberOfYear",
+  s."Клиент" AS "ClientRef",
+  c."Code" AS "ClientCode",
+  c."Description" AS "ClientName",
+  s."ТипДоставки",
+  l.id AS "LineId",
+  l."Товар" AS "ProductRef",
+  p."Code" AS "ProductCode",
+  p."Description" AS "ProductName",
+  p."Описание" AS "ProductDescription",
+  l."Доставка",
+  l."Колличество" AS "Qty",
+  l."Цена" AS "Price",
+  COALESCE(l."Колличество", 0) * COALESCE(l."Цена", 0) AS "Amount"
+FROM target."FACT_Продажи" AS s
+INNER JOIN target."FACT_Продажи_Товары" AS l
+  ON l."FACT_ПродажиRefID" = s."RefID"
+  AND l.end_date = mq."fn_GetMaxDate"()
+LEFT JOIN target."DIM_Клиенты" AS c
+  ON c.end_date = mq."fn_GetMaxDate"()
+  AND COALESCE(c."DeletionMark", false) = false
+  AND c."RefID"::varchar(36) = s."Клиент"
+LEFT JOIN target."DIM_Товары" AS p
+  ON p.end_date = mq."fn_GetMaxDate"()
+  AND COALESCE(p."DeletionMark", false) = false
+  AND p."RefID"::varchar(36) = l."Товар"
+WHERE s.end_date = mq."fn_GetMaxDate"()
+  AND COALESCE(s."DeletionMark", false) = false;

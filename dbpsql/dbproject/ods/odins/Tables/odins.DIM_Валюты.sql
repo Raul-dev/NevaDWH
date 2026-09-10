@@ -19,8 +19,8 @@ CREATE TABLE IF NOT EXISTS odins."DIM_Валюты" (
     "ПараметрыПрописи"            varchar(200)   NULL  ,
     "ФормулаРасчетаКурса"         varchar(100)   NULL  ,
     "СпособУстановкиКурса"        varchar(500)   NULL  ,
-    dt_update                     timestamp without time zone default now(),
-    dt_create                     timestamp without time zone default now()
+    updated_at                    timestamp without time zone default now(),
+    created_at                    timestamp without time zone default now()
 );
 
 COMMENT ON TABLE "odins"."DIM_Валюты" IS '{"Description":"DIM_Валюты"}';

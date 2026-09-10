@@ -92,8 +92,8 @@ CREATE TABLE IF NOT EXISTS etl.dwh_session (
     dwh_session_state_id smallint         NOT NULL,
     create_session       timestamp with time zone,
     error_message        varchar(4000) NULL,
-    dt_update            timestamp with time zone NOT NULL default now(),
-    dt_create            timestamp with time zone NOT NULL default now()
+    updated_at            timestamp with time zone NOT NULL default now(),
+    created_at            timestamp with time zone NOT NULL default now()
     
 );
 
@@ -102,7 +102,7 @@ CREATE TABLE IF NOT EXISTS etl.dwh_session_log (
     dwh_session_id       bigint         NOT NULL,
     dwh_session_state_id smallint        NOT NULL,
     error_message        varchar(4000) NULL,
-    dt_create            timestamp with time zone NOT NULL 
+    created_at            timestamp with time zone NOT NULL 
 );
 
 CREATE TABLE IF NOT EXISTS etl.dwh_session_state (
@@ -235,7 +235,7 @@ BEGIN
     "ПараметрыПрописи",
     "ФормулаРасчетаКурса",
     "СпособУстановкиКурса",
-    dt_create
+    created_at
   )
   SELECT
     b.nkey,
@@ -251,7 +251,7 @@ BEGIN
     b."ПараметрыПрописи",
     b."ФормулаРасчетаКурса",
     b."СпособУстановкиКурса",
-    now() AS dt_create
+    now() AS created_at
   FROM odins."DIM_Валюты" b
     INNER JOIN "tmp_DIM_Валюты" ll ON b.ods_id = ll.ods_id;
 
@@ -264,7 +264,7 @@ BEGIN
     "DIM_ВалютыRefID",
     "КодЯзыка",
     "ПараметрыПрописи",
-    dt_create
+    created_at
   )
   SELECT
     b.nkey,
@@ -272,7 +272,7 @@ BEGIN
     b."DIM_ВалютыRefID",
     b."КодЯзыка",
     b."ПараметрыПрописи",
-    now() AS dt_create
+    now() AS created_at
   FROM odins."DIM_Валюты_Представления" b
     INNER JOIN "tmp_DIM_Валюты" ll ON b."DIM_ВалютыRefID" = ll."RefID";
 
@@ -316,7 +316,7 @@ BEGIN
     "Code",
     "Description",
     "Контакт",
-    dt_create
+    created_at
   )
   SELECT
     b.nkey,
@@ -326,7 +326,7 @@ BEGIN
     b."Code",
     b."Description",
     b."Контакт",
-    now() AS dt_create
+    now() AS created_at
   FROM odins."DIM_Клиенты" b
     INNER JOIN "tmp_DIM_Клиенты" ll ON b.ods_id = ll.ods_id;
 
@@ -361,7 +361,7 @@ BEGIN
     "Code",
     "Description",
     "Описание",
-    dt_create
+    created_at
   )
   SELECT
     b.nkey,
@@ -371,7 +371,7 @@ BEGIN
     b."Code",
     b."Description",
     b."Описание",
-    now() AS dt_create
+    now() AS created_at
   FROM odins."DIM_Товары" b
     INNER JOIN "tmp_DIM_Товары" ll ON b.ods_id = ll.ods_id;
 
@@ -413,7 +413,7 @@ BEGIN
     "ТипДоставки",
     "ПримерСоставногоТипа",
     "ПримерСоставногоТипа_ТипЗначения",
-    dt_create
+    created_at
   )
   SELECT
     b.nkey,
@@ -430,7 +430,7 @@ BEGIN
     b."ТипДоставки",
     b."ПримерСоставногоТипа",
     b."ПримерСоставногоТипа_ТипЗначения",
-    now() AS dt_create
+    now() AS created_at
   FROM odins."FACT_Продажи" b
     INNER JOIN "tmp_FACT_Продажи" ll ON b.ods_id = ll.ods_id;
 
@@ -445,7 +445,7 @@ BEGIN
     "Товар",
     "Колличество",
     "Цена",
-    dt_create
+    created_at
   )
   SELECT
     b.nkey,
@@ -455,7 +455,7 @@ BEGIN
     b."Товар",
     b."Колличество",
     b."Цена",
-    now() AS dt_create
+    now() AS created_at
   FROM odins."FACT_Продажи_Товары" b
     INNER JOIN "tmp_FACT_Продажи" ll ON b."FACT_ПродажиRefID" = ll."RefID";
 
@@ -546,7 +546,7 @@ BEGIN
                 dwh_session_state_id = par_dwh_session_state_id,
                 error_message = par_error_message,
                 create_session = CASE WHEN par_dwh_session_state_id = 2 THEN now() ELSE create_session END,
-                dt_update = now()
+                updated_at = now()
         WHERE dwh_session_id = par_dwh_session_id;
     END IF;
 
@@ -573,8 +573,8 @@ CREATE TABLE IF NOT EXISTS mq.filequeue (
     filetype     character varying(4) COLLATE pg_catalog."default" NULL,
     error_msg    character varying(4000) COLLATE pg_catalog."default" NULL,
     state_id     smallint NOT NULL,
-    dt_create    timestamp with time zone  CONSTRAINT DF_filequeue_create_date_DEFAULT DEFAULT (now()) NOT NULL,
-    dt_update    timestamp with time zone  CONSTRAINT DF_filequeue_update_date_DEFAULT DEFAULT (now()) NOT NULL,
+    created_at    timestamp with time zone  CONSTRAINT DF_filequeue_create_date_DEFAULT DEFAULT (now()) NOT NULL,
+    updated_at    timestamp with time zone  CONSTRAINT DF_filequeue_update_date_DEFAULT DEFAULT (now()) NOT NULL,
     CONSTRAINT PK_filequeue PRIMARY KEY (filequeue_id)
 );
 
@@ -594,7 +594,7 @@ CREATE TABLE IF NOT EXISTS mq.metadata
     namespace_ver  character varying(256) COLLATE pg_catalog."default",
     msg            text COLLATE pg_catalog."default",
     metaadapter_id smallint NOT NULL,
-    dt_create      timestamp with time zone NOT NULL,
+    created_at      timestamp with time zone NOT NULL,
     CONSTRAINT "PK_metadata" PRIMARY KEY (nkey)
 )
 
@@ -609,8 +609,8 @@ CREATE TABLE IF NOT EXISTS mq.metadata_buffer
     msg_id      character varying(36) COLLATE pg_catalog."default",
     msg         text COLLATE pg_catalog."default",
     is_error    boolean       CONSTRAINT DF_metadata_buffer_is_error_DEFAULT DEFAULT ((false)) NOT NULL,
-    dt_create   timestamp with time zone NOT NULL default now(),
-    dt_update   timestamp without time zone NOT NULL DEFAULT to_date('19000101', 'YYYYMMDD')
+    created_at   timestamp with time zone NOT NULL default now(),
+    updated_at   timestamp without time zone NOT NULL DEFAULT to_date('19000101', 'YYYYMMDD')
 )
 
 TABLESPACE pg_default;
@@ -644,7 +644,7 @@ CREATE TABLE IF NOT EXISTS mq.msgqueue
     msg_id     uuid NOT NULL,
     msg        text COLLATE pg_catalog."default",
     msg_key    character varying(128) COLLATE pg_catalog."default",
-    dt_create  timestamp with time zone NOT NULL DEFAULT now(),
+    created_at  timestamp with time zone NOT NULL DEFAULT now(),
     CONSTRAINT "PK_msgqueue" PRIMARY KEY (buffer_id)
 )
 
@@ -658,8 +658,8 @@ CREATE TABLE IF NOT EXISTS mq.session (
     data_source_id   smallint        NOT NULL,
     session_state_id smallint    NOT NULL,
     error_message    character varying(4000) COLLATE pg_catalog."default" NULL,
-    dt_update        timestamp with time zone  CONSTRAINT DF_session_update_date_DEFAULT DEFAULT (now()) NOT NULL,
-    dt_create        timestamp with time zone  CONSTRAINT DF_session_create_date_DEFAULT DEFAULT (now()) NOT NULL,
+    updated_at        timestamp with time zone  CONSTRAINT DF_session_update_date_DEFAULT DEFAULT (now()) NOT NULL,
+    created_at        timestamp with time zone  CONSTRAINT DF_session_create_date_DEFAULT DEFAULT (now()) NOT NULL,
     CONSTRAINT PK_session PRIMARY KEY (session_id)
 );
 
@@ -672,7 +672,7 @@ CREATE TABLE IF NOT EXISTS mq.session_log
     session_id       bigint   NOT NULL,
     session_state_id smallint  NOT NULL,
     error_message    character varying(4000) COLLATE pg_catalog."default",
-    dt_create        timestamp with time zone  CONSTRAINT DF_session_log_date_DEFAULT DEFAULT (now()) NOT NULL,
+    created_at        timestamp with time zone  CONSTRAINT DF_session_log_date_DEFAULT DEFAULT (now()) NOT NULL,
     CONSTRAINT "PK_session_log" PRIMARY KEY (session_log_id)
 );
 
@@ -739,7 +739,7 @@ BEGIN
             namespace_ver character varying(256) ,
             msg text ,
             type character varying(128) ,
-            dt_create timestamp with time zone NOT NULL,
+            created_at timestamp with time zone NOT NULL,
             CONSTRAINT "PK_metadata" PRIMARY KEY (nkey)
         );
 
@@ -787,14 +787,14 @@ BEGIN
         ELSE
 
             UPDATE mq.metadata_buffer AS org SET
-                dt_update = var_updatedate
+                updated_at = var_updatedate
             FROM "metadata_tmp1" AS src
             WHERE org."buffer_id" = src."buffer_id" ;
 
             IF var_buffer_history_mode >= 2 AND NOT EXISTS (SELECT 1 FROM mq.metadata_buffer WHERE is_error = true) THEN
                 DELETE
                 FROM mq.metadata_buffer AS b
-                WHERE EXTRACT(DAY FROM  var_updatedate::timestamp - dt_update::timestamp) > var_bufferhistorydays;
+                WHERE EXTRACT(DAY FROM  var_updatedate::timestamp - updated_at::timestamp) > var_bufferhistorydays;
             END IF;
         END    IF;
 
@@ -811,7 +811,7 @@ BEGIN
 
         UPDATE mq.metadata_buffer AS org SET
             is_error  = true,
-            dt_update = var_updatedate
+            updated_at = var_updatedate
         FROM "metadata_tmp1" AS src
         WHERE org."buffer_id" = src."buffer_id" ;
 
@@ -830,8 +830,8 @@ $$;
 
 CREATE OR REPLACE PROCEDURE mq."rb_SaveSessionState" (
     par_session_id inout bigint DEFAULT NULL,
-    par_data_source_id in smallint = 1,
-    par_session_state_id in smallint = 1,
+    par_data_source_id in smallint DEFAULT 1,
+    par_session_state_id in smallint DEFAULT 1,
     par_error_message in varchar(4000) DEFAULT NULL
 )
 AS $BODY$
@@ -839,16 +839,23 @@ BEGIN
     IF par_session_id IS NULL THEN
 
         INSERT INTO mq.session (data_source_id, session_state_id, error_message)
-        VALUES(par_data_source_id, par_session_state_id, par_error_message);
+        VALUES (par_data_source_id, par_session_state_id, par_error_message)
+        RETURNING session_id INTO par_session_id;
 
-        SELECT currval(pg_get_serial_sequence('mq.session', 'session_id')) INTO par_session_id;
+        INSERT INTO mq.session_log (session_id, session_state_id, error_message)
+        VALUES (par_session_id, par_session_state_id, par_error_message);
+
         RETURN;
     ELSE
         UPDATE mq.session
         SET data_source_id = par_data_source_id,
             session_state_id = par_session_state_id,
-            dt_update = now()
+            error_message = par_error_message,
+            updated_at = now()
         WHERE session_id = par_session_id;
+
+        INSERT INTO mq.session_log (session_id, session_state_id, error_message)
+        VALUES (par_session_id, par_session_state_id, par_error_message);
     END IF;
 END;
 
@@ -875,8 +882,8 @@ CREATE TABLE IF NOT EXISTS odins."DIM_Валюты" (
     "ПараметрыПрописи"            varchar(200)   NULL  ,
     "ФормулаРасчетаКурса"         varchar(100)   NULL  ,
     "СпособУстановкиКурса"        varchar(500)   NULL  ,
-    dt_update                     timestamp without time zone default now(),
-    dt_create                     timestamp without time zone default now()
+    updated_at                    timestamp without time zone default now(),
+    created_at                    timestamp without time zone default now()
 );
 
 COMMENT ON TABLE "odins"."DIM_Валюты" IS '{"Description":"DIM_Валюты"}';
@@ -895,8 +902,8 @@ CREATE TABLE IF NOT EXISTS odins."DIM_Валюты_Представления" (
     "DIM_ВалютыRefID"             uuid  NOT NULL  ,
     "КодЯзыка"                    varchar(10)   NULL  ,
     "ПараметрыПрописи"            varchar(200)   NULL  ,
-    dt_update                     timestamp without time zone default now(),
-    dt_create                     timestamp without time zone default now()
+    updated_at                    timestamp without time zone default now(),
+    created_at                    timestamp without time zone default now()
 );
 
 COMMENT ON TABLE "odins"."DIM_Валюты_Представления" IS '{"Description":"DIM_Валюты.Представления"}';
@@ -914,7 +921,7 @@ CREATE TABLE IF NOT EXISTS "odins"."DIM_Валюты_Представления_
   "DIM_ВалютыRefID"            uuid  NULL,
   "КодЯзыка"            varchar(10)  NULL,
   "ПараметрыПрописи"            varchar(200)  NULL,
-  "dt_create"              timestamp without time zone         NULL default now());
+  "created_at"              timestamp without time zone         NULL default now());
 do
 $$
 BEGIN
@@ -928,8 +935,8 @@ CREATE TABLE IF NOT EXISTS odins."DIM_Валюты_buffer" (
   "msg"         text     NULL,
   "is_error"    boolean  NOT NULL DEFAULT false,
   "msgtype_id"  smallint NOT NULL DEFAULT 1,
-  "dt_create"   timestamp without time zone NOT NULL  default now(),
-  "dt_update"   timestamp without time zone NOT NULL  default to_date('19000101', 'YYYYMMDD')
+  "created_at"   timestamp without time zone NOT NULL  default now(),
+  "updated_at"   timestamp without time zone NOT NULL  default to_date('19000101', 'YYYYMMDD')
 );
 do
 $$
@@ -951,7 +958,7 @@ CREATE TABLE IF NOT EXISTS "odins"."DIM_Валюты_history" (
   "ПараметрыПрописи"            varchar(200)  NULL,
   "ФормулаРасчетаКурса"            varchar(100)  NULL,
   "СпособУстановкиКурса"            varchar(500)  NULL,
-  "dt_create"              timestamp without time zone         NULL default now());
+  "created_at"              timestamp without time zone         NULL default now());
 do
 $$
 BEGIN
@@ -967,8 +974,8 @@ CREATE TABLE IF NOT EXISTS odins."DIM_Клиенты" (
     "Code"                        varchar(128)   NULL  ,
     "Description"                 varchar(128)   NULL  ,
     "Контакт"                     varchar(500)   NULL  ,
-    dt_update                     timestamp without time zone default now(),
-    dt_create                     timestamp without time zone default now()
+    updated_at                    timestamp without time zone default now(),
+    created_at                    timestamp without time zone default now()
 );
 
 COMMENT ON TABLE "odins"."DIM_Клиенты" IS '{"Description":"DIM_Клиенты"}';
@@ -987,8 +994,8 @@ CREATE TABLE IF NOT EXISTS odins."DIM_Клиенты_buffer" (
   "msg"         text     NULL,
   "is_error"    boolean  NOT NULL DEFAULT false,
   "msgtype_id"  smallint NOT NULL DEFAULT 1,
-  "dt_create"   timestamp without time zone NOT NULL  default now(),
-  "dt_update"   timestamp without time zone NOT NULL  default to_date('19000101', 'YYYYMMDD')
+  "created_at"   timestamp without time zone NOT NULL  default now(),
+  "updated_at"   timestamp without time zone NOT NULL  default to_date('19000101', 'YYYYMMDD')
 );
 do
 $$
@@ -1004,7 +1011,7 @@ CREATE TABLE IF NOT EXISTS "odins"."DIM_Клиенты_history" (
   "Code"            varchar(128)  NULL,
   "Description"            varchar(128)  NULL,
   "Контакт"            varchar(500)  NULL,
-  "dt_create"              timestamp without time zone         NULL default now());
+  "created_at"              timestamp without time zone         NULL default now());
 do
 $$
 BEGIN
@@ -1020,8 +1027,8 @@ CREATE TABLE IF NOT EXISTS odins."DIM_Товары" (
     "Code"                        varchar(128)   NULL  ,
     "Description"                 varchar(128)   NULL  ,
     "Описание"                    varchar(255)   NULL  ,
-    dt_update                     timestamp without time zone default now(),
-    dt_create                     timestamp without time zone default now()
+    updated_at                    timestamp without time zone default now(),
+    created_at                    timestamp without time zone default now()
 );
 
 COMMENT ON TABLE "odins"."DIM_Товары" IS '{"Description":"DIM_Товары"}';
@@ -1040,8 +1047,8 @@ CREATE TABLE IF NOT EXISTS odins."DIM_Товары_buffer" (
   "msg"         text     NULL,
   "is_error"    boolean  NOT NULL DEFAULT false,
   "msgtype_id"  smallint NOT NULL DEFAULT 1,
-  "dt_create"   timestamp without time zone NOT NULL  default now(),
-  "dt_update"   timestamp without time zone NOT NULL  default to_date('19000101', 'YYYYMMDD')
+  "created_at"   timestamp without time zone NOT NULL  default now(),
+  "updated_at"   timestamp without time zone NOT NULL  default to_date('19000101', 'YYYYMMDD')
 );
 do
 $$
@@ -1057,7 +1064,7 @@ CREATE TABLE IF NOT EXISTS "odins"."DIM_Товары_history" (
   "Code"            varchar(128)  NULL,
   "Description"            varchar(128)  NULL,
   "Описание"            varchar(255)  NULL,
-  "dt_create"              timestamp without time zone         NULL default now());
+  "created_at"              timestamp without time zone         NULL default now());
 do
 $$
 BEGIN
@@ -1080,8 +1087,8 @@ CREATE TABLE IF NOT EXISTS odins."FACT_Продажи" (
     "ТипДоставки"                 varchar(500)   NULL  ,
     "ПримерСоставногоТипа"        varchar(36)   NULL  ,
     "ПримерСоставногоТипа_ТипЗначения"varchar(128)   NULL  ,
-    dt_update                     timestamp without time zone default now(),
-    dt_create                     timestamp without time zone default now()
+    updated_at                    timestamp without time zone default now(),
+    created_at                    timestamp without time zone default now()
 );
 
 COMMENT ON TABLE "odins"."FACT_Продажи" IS '{"Description":"FACT_Продажи"}';
@@ -1102,8 +1109,8 @@ CREATE TABLE IF NOT EXISTS odins."FACT_Продажи_Товары" (
     "Товар"                       varchar(36)   NULL  ,
     "Колличество"                 decimal(12, 0)   NULL  ,
     "Цена"                        decimal(16, 4)   NULL  ,
-    dt_update                     timestamp without time zone default now(),
-    dt_create                     timestamp without time zone default now()
+    updated_at                    timestamp without time zone default now(),
+    created_at                    timestamp without time zone default now()
 );
 
 COMMENT ON TABLE "odins"."FACT_Продажи_Товары" IS '{"Description":"FACT_Продажи.Товары"}';
@@ -1123,7 +1130,7 @@ CREATE TABLE IF NOT EXISTS "odins"."FACT_Продажи_Товары_history" (
   "Товар"            varchar(36)  NULL,
   "Колличество"            decimal(12, 0)  NULL,
   "Цена"            decimal(16, 4)  NULL,
-  "dt_create"              timestamp without time zone         NULL default now());
+  "created_at"              timestamp without time zone         NULL default now());
 do
 $$
 BEGIN
@@ -1137,8 +1144,8 @@ CREATE TABLE IF NOT EXISTS odins."FACT_Продажи_buffer" (
   "msg"         text     NULL,
   "is_error"    boolean  NOT NULL DEFAULT false,
   "msgtype_id"  smallint NOT NULL DEFAULT 1,
-  "dt_create"   timestamp without time zone NOT NULL  default now(),
-  "dt_update"   timestamp without time zone NOT NULL  default to_date('19000101', 'YYYYMMDD')
+  "created_at"   timestamp without time zone NOT NULL  default now(),
+  "updated_at"   timestamp without time zone NOT NULL  default to_date('19000101', 'YYYYMMDD')
 );
 do
 $$
@@ -1161,7 +1168,7 @@ CREATE TABLE IF NOT EXISTS "odins"."FACT_Продажи_history" (
   "ТипДоставки"            varchar(500)  NULL,
   "ПримерСоставногоТипа"            varchar(36)  NULL,
   "ПримерСоставногоТипа_ТипЗначения"            varchar(128)  NULL,
-  "dt_create"              timestamp without time zone         NULL default now());
+  "created_at"              timestamp without time zone         NULL default now());
 do
 $$
 BEGIN
@@ -1212,7 +1219,7 @@ BEGIN
   SELECT buffer_id AS buffer_id,
     CAST((xpath('/nva:Data/nva:Реквизиты/nva:CatalogObject.Валюты/nva:Ref/text()', msg::xml, var_xmlns ))[1]::text as uuid) ref
   FROM "odins"."DIM_Валюты_buffer" b
-  WHERE b.dt_update = var_mindate;
+  WHERE b.updated_at = var_mindate;
 
   GET DIAGNOSTICS var_rowcount = ROW_COUNT;
   par_rowcount := var_rowcount;
@@ -1246,7 +1253,7 @@ BEGIN
       "ПараметрыПрописи" varchar(200),
       "ФормулаРасчетаКурса" varchar(100),
       "СпособУстановкиКурса" varchar(500),
-      "dt_update" timestamp without time zone 
+      "updated_at" timestamp without time zone 
     );
 
     INSERT INTO "DIM_Валюты_tmp2"
@@ -1254,7 +1261,7 @@ BEGIN
     SELECT
       CAST((xpath('/nva:Data/nva:Реквизиты/nva:CatalogObject.Валюты/nva:Ref/text()', msg::xml, var_xmlns ))[1]::text as uuid) AS "nkey",
 
-      (xpath('/nva:Data/nva:Реквизиты/nva:CatalogObject.Валюты/nva:DIM_Валюты.Представления/text()', msg::xml, var_xmlns ))[1]::xml  AS "DIM_Валюты_Представления",
+      (SELECT xmlelement(name "rows", xmlagg(x)) FROM unnest(xpath('/nva:Data/nva:Реквизиты/nva:CatalogObject.Валюты/nva:Представления', msg::xml, var_xmlns)) AS t(x)) AS "DIM_Валюты_Представления",
       CAST((xpath('/nva:Data/nva:Реквизиты/nva:CatalogObject.Валюты/nva:Ref/text()', msg::xml, var_xmlns ))[1]::text as uuid)  AS "RefID",
       CAST((xpath('/nva:Data/nva:Реквизиты/nva:CatalogObject.Валюты/nva:DeletionMark/text()', msg::xml, var_xmlns ))[1]::text as boolean)  AS "DeletionMark",
       CAST((xpath('/nva:Data/nva:Реквизиты/nva:CatalogObject.Валюты/nva:Code/text()', msg::xml, var_xmlns ))[1]::text as varchar(128))  AS "Code",
@@ -1284,7 +1291,7 @@ BEGIN
       "ПараметрыПрописи" = src."ПараметрыПрописи",
       "ФормулаРасчетаКурса" = src."ФормулаРасчетаКурса",
       "СпособУстановкиКурса" = src."СпособУстановкиКурса",
-      dt_update = var_updatedate
+      updated_at = var_updatedate
     FROM "DIM_Валюты_tmp2" AS src 
     WHERE org."nkey" = src."nkey" ;
 
@@ -1301,7 +1308,7 @@ BEGIN
       "ПараметрыПрописи",
       "ФормулаРасчетаКурса",
       "СпособУстановкиКурса",
-      dt_update
+      updated_at
     )
     SELECT 
       src."nkey" ,
@@ -1316,10 +1323,35 @@ BEGIN
       src."ПараметрыПрописи",
       src."ФормулаРасчетаКурса",
       src."СпособУстановкиКурса",
-      src."dt_update"
+      src."updated_at"
     FROM "DIM_Валюты_tmp2" AS src 
       LEFT JOIN "odins"."DIM_Валюты" AS org ON org."nkey" = src."nkey" 
     WHERE org."RefID" IS NULL ;
+
+    /* Sub tables (tabular sections) */
+    DELETE FROM "odins"."DIM_Валюты_Представления" AS trg
+    USING "DIM_Валюты_tmp2" AS tmp
+    WHERE
+      trg."DIM_ВалютыRefID" = tmp."RefID";
+
+    INSERT INTO "odins"."DIM_Валюты_Представления" (
+      "nkey",
+      "DIM_ВалютыRefID",
+      "КодЯзыка",
+      "ПараметрыПрописи",
+      updated_at
+    )
+    SELECT
+      CAST(md5(CONVERT(
+        (CAST(tmp."RefID" AS varchar(36)) || '|' || COALESCE(CAST(line_ord AS varchar), '0'))
+        ::bytea, 'UTF8', 'UHC')) AS uuid) AS "nkey",
+      tmp."RefID" AS "DIM_ВалютыRefID",
+      CAST((xpath('//*[local-name()="КодЯзыка"]/text()', line_xml))[1]::text AS varchar(10)) AS "КодЯзыка",
+      CAST((xpath('//*[local-name()="ПараметрыПрописи"]/text()', line_xml))[1]::text AS varchar(200)) AS "ПараметрыПрописи",
+      var_updatedate AS updated_at
+    FROM "DIM_Валюты_tmp2" AS tmp
+    CROSS JOIN LATERAL unnest(xpath('/*[local-name()="rows"]/*', tmp."DIM_Валюты_Представления")) WITH ORDINALITY AS line(line_xml, line_ord)
+    WHERE tmp."DIM_Валюты_Представления" IS NOT NULL;
 
     -- Clear buffer table
     IF var_buffer_history_mode = 1 AND NOT EXISTS (SELECT 1 FROM "odins"."DIM_Валюты_buffer" WHERE is_error = true) THEN
@@ -1331,14 +1363,14 @@ BEGIN
     ELSE
 
       UPDATE "odins"."DIM_Валюты_buffer" AS org SET
-        dt_update = var_updatedate
+        updated_at = var_updatedate
       FROM "DIM_Валюты_lock" AS src
       WHERE org."buffer_id" = src."buffer_id";
 
       IF var_buffer_history_mode >= 2 AND NOT EXISTS (SELECT 1 FROM "odins"."DIM_Валюты_buffer" WHERE is_error = true) THEN
         DELETE
         FROM "odins"."DIM_Валюты_buffer" AS b
-        WHERE EXTRACT(DAY FROM var_updatedate::timestamp - dt_update::timestamp) > var_bufferhistorydays;
+        WHERE EXTRACT(DAY FROM var_updatedate::timestamp - updated_at::timestamp) > var_bufferhistorydays;
       END IF;
     END IF;
 
@@ -1355,7 +1387,7 @@ BEGIN
 
     UPDATE "odins"."DIM_Валюты_buffer" AS org SET
       is_error  = true,
-      dt_update = var_updatedate
+      updated_at = var_updatedate
     FROM "DIM_Валюты_lock" AS src
     WHERE org."buffer_id" = src."buffer_id";
 
@@ -1394,16 +1426,94 @@ END;
 $$;
 
 CREATE OR REPLACE PROCEDURE odins."load_DIM_Валюты_staging" (
-  par_session_id in bigint DEFAULT NULL, 
-  par_rowcount inout int DEFAULT NULL 
+  par_session_id in bigint DEFAULT NULL,
+  par_rowcount inout int DEFAULT NULL
 )
 AS $BODY$
 DECLARE
   var_rowcount int;
+  var_updatedate timestamp without time zone;
+  var_xmlns text ARRAY;
 BEGIN
+  SELECT now() INTO var_updatedate;
+  SELECT ARRAY[ARRAY['nva', 'http://v8.1c.ru/8.1/data/enterprise/current-config'], ARRAY['xsi', 'http://www.w3.org/2001/XMLSchema-instance'], ARRAY['xs', 'http://www.w3.org/2001/XMLSchema']] INTO var_xmlns;
 
-  DROP TABLE IF EXISTS "DIM_Валюты_tmp1";
+  UPDATE "odins"."DIM_Валюты" AS org SET
+    "RefID" = src."RefID",
+    "DeletionMark" = src."DeletionMark",
+    "Code" = src."Code",
+    "Description" = src."Description",
+    "ЗагружаетсяИзИнтернета" = src."ЗагружаетсяИзИнтернета",
+    "НаименованиеПолное" = src."НаименованиеПолное",
+    "Наценка" = src."Наценка",
+    "ОсновнаяВалюта" = src."ОсновнаяВалюта",
+    "ПараметрыПрописи" = src."ПараметрыПрописи",
+    "ФормулаРасчетаКурса" = src."ФормулаРасчетаКурса",
+    "СпособУстановкиКурса" = src."СпособУстановкиКурса",
+    updated_at = var_updatedate
+  FROM staging."DIM_Валюты" AS src
+  WHERE org."nkey" = src."nkey";
 
+  INSERT INTO "odins"."DIM_Валюты" (
+    "nkey",
+    "RefID",
+    "DeletionMark",
+    "Code",
+    "Description",
+    "ЗагружаетсяИзИнтернета",
+    "НаименованиеПолное",
+    "Наценка",
+    "ОсновнаяВалюта",
+    "ПараметрыПрописи",
+    "ФормулаРасчетаКурса",
+    "СпособУстановкиКурса",
+    updated_at
+  )
+  SELECT
+    src."nkey",
+    src."RefID",
+    src."DeletionMark",
+    src."Code",
+    src."Description",
+    src."ЗагружаетсяИзИнтернета",
+    src."НаименованиеПолное",
+    src."Наценка",
+    src."ОсновнаяВалюта",
+    src."ПараметрыПрописи",
+    src."ФормулаРасчетаКурса",
+    src."СпособУстановкиКурса",
+    src.updated_at
+  FROM staging."DIM_Валюты" AS src
+  LEFT JOIN "odins"."DIM_Валюты" AS org ON org."nkey" = src."nkey"
+  WHERE org."RefID" IS NULL;
+
+  /* Sub tables (tabular sections) */
+  DELETE FROM "odins"."DIM_Валюты_Представления" AS trg
+  USING staging."DIM_Валюты" AS tmp
+  WHERE
+    trg."DIM_ВалютыRefID" = tmp."RefID";
+
+  INSERT INTO "odins"."DIM_Валюты_Представления" (
+    "nkey",
+    "DIM_ВалютыRefID",
+    "КодЯзыка",
+    "ПараметрыПрописи",
+    updated_at
+  )
+  SELECT
+    CAST(md5(CONVERT(
+      (CAST(tmp."RefID" AS varchar(36)) || '|' || COALESCE(CAST(line_ord AS varchar), '0'))
+      ::bytea, 'UTF8', 'UHC')) AS uuid) AS "nkey",
+    tmp."RefID" AS "DIM_ВалютыRefID",
+    CAST((xpath('//*[local-name()="КодЯзыка"]/text()', line_xml))[1]::text AS varchar(10)) AS "КодЯзыка",
+    CAST((xpath('//*[local-name()="ПараметрыПрописи"]/text()', line_xml))[1]::text AS varchar(200)) AS "ПараметрыПрописи",
+    var_updatedate AS updated_at
+  FROM staging."DIM_Валюты" AS tmp
+  CROSS JOIN LATERAL unnest(xpath('/*[local-name()="rows"]/*', tmp."DIM_Валюты_Представления")) WITH ORDINALITY AS line(line_xml, line_ord)
+  WHERE tmp."DIM_Валюты_Представления" IS NOT NULL;
+
+  GET DIAGNOSTICS var_rowcount = ROW_COUNT;
+  par_rowcount := var_rowcount;
 END;
 
 $BODY$
@@ -1458,7 +1568,7 @@ BEGIN
   SELECT buffer_id AS buffer_id,
     CAST((xpath('/nva:Data/nva:Реквизиты/nva:CatalogObject.Клиенты/nva:Ref/text()', msg::xml, var_xmlns ))[1]::text as uuid) ref
   FROM "odins"."DIM_Клиенты_buffer" b
-  WHERE b.dt_update = var_mindate;
+  WHERE b.updated_at = var_mindate;
 
   GET DIAGNOSTICS var_rowcount = ROW_COUNT;
   par_rowcount := var_rowcount;
@@ -1485,7 +1595,7 @@ BEGIN
       "Code" varchar(128),
       "Description" varchar(128),
       "Контакт" varchar(500),
-      "dt_update" timestamp without time zone 
+      "updated_at" timestamp without time zone 
     );
 
     INSERT INTO "DIM_Клиенты_tmp2"
@@ -1510,7 +1620,7 @@ BEGIN
       "Code" = src."Code",
       "Description" = src."Description",
       "Контакт" = src."Контакт",
-      dt_update = var_updatedate
+      updated_at = var_updatedate
     FROM "DIM_Клиенты_tmp2" AS src 
     WHERE org."nkey" = src."nkey" ;
 
@@ -1521,7 +1631,7 @@ BEGIN
       "Code",
       "Description",
       "Контакт",
-      dt_update
+      updated_at
     )
     SELECT 
       src."nkey" ,
@@ -1530,11 +1640,12 @@ BEGIN
       src."Code",
       src."Description",
       src."Контакт",
-      src."dt_update"
+      src."updated_at"
     FROM "DIM_Клиенты_tmp2" AS src 
       LEFT JOIN "odins"."DIM_Клиенты" AS org ON org."nkey" = src."nkey" 
     WHERE org."RefID" IS NULL ;
 
+    /* Sub tables (tabular sections) */
     -- Clear buffer table
     IF var_buffer_history_mode = 1 AND NOT EXISTS (SELECT 1 FROM "odins"."DIM_Клиенты_buffer" WHERE is_error = true) THEN
 
@@ -1545,14 +1656,14 @@ BEGIN
     ELSE
 
       UPDATE "odins"."DIM_Клиенты_buffer" AS org SET
-        dt_update = var_updatedate
+        updated_at = var_updatedate
       FROM "DIM_Клиенты_lock" AS src
       WHERE org."buffer_id" = src."buffer_id";
 
       IF var_buffer_history_mode >= 2 AND NOT EXISTS (SELECT 1 FROM "odins"."DIM_Клиенты_buffer" WHERE is_error = true) THEN
         DELETE
         FROM "odins"."DIM_Клиенты_buffer" AS b
-        WHERE EXTRACT(DAY FROM var_updatedate::timestamp - dt_update::timestamp) > var_bufferhistorydays;
+        WHERE EXTRACT(DAY FROM var_updatedate::timestamp - updated_at::timestamp) > var_bufferhistorydays;
       END IF;
     END IF;
 
@@ -1569,7 +1680,7 @@ BEGIN
 
     UPDATE "odins"."DIM_Клиенты_buffer" AS org SET
       is_error  = true,
-      dt_update = var_updatedate
+      updated_at = var_updatedate
     FROM "DIM_Клиенты_lock" AS src
     WHERE org."buffer_id" = src."buffer_id";
 
@@ -1608,16 +1719,52 @@ END;
 $$;
 
 CREATE OR REPLACE PROCEDURE odins."load_DIM_Клиенты_staging" (
-  par_session_id in bigint DEFAULT NULL, 
-  par_rowcount inout int DEFAULT NULL 
+  par_session_id in bigint DEFAULT NULL,
+  par_rowcount inout int DEFAULT NULL
 )
 AS $BODY$
 DECLARE
   var_rowcount int;
+  var_updatedate timestamp without time zone;
+  var_xmlns text ARRAY;
 BEGIN
+  SELECT now() INTO var_updatedate;
+  SELECT ARRAY[ARRAY['nva', 'http://v8.1c.ru/8.1/data/enterprise/current-config'], ARRAY['xsi', 'http://www.w3.org/2001/XMLSchema-instance'], ARRAY['xs', 'http://www.w3.org/2001/XMLSchema']] INTO var_xmlns;
 
-  DROP TABLE IF EXISTS "DIM_Клиенты_tmp1";
+  UPDATE "odins"."DIM_Клиенты" AS org SET
+    "RefID" = src."RefID",
+    "DeletionMark" = src."DeletionMark",
+    "Code" = src."Code",
+    "Description" = src."Description",
+    "Контакт" = src."Контакт",
+    updated_at = var_updatedate
+  FROM staging."DIM_Клиенты" AS src
+  WHERE org."nkey" = src."nkey";
 
+  INSERT INTO "odins"."DIM_Клиенты" (
+    "nkey",
+    "RefID",
+    "DeletionMark",
+    "Code",
+    "Description",
+    "Контакт",
+    updated_at
+  )
+  SELECT
+    src."nkey",
+    src."RefID",
+    src."DeletionMark",
+    src."Code",
+    src."Description",
+    src."Контакт",
+    src.updated_at
+  FROM staging."DIM_Клиенты" AS src
+  LEFT JOIN "odins"."DIM_Клиенты" AS org ON org."nkey" = src."nkey"
+  WHERE org."RefID" IS NULL;
+
+  /* Sub tables (tabular sections) */
+  GET DIAGNOSTICS var_rowcount = ROW_COUNT;
+  par_rowcount := var_rowcount;
 END;
 
 $BODY$
@@ -1672,7 +1819,7 @@ BEGIN
   SELECT buffer_id AS buffer_id,
     CAST((xpath('/nva:Data/nva:Реквизиты/nva:CatalogObject.Товары/nva:Ref/text()', msg::xml, var_xmlns ))[1]::text as uuid) ref
   FROM "odins"."DIM_Товары_buffer" b
-  WHERE b.dt_update = var_mindate;
+  WHERE b.updated_at = var_mindate;
 
   GET DIAGNOSTICS var_rowcount = ROW_COUNT;
   par_rowcount := var_rowcount;
@@ -1699,7 +1846,7 @@ BEGIN
       "Code" varchar(128),
       "Description" varchar(128),
       "Описание" varchar(255),
-      "dt_update" timestamp without time zone 
+      "updated_at" timestamp without time zone 
     );
 
     INSERT INTO "DIM_Товары_tmp2"
@@ -1724,7 +1871,7 @@ BEGIN
       "Code" = src."Code",
       "Description" = src."Description",
       "Описание" = src."Описание",
-      dt_update = var_updatedate
+      updated_at = var_updatedate
     FROM "DIM_Товары_tmp2" AS src 
     WHERE org."nkey" = src."nkey" ;
 
@@ -1735,7 +1882,7 @@ BEGIN
       "Code",
       "Description",
       "Описание",
-      dt_update
+      updated_at
     )
     SELECT 
       src."nkey" ,
@@ -1744,11 +1891,12 @@ BEGIN
       src."Code",
       src."Description",
       src."Описание",
-      src."dt_update"
+      src."updated_at"
     FROM "DIM_Товары_tmp2" AS src 
       LEFT JOIN "odins"."DIM_Товары" AS org ON org."nkey" = src."nkey" 
     WHERE org."RefID" IS NULL ;
 
+    /* Sub tables (tabular sections) */
     -- Clear buffer table
     IF var_buffer_history_mode = 1 AND NOT EXISTS (SELECT 1 FROM "odins"."DIM_Товары_buffer" WHERE is_error = true) THEN
 
@@ -1759,14 +1907,14 @@ BEGIN
     ELSE
 
       UPDATE "odins"."DIM_Товары_buffer" AS org SET
-        dt_update = var_updatedate
+        updated_at = var_updatedate
       FROM "DIM_Товары_lock" AS src
       WHERE org."buffer_id" = src."buffer_id";
 
       IF var_buffer_history_mode >= 2 AND NOT EXISTS (SELECT 1 FROM "odins"."DIM_Товары_buffer" WHERE is_error = true) THEN
         DELETE
         FROM "odins"."DIM_Товары_buffer" AS b
-        WHERE EXTRACT(DAY FROM var_updatedate::timestamp - dt_update::timestamp) > var_bufferhistorydays;
+        WHERE EXTRACT(DAY FROM var_updatedate::timestamp - updated_at::timestamp) > var_bufferhistorydays;
       END IF;
     END IF;
 
@@ -1783,7 +1931,7 @@ BEGIN
 
     UPDATE "odins"."DIM_Товары_buffer" AS org SET
       is_error  = true,
-      dt_update = var_updatedate
+      updated_at = var_updatedate
     FROM "DIM_Товары_lock" AS src
     WHERE org."buffer_id" = src."buffer_id";
 
@@ -1822,16 +1970,52 @@ END;
 $$;
 
 CREATE OR REPLACE PROCEDURE odins."load_DIM_Товары_staging" (
-  par_session_id in bigint DEFAULT NULL, 
-  par_rowcount inout int DEFAULT NULL 
+  par_session_id in bigint DEFAULT NULL,
+  par_rowcount inout int DEFAULT NULL
 )
 AS $BODY$
 DECLARE
   var_rowcount int;
+  var_updatedate timestamp without time zone;
+  var_xmlns text ARRAY;
 BEGIN
+  SELECT now() INTO var_updatedate;
+  SELECT ARRAY[ARRAY['nva', 'http://v8.1c.ru/8.1/data/enterprise/current-config'], ARRAY['xsi', 'http://www.w3.org/2001/XMLSchema-instance'], ARRAY['xs', 'http://www.w3.org/2001/XMLSchema']] INTO var_xmlns;
 
-  DROP TABLE IF EXISTS "DIM_Товары_tmp1";
+  UPDATE "odins"."DIM_Товары" AS org SET
+    "RefID" = src."RefID",
+    "DeletionMark" = src."DeletionMark",
+    "Code" = src."Code",
+    "Description" = src."Description",
+    "Описание" = src."Описание",
+    updated_at = var_updatedate
+  FROM staging."DIM_Товары" AS src
+  WHERE org."nkey" = src."nkey";
 
+  INSERT INTO "odins"."DIM_Товары" (
+    "nkey",
+    "RefID",
+    "DeletionMark",
+    "Code",
+    "Description",
+    "Описание",
+    updated_at
+  )
+  SELECT
+    src."nkey",
+    src."RefID",
+    src."DeletionMark",
+    src."Code",
+    src."Description",
+    src."Описание",
+    src.updated_at
+  FROM staging."DIM_Товары" AS src
+  LEFT JOIN "odins"."DIM_Товары" AS org ON org."nkey" = src."nkey"
+  WHERE org."RefID" IS NULL;
+
+  /* Sub tables (tabular sections) */
+  GET DIAGNOSTICS var_rowcount = ROW_COUNT;
+  par_rowcount := var_rowcount;
 END;
 
 $BODY$
@@ -1886,7 +2070,7 @@ BEGIN
   SELECT buffer_id AS buffer_id,
     CAST((xpath('/nva:Data/nva:Реквизиты/nva:DocumentObject.Продажи/nva:Ref/text()', msg::xml, var_xmlns ))[1]::text as uuid) ref
   FROM "odins"."FACT_Продажи_buffer" b
-  WHERE b.dt_update = var_mindate;
+  WHERE b.updated_at = var_mindate;
 
   GET DIAGNOSTICS var_rowcount = ROW_COUNT;
   par_rowcount := var_rowcount;
@@ -1921,7 +2105,7 @@ BEGIN
       "ТипДоставки" varchar(500),
       "ПримерСоставногоТипа" varchar(36),
       "ПримерСоставногоТипа_ТипЗначения" varchar(128),
-      "dt_update" timestamp without time zone 
+      "updated_at" timestamp without time zone 
     );
 
     INSERT INTO "FACT_Продажи_tmp2"
@@ -1929,7 +2113,7 @@ BEGIN
     SELECT
       CAST((xpath('/nva:Data/nva:Реквизиты/nva:DocumentObject.Продажи/nva:Ref/text()', msg::xml, var_xmlns ))[1]::text as uuid) AS "nkey",
 
-      (xpath('/nva:Data/nva:Реквизиты/nva:DocumentObject.Продажи/nva:FACT_Продажи.Товары/text()', msg::xml, var_xmlns ))[1]::xml  AS "FACT_Продажи_Товары",
+      (SELECT xmlelement(name "rows", xmlagg(x)) FROM unnest(xpath('/nva:Data/nva:Реквизиты/nva:DocumentObject.Продажи/nva:Товары', msg::xml, var_xmlns)) AS t(x)) AS "FACT_Продажи_Товары",
       CAST((xpath('/nva:Data/nva:Реквизиты/nva:DocumentObject.Продажи/nva:Ref/text()', msg::xml, var_xmlns ))[1]::text as uuid)  AS "RefID",
       CAST((xpath('/nva:Data/nva:Реквизиты/nva:DocumentObject.Продажи/nva:DeletionMark/text()', msg::xml, var_xmlns ))[1]::text as boolean)  AS "DeletionMark",
       CAST((xpath('/nva:Data/nva:Реквизиты/nva:DocumentObject.Продажи/nva:Number/text()', msg::xml, var_xmlns ))[1]::text as integer)  AS "Number",
@@ -1961,7 +2145,7 @@ BEGIN
       "ТипДоставки" = src."ТипДоставки",
       "ПримерСоставногоТипа" = src."ПримерСоставногоТипа",
       "ПримерСоставногоТипа_ТипЗначения" = src."ПримерСоставногоТипа_ТипЗначения",
-      dt_update = var_updatedate
+      updated_at = var_updatedate
     FROM "FACT_Продажи_tmp2" AS src 
     WHERE org."nkey" = src."nkey" ;
 
@@ -1979,7 +2163,7 @@ BEGIN
       "ТипДоставки",
       "ПримерСоставногоТипа",
       "ПримерСоставногоТипа_ТипЗначения",
-      dt_update
+      updated_at
     )
     SELECT 
       src."nkey" ,
@@ -1995,10 +2179,39 @@ BEGIN
       src."ТипДоставки",
       src."ПримерСоставногоТипа",
       src."ПримерСоставногоТипа_ТипЗначения",
-      src."dt_update"
+      src."updated_at"
     FROM "FACT_Продажи_tmp2" AS src 
       LEFT JOIN "odins"."FACT_Продажи" AS org ON org."nkey" = src."nkey" 
     WHERE org."RefID" IS NULL ;
+
+    /* Sub tables (tabular sections) */
+    DELETE FROM "odins"."FACT_Продажи_Товары" AS trg
+    USING "FACT_Продажи_tmp2" AS tmp
+    WHERE
+      trg."FACT_ПродажиRefID" = tmp."RefID";
+
+    INSERT INTO "odins"."FACT_Продажи_Товары" (
+      "nkey",
+      "FACT_ПродажиRefID",
+      "Доставка",
+      "Товар",
+      "Колличество",
+      "Цена",
+      updated_at
+    )
+    SELECT
+      CAST(md5(CONVERT(
+        (CAST(tmp."RefID" AS varchar(36)) || '|' || COALESCE(CAST(line_ord AS varchar), '0'))
+        ::bytea, 'UTF8', 'UHC')) AS uuid) AS "nkey",
+      tmp."RefID" AS "FACT_ПродажиRefID",
+      CAST((xpath('//*[local-name()="Доставка"]/text()', line_xml))[1]::text AS boolean) AS "Доставка",
+      CAST((xpath('//*[local-name()="Товар"]/text()', line_xml))[1]::text AS varchar(36)) AS "Товар",
+      CAST((xpath('//*[local-name()="Колличество"]/text()', line_xml))[1]::text AS decimal(12, 0)) AS "Колличество",
+      CAST((xpath('//*[local-name()="Цена"]/text()', line_xml))[1]::text AS decimal(16, 4)) AS "Цена",
+      var_updatedate AS updated_at
+    FROM "FACT_Продажи_tmp2" AS tmp
+    CROSS JOIN LATERAL unnest(xpath('/*[local-name()="rows"]/*', tmp."FACT_Продажи_Товары")) WITH ORDINALITY AS line(line_xml, line_ord)
+    WHERE tmp."FACT_Продажи_Товары" IS NOT NULL;
 
     -- Clear buffer table
     IF var_buffer_history_mode = 1 AND NOT EXISTS (SELECT 1 FROM "odins"."FACT_Продажи_buffer" WHERE is_error = true) THEN
@@ -2010,14 +2223,14 @@ BEGIN
     ELSE
 
       UPDATE "odins"."FACT_Продажи_buffer" AS org SET
-        dt_update = var_updatedate
+        updated_at = var_updatedate
       FROM "FACT_Продажи_lock" AS src
       WHERE org."buffer_id" = src."buffer_id";
 
       IF var_buffer_history_mode >= 2 AND NOT EXISTS (SELECT 1 FROM "odins"."FACT_Продажи_buffer" WHERE is_error = true) THEN
         DELETE
         FROM "odins"."FACT_Продажи_buffer" AS b
-        WHERE EXTRACT(DAY FROM var_updatedate::timestamp - dt_update::timestamp) > var_bufferhistorydays;
+        WHERE EXTRACT(DAY FROM var_updatedate::timestamp - updated_at::timestamp) > var_bufferhistorydays;
       END IF;
     END IF;
 
@@ -2034,7 +2247,7 @@ BEGIN
 
     UPDATE "odins"."FACT_Продажи_buffer" AS org SET
       is_error  = true,
-      dt_update = var_updatedate
+      updated_at = var_updatedate
     FROM "FACT_Продажи_lock" AS src
     WHERE org."buffer_id" = src."buffer_id";
 
@@ -2073,16 +2286,101 @@ END;
 $$;
 
 CREATE OR REPLACE PROCEDURE odins."load_FACT_Продажи_staging" (
-  par_session_id in bigint DEFAULT NULL, 
-  par_rowcount inout int DEFAULT NULL 
+  par_session_id in bigint DEFAULT NULL,
+  par_rowcount inout int DEFAULT NULL
 )
 AS $BODY$
 DECLARE
   var_rowcount int;
+  var_updatedate timestamp without time zone;
+  var_xmlns text ARRAY;
 BEGIN
+  SELECT now() INTO var_updatedate;
+  SELECT ARRAY[ARRAY['nva', 'http://v8.1c.ru/8.1/data/enterprise/current-config'], ARRAY['xsi', 'http://www.w3.org/2001/XMLSchema-instance'], ARRAY['xs', 'http://www.w3.org/2001/XMLSchema']] INTO var_xmlns;
 
-  DROP TABLE IF EXISTS "FACT_Продажи_tmp1";
+  UPDATE "odins"."FACT_Продажи" AS org SET
+    "RefID" = src."RefID",
+    "DeletionMark" = src."DeletionMark",
+    "Number" = src."Number",
+    "Posted" = src."Posted",
+    "Date" = src."Date",
+    "DateID" = src."DateID",
+    "ДатаОтгрузки" = src."ДатаОтгрузки",
+    "ДатаОтгрузкиID" = src."ДатаОтгрузкиID",
+    "Клиент" = src."Клиент",
+    "ТипДоставки" = src."ТипДоставки",
+    "ПримерСоставногоТипа" = src."ПримерСоставногоТипа",
+    "ПримерСоставногоТипа_ТипЗначения" = src."ПримерСоставногоТипа_ТипЗначения",
+    updated_at = var_updatedate
+  FROM staging."FACT_Продажи" AS src
+  WHERE org."nkey" = src."nkey";
 
+  INSERT INTO "odins"."FACT_Продажи" (
+    "nkey",
+    "RefID",
+    "DeletionMark",
+    "Number",
+    "Posted",
+    "Date",
+    "DateID",
+    "ДатаОтгрузки",
+    "ДатаОтгрузкиID",
+    "Клиент",
+    "ТипДоставки",
+    "ПримерСоставногоТипа",
+    "ПримерСоставногоТипа_ТипЗначения",
+    updated_at
+  )
+  SELECT
+    src."nkey",
+    src."RefID",
+    src."DeletionMark",
+    src."Number",
+    src."Posted",
+    src."Date",
+    src."DateID",
+    src."ДатаОтгрузки",
+    src."ДатаОтгрузкиID",
+    src."Клиент",
+    src."ТипДоставки",
+    src."ПримерСоставногоТипа",
+    src."ПримерСоставногоТипа_ТипЗначения",
+    src.updated_at
+  FROM staging."FACT_Продажи" AS src
+  LEFT JOIN "odins"."FACT_Продажи" AS org ON org."nkey" = src."nkey"
+  WHERE org."RefID" IS NULL;
+
+  /* Sub tables (tabular sections) */
+  DELETE FROM "odins"."FACT_Продажи_Товары" AS trg
+  USING staging."FACT_Продажи" AS tmp
+  WHERE
+    trg."FACT_ПродажиRefID" = tmp."RefID";
+
+  INSERT INTO "odins"."FACT_Продажи_Товары" (
+    "nkey",
+    "FACT_ПродажиRefID",
+    "Доставка",
+    "Товар",
+    "Колличество",
+    "Цена",
+    updated_at
+  )
+  SELECT
+    CAST(md5(CONVERT(
+      (CAST(tmp."RefID" AS varchar(36)) || '|' || COALESCE(CAST(line_ord AS varchar), '0'))
+      ::bytea, 'UTF8', 'UHC')) AS uuid) AS "nkey",
+    tmp."RefID" AS "FACT_ПродажиRefID",
+    CAST((xpath('//*[local-name()="Доставка"]/text()', line_xml))[1]::text AS boolean) AS "Доставка",
+    CAST((xpath('//*[local-name()="Товар"]/text()', line_xml))[1]::text AS varchar(36)) AS "Товар",
+    CAST((xpath('//*[local-name()="Колличество"]/text()', line_xml))[1]::text AS decimal(12, 0)) AS "Колличество",
+    CAST((xpath('//*[local-name()="Цена"]/text()', line_xml))[1]::text AS decimal(16, 4)) AS "Цена",
+    var_updatedate AS updated_at
+  FROM staging."FACT_Продажи" AS tmp
+  CROSS JOIN LATERAL unnest(xpath('/*[local-name()="rows"]/*', tmp."FACT_Продажи_Товары")) WITH ORDINALITY AS line(line_xml, line_ord)
+  WHERE tmp."FACT_Продажи_Товары" IS NOT NULL;
+
+  GET DIAGNOSTICS var_rowcount = ROW_COUNT;
+  par_rowcount := var_rowcount;
 END;
 
 $BODY$
@@ -2107,7 +2405,7 @@ CREATE TABLE IF NOT EXISTS "staging"."DIM_Валюты" (
   "ПараметрыПрописи"            varchar(200)  NULL,
   "ФормулаРасчетаКурса"            varchar(100)  NULL,
   "СпособУстановкиКурса"            varchar(500)  NULL,
-  "dt_update"              timestamp without time zone);
+  "updated_at"              timestamp without time zone);
 do
 $$
 BEGIN
@@ -2122,7 +2420,7 @@ CREATE TABLE IF NOT EXISTS "staging"."DIM_Клиенты" (
   "Code"            varchar(128)  NULL,
   "Description"            varchar(128)  NULL,
   "Контакт"            varchar(500)  NULL,
-  "dt_update"              timestamp without time zone);
+  "updated_at"              timestamp without time zone);
 do
 $$
 BEGIN
@@ -2137,7 +2435,7 @@ CREATE TABLE IF NOT EXISTS "staging"."DIM_Товары" (
   "Code"            varchar(128)  NULL,
   "Description"            varchar(128)  NULL,
   "Описание"            varchar(255)  NULL,
-  "dt_update"              timestamp without time zone);
+  "updated_at"              timestamp without time zone);
 do
 $$
 BEGIN
@@ -2159,4 +2457,4 @@ CREATE TABLE IF NOT EXISTS "staging"."FACT_Продажи" (
   "ТипДоставки"            varchar(500)  NULL,
   "ПримерСоставногоТипа"            varchar(36)  NULL,
   "ПримерСоставногоТипа_ТипЗначения"            varchar(128)  NULL,
-  "dt_update"              timestamp without time zone);
+  "updated_at"              timestamp without time zone);

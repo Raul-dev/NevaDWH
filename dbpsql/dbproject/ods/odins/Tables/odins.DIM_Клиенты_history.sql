@@ -12,4 +12,4 @@ CREATE TABLE IF NOT EXISTS "odins"."DIM_Клиенты_history" (
   "Code"            varchar(128)  NULL,
   "Description"            varchar(128)  NULL,
   "Контакт"            varchar(500)  NULL,
-  "dt_create"              timestamp without time zone         NULL default now());
+  "created_at"              timestamp without time zone         NULL default now());

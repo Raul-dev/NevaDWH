@@ -17,7 +17,7 @@ CREATE TABLE IF NOT EXISTS target."DIM_Валюты_Представления" 
   "КодЯзыка"         varchar(10)  NULL ,
   "ПараметрыПрописи"         varchar(200)  NULL ,
   session_id_update bigint NOT NULL,
-  dt_update         timestamp without time zone NOT NULL default now(),
-  dt_create         timestamp without time zone NOT NULL default now(),
+  updated_at         timestamp without time zone NOT NULL default now(),
+  created_at         timestamp without time zone NOT NULL default now(),
   CONSTRAINT "PK_target_DIM_Валюты_Представления" PRIMARY KEY (id));
 CREATE UNIQUE INDEX IF NOT EXISTS "IDX_target_DIM_Валюты_Представления" ON target."DIM_Валюты_Представления" (nkey);

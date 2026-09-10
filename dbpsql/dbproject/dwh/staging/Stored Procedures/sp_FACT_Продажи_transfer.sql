@@ -52,7 +52,7 @@ BEGIN
     "ПримерСоставногоТипа",
     "ПримерСоставногоТипа_ТипЗначения",
     session_id_update,
-    dt_update
+    updated_at
   )
   SELECT
     par_session_id AS "session_id",
@@ -74,7 +74,7 @@ BEGIN
     "ПримерСоставногоТипа",
     "ПримерСоставногоТипа_ТипЗначения",
     par_session_id AS session_id_update,
-    val_start_date AS dt_update
+    val_start_date AS updated_at
   FROM fdw."odins_FACT_Продажи" tmp
   WHERE dwh_session_id = val_dwh_session_id;
   GET DIAGNOSTICS var_RowCount = ROW_COUNT;
@@ -102,7 +102,7 @@ BEGIN
     "Колличество",
     "Цена",
     session_id_update,
-    dt_update
+    updated_at
   )
   SELECT
     par_session_id AS "session_id",
@@ -117,7 +117,7 @@ BEGIN
     "Колличество",
     "Цена",
     par_session_id AS session_id_update,
-    val_start_date AS dt_update
+    val_start_date AS updated_at
   FROM fdw."odins_FACT_Продажи_Товары" tmp
   WHERE dwh_session_id = val_dwh_session_id;
   GET DIAGNOSTICS var_RowCount = ROW_COUNT;

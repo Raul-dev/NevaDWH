@@ -20,8 +20,8 @@ CREATE TABLE IF NOT EXISTS odins."FACT_Продажи" (
     "ТипДоставки"                 varchar(500)   NULL  ,
     "ПримерСоставногоТипа"        varchar(36)   NULL  ,
     "ПримерСоставногоТипа_ТипЗначения"varchar(128)   NULL  ,
-    dt_update                     timestamp without time zone default now(),
-    dt_create                     timestamp without time zone default now()
+    updated_at                    timestamp without time zone default now(),
+    created_at                    timestamp without time zone default now()
 );
 
 COMMENT ON TABLE "odins"."FACT_Продажи" IS '{"Description":"FACT_Продажи"}';

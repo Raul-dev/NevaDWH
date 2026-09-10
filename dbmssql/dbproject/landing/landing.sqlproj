@@ -6,13 +6,14 @@
   <Name>landing</Name>
   <SchemaVersion>2.0</SchemaVersion>
   <ProjectVersion>4.1</ProjectVersion>
-  <ProjectGuid>{c2ebe3c4-9129-4aff-b058-f9a5f7cd5273}</ProjectGuid>
+  <ProjectGuid>{C2EBE3C4-9129-4AFF-B058-F9A5F7CD5273}</ProjectGuid>
   <DSP>Microsoft.Data.Tools.Schema.Sql.Sql150DatabaseSchemaProvider</DSP>
   <OutputType>Database</OutputType>
-  <RootPath />
+  <RootPath>
+  </RootPath>
   <RootNamespace>landing</RootNamespace>
   <AssemblyName>landing</AssemblyName>
-  <ModelCollation>1049,CI</ModelCollation>
+  <ModelCollation>1033, CI</ModelCollation>
   <DefaultFileStructure>BySchemaAndSchemaType</DefaultFileStructure>
   <DeployToDatabase>True</DeployToDatabase>
   <TargetFrameworkVersion>v4.8</TargetFrameworkVersion>
@@ -21,7 +22,6 @@
   <SqlServerVerification>False</SqlServerVerification>
   <IncludeCompositeObjects>True</IncludeCompositeObjects>
   <TargetDatabaseSet>True</TargetDatabaseSet>
-  <TargetFrameworkProfile />
   <DefaultCollation>Cyrillic_General_CI_AS</DefaultCollation>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
@@ -49,6 +49,7 @@
   </PropertyGroup>
   <PropertyGroup>
   <VisualStudioVersion Condition="'$(VisualStudioVersion)' == ''">11.0</VisualStudioVersion>
+  <!-- Default to the v11.0 targets path if the targets file for the current VS version is not found -->
   <SSDTExists Condition="Exists('$(MSBuildExtensionsPath)\Microsoft\VisualStudio\v$(VisualStudioVersion)\SSDT\Microsoft.Data.Tools.Schema.SqlTasks.targets')">True</SSDTExists>
   <VisualStudioVersion Condition="'$(SSDTExists)' == ''">11.0</VisualStudioVersion>
   </PropertyGroup>
@@ -56,20 +57,27 @@
   <Import Condition="'$(SQLDBExtensionsRefPath)' == ''" Project="$(MSBuildExtensionsPath)\Microsoft\VisualStudio\v$(VisualStudioVersion)\SSDT\Microsoft.Data.Tools.Schema.SqlTasks.targets" />
   <ItemGroup>
   <Folder Include="Properties" />
-  <Folder Include="audit" />
-  <Folder Include="audit\Stored Procedures" />
+  <Folder Include="target\" />
+  <Folder Include="target\Tables\" />
+  <Folder Include="target\Stored Procedures\" />
+  <Folder Include="Security\" />
+  <Folder Include="audit\" />
+  <Folder Include="audit\Stored Procedures\" />
+  <Folder Include="Storage\" />
   <Folder Include="audit\Tables" />
   <Folder Include="audit\Functions" />
-  <Folder Include="Storage" />
-  <Folder Include="Security" />
-  <Folder Include="Dictionaries" />
   <Folder Include="mq\" />
   <Folder Include="mq\Tables\" />
   <Folder Include="mq\Stored Procedures\" />
-  <Folder Include="mq\Functions" />
   <Folder Include="etl\" />
   <Folder Include="etl\Tables\" />
-  <Folder Include="etl\Stored Procedures" />
+  <Folder Include="etl\Stored Procedures\" />
+  <Folder Include="etl\Functions\" />
+  <Folder Include="mq\Functions" />
+  <Folder Include="config\" />
+  <Folder Include="config\Tables\" />
+  <Folder Include="config\Functions\" />
+  <Folder Include="Dictionaries" />
   </ItemGroup>
   <ItemGroup>
   <Build Include="mq\Tables\MetaMap.sql" />
@@ -80,26 +88,31 @@
   <Build Include="mq\Tables\SessionState.sql" />
   <Build Include="mq\Tables\Session.sql" />
   <Build Include="mq\Tables\SessionLog.sql" />
-  <Build Include="mq\Stored Procedures\sp_SaveSessionState.sql" />
   <Build Include="mq\Tables\MetaDataBuffer.sql" />
-  <Build Include="mq\Tables\MetaData.sql" />
-  <Build Include="mq\Stored Procedures\load_MetaData.sql" />
-  <Build Include="mq\Tables\FileQueue.sql" />
-  <Build Include="etl\Stored Procedures\dwh_ArchiveTables.sql" />
-  <Build Include="etl\Stored Procedures\dwh_AssignSessionID.sql" />
+  <Build Include="mq\Stored Procedures\sp_SaveSessionState.sql" />
   <Build Include="etl\Stored Procedures\dwh_SaveSessionState.sql" />
-  <Build Include="etl\Tables\CodeGenEnableType.sql" />
-  <Build Include="etl\Tables\CodeGen.sql" />
+  <Build Include="etl\Stored Procedures\dwh_ArchiveTables.sql" />
+  <Build Include="etl\Stored Procedures\dwh_AssignSessionID.sql"/>
+  <Build Include="config\Functions\fn_GetSettingValue.sql" />
+  <Build Include="config\Functions\fn_GetSettingInt.sql" />
+  <Build Include="config\Tables\Setting.sql" />
   <Build Include="etl\Tables\CodeGenDwhTable.sql" />
   <Build Include="etl\Tables\CodeGenDwhColumn.sql" />
-  <Build Include="etl\Tables\DwhProcessingDetails.sql" />
-  <Build Include="etl\Tables\DwhSession.sql" />
-  <Build Include="etl\Tables\DwhSessionLog.sql" />
+  <Build Include="etl\Tables\CodeGen.sql" />
+  <Build Include="etl\Tables\CodeGenEnableType.sql" />
   <Build Include="etl\Tables\DwhSessionState.sql" />
-  <Build Include="etl\Tables\MetaDataSql.sql" />
-  <Build Include="config\Tables\Setting.sql" />
-  <Build Include="config\Functions\fn_GetSettingInt.sql" />
-  <Build Include="config\Functions\fn_GetSettingValue.sql" />
+  <Build Include="etl\Tables\DwhSessionLog.sql"/>
+  <Build Include="etl\Tables\DwhSession.sql"/>
+  <Build Include="etl\Tables\DwhProcessingDetails.sql" />
+  <Build Include="target\Tables\DIM_Date.sql" />
+  <Build Include="target\Stored Procedures\sp_FillDimDate.sql" />
+  <None Include="Dictionaries\dwh_session_state.sql" />
+  <Build Include="Security\target.sql" />
+  <Build Include="Security\staging.sql" />
+  <Build Include="Storage\InMemory.sql" />
+  <Build Include="Storage\fn_filequeueRange.sql" />
+  <Build Include="Storage\filequeueRange.sql" />
+  <Build Include="audit\Tables\LogProcedures.sql" />
   <Build Include="audit\Stored Procedures\sp_LnkInsert.sql" />
   <Build Include="audit\Stored Procedures\sp_LnkUpdate.sql" />
   <Build Include="audit\Stored Procedures\sp_LogFinish.sql" />
@@ -111,39 +124,34 @@
   <Build Include="audit\Functions\Template_LogProc.sql" />
   <Build Include="audit\Tables\AuditTypeSP.sql" />
   <Build Include="audit\Tables\Setting.sql" />
-  <Build Include="audit\Stored Procedures\sp_Print.sql">
-   <QuotedIdentifier>Off</QuotedIdentifier>
-  </Build>
+  <Build Include="mq\Tables\MetaData.sql" />
+  <Build Include="mq\Tables\FileQueue.sql" />
+  <Build Include="mq\Stored Procedures\load_MetaData.sql" />
   <Build Include="mq\Functions\fn_GetRef.sql" />
   <Build Include="mq\Functions\fn_GetMaxDate.sql" />
   <Build Include="mq\Functions\fn_GetMinDate.sql" />
-  <Build Include="audit\Tables\LogProcedures.sql" />
-  <Build Include="Storage\InMemory.sql" />
-  <Build Include="Storage\fn_filequeueRange.sql" />
-  <Build Include="Storage\filequeueRange.sql" />
+  <Build Include="audit\Stored Procedures\sp_Print.sql">
+   <QuotedIdentifier>Off</QuotedIdentifier>
+  </Build>
+  <None Include="Dictionaries\AuditSetup.sql">
+   <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+  </None>
   <Build Include="Security\audit.sql" />
   <Build Include="Security\mq.sql" />
   <Build Include="Security\etl.sql" />
   <Build Include="Security\config.sql" />
-  <Build Include="Security\odins.sql" />
-  <None Include="Dictionaries\codegen.sql">
-   <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-  </None>
-  <None Include="Dictionaries\codegen_enable_type.sql">
-   <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-  </None>
-  <None Include="Dictionaries\dwh_session_state.sql">
-   <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-  </None>
-  <None Include="Dictionaries\metamap.sql">
-   <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-  </None>
+    </ItemGroup>
+  <ItemGroup>
+  <None Include="Dictionaries\codegen_enable_type.sql" />
   <None Include="Dictionaries\session_state.sql">
-   <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-  </None>
-  <None Include="Dictionaries\AuditSetup.sql">
    <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
   </None>
+  <None Include="Dictionaries\metamap.sql" />
+  <None Include="Dictionaries\codegen.sql" />
+  <None Include="Dictionaries\messagequeue.sql" />
+  </ItemGroup>
+  <ItemGroup>
+  <PostDeploy Include="Dictionaries\Script.PostDeployment.sql" />
   </ItemGroup>
   <ItemGroup>
   <ArtifactReference Include="$(DacPacRootPath)\Extensions\Microsoft\SQLDB\Extensions\SqlServer\150\SqlSchemas\master.dacpac">
@@ -151,14 +159,6 @@
    <SuppressMissingDependenciesErrors>True</SuppressMissingDependenciesErrors>
    <DatabaseVariableLiteralValue>master</DatabaseVariableLiteralValue>
   </ArtifactReference>
-  </ItemGroup>
-  <ItemGroup>
-  <None Include="Dictionaries\.editorconfig" />
-  </ItemGroup>
-  <ItemGroup>
-  <PostDeploy Include="Dictionaries\Script.PostDeployment.sql">
-   <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-  </PostDeploy>
   </ItemGroup>
   <ItemGroup>
   <SqlCmdVariable Include="landing">
@@ -169,17 +169,17 @@
    <DefaultValue>LinkSRVLogLanding</DefaultValue>
    <Value>$(SqlCmdVar__3)</Value>
   </SqlCmdVariable>
-  <SqlCmdVariable Include="LinkSRVLog">
-   <DefaultValue>LinkSRVLog</DefaultValue>
-   <Value>$(SqlCmdVar__4)</Value>
-  </SqlCmdVariable>
   <SqlCmdVariable Include="ods">
    <DefaultValue>ods</DefaultValue>
-   <Value>$(SqlCmdVar__6)</Value>
+   <Value>$(SqlCmdVar__4)</Value>
+  </SqlCmdVariable>
+  <SqlCmdVariable Include="LinkSRVLog">
+   <DefaultValue>LinkSRVLog</DefaultValue>
+   <Value>$(SqlCmdVar__5)</Value>
   </SqlCmdVariable>
   <SqlCmdVariable Include="log">
    <DefaultValue>log</DefaultValue>
-   <Value>$(SqlCmdVar__5)</Value>
+   <Value>$(SqlCmdVar__6)</Value>
   </SqlCmdVariable>
   </ItemGroup>
   <ItemGroup>

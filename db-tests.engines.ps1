@@ -28,8 +28,22 @@ function New-DbTestEngineMssql {
     Id    = 'mssql'
     Label = 'mssql'
 
-    OdinsTables     = @('DIM_Валюты', 'DIM_Клиенты', 'DIM_Товары', 'FACT_Продажи')
-    DwhEntityTables = @('DIM_Валюты', 'DIM_Клиенты', 'DIM_Товары', 'FACT_Продажи')
+    OdinsTables     = @('DIM_Валюты', 'DIM_Клиенты', 'DIM_Товары', 'FACT_Продажи', 'FACT_Продажи.Товары', 'DIM_Валюты.Представления')
+    # MQ consumer writes *Buffer first (MSSQL naming); main odins.* may be emptied after Airflow ETL
+    OdinsBufferTables = @('DIM_ВалютыBuffer', 'DIM_КлиентыBuffer', 'DIM_ТоварыBuffer', 'FACT_ПродажиBuffer')
+    DwhEntityTables = @('DIM_Валюты', 'DIM_Клиенты', 'DIM_Товары', 'FACT_Продажи', 'FACT_Продажи.Товары', 'DIM_Валюты.Представления')
+    # Parent → child: after ETL, parent rows must have tabular section rows too
+    SalesParentTable = 'FACT_Продажи'
+    SalesChildTable  = 'FACT_Продажи.Товары'
+    GetSalesLinesQualitySql = {
+      param([string]$Schema)
+      @"
+SELECT CAST(COUNT(*) AS varchar(20)) + '|' +
+       CAST(SUM(CASE WHEN [Товар] IS NOT NULL THEN 1 ELSE 0 END) AS varchar(20)) + '|' +
+       CAST(ISNULL(SUM([Колличество]), 0) AS varchar(40))
+FROM [$Schema].[FACT_Продажи.Товары]
+"@
+    }.GetNewClosure()
     OdinsTruncateOrder = @(
       'DIM_Валюты.Представления',
       'FACT_Продажи.Товары',
@@ -169,8 +183,22 @@ function New-DbTestEnginePsql {
     Label = 'psql'
     PostgresContainer = 'client-postgresdb17'
 
-    OdinsTables     = @('DIM_Валюты', 'DIM_Клиенты', 'DIM_Товары', 'FACT_Продажи')
-    DwhEntityTables = @('DIM_Валюты', 'DIM_Клиенты', 'DIM_Товары', 'FACT_Продажи')
+    OdinsTables     = @('DIM_Валюты', 'DIM_Клиенты', 'DIM_Товары', 'FACT_Продажи', 'FACT_Продажи_Товары', 'DIM_Валюты_Представления')
+    # MQ consumer writes *_buffer first; main odins.* may be emptied after Airflow ETL
+    OdinsBufferTables = @('DIM_Валюты_buffer', 'DIM_Клиенты_buffer', 'DIM_Товары_buffer', 'FACT_Продажи_buffer')
+    DwhEntityTables = @('DIM_Валюты', 'DIM_Клиенты', 'DIM_Товары', 'FACT_Продажи', 'FACT_Продажи_Товары', 'DIM_Валюты_Представления')
+    # Parent → child: after ETL, parent rows must have tabular section rows too
+    SalesParentTable = 'FACT_Продажи'
+    SalesChildTable  = 'FACT_Продажи_Товары'
+    GetSalesLinesQualitySql = {
+      param([string]$Schema)
+      @"
+SELECT COUNT(*)::text || '|' ||
+       COUNT("Товар")::text || '|' ||
+       COALESCE(SUM("Колличество"),0)::text
+FROM "$Schema"."FACT_Продажи_Товары"
+"@
+    }.GetNewClosure()
     # Postgres generator uses underscore instead of dot in child table names
     OdinsTruncateOrder = @(
       'DIM_Валюты_Представления',
@@ -198,11 +226,11 @@ function New-DbTestEnginePsql {
 
     GetOdinsFreshCountSql = {
       param([string]$Table, [string]$Marker)
-      # ODS psql columns: dt_create / dt_update (not CreatedAt/UpdatedAt)
+      # ODS psql columns: created_at / updated_at (Snake; MSSQL uses CreatedAt/UpdatedAt)
       @(
         ('SELECT COUNT(*) FROM "odins"."{0}"' -f $Table)
-        "WHERE dt_create >= TIMESTAMP '$Marker'"
-        "   OR dt_update >= TIMESTAMP '$Marker'"
+        "WHERE created_at >= TIMESTAMP '$Marker'"
+        "   OR updated_at >= TIMESTAMP '$Marker'"
       ) -join "`n"
     }.GetNewClosure()
 

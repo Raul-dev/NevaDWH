@@ -47,7 +47,7 @@ BEGIN
     "Description",
     "Описание",
     session_id_update,
-    dt_update
+    updated_at
   )
   SELECT
     id,
@@ -63,7 +63,7 @@ BEGIN
     "Description",
     "Описание",
     par_session_id AS session_id_update,
-    val_start_date AS dt_update
+    val_start_date AS updated_at
   FROM (
     SELECT source.*
       FROM target."DIM_Товары" source

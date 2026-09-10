@@ -12,4 +12,4 @@ CREATE TABLE IF NOT EXISTS "staging"."DIM_Клиенты" (
   "Code"            varchar(128)  NULL,
   "Description"            varchar(128)  NULL,
   "Контакт"            varchar(500)  NULL,
-  "dt_update"              timestamp without time zone);
+  "updated_at"              timestamp without time zone);

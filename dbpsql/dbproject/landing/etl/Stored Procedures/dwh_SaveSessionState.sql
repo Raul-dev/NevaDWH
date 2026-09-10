@@ -40,7 +40,7 @@ BEGIN
                 dwh_session_state_id = par_dwh_session_state_id,
                 error_message = par_error_message,
                 create_session = CASE WHEN par_dwh_session_state_id = 2 THEN now() ELSE create_session END,
-                dt_update = now()
+                updated_at = now()
         WHERE dwh_session_id = par_dwh_session_id;
     END IF;
 

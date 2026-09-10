@@ -14,7 +14,7 @@ CREATE FOREIGN TABLE IF NOT EXISTS fdw."odins_DIM_Товары" (
   "Code"        varchar(128),
   "Description"        varchar(128),
   "Описание"        varchar(255),
-  dt_create        timestamp without time zone default now()
+  created_at        timestamp without time zone default now()
 )
 SERVER client_ods OPTIONS (schema_name 'odins', table_name 'DIM_Товары_history');
 COMMENT ON FOREIGN TABLE fdw."odins_DIM_Товары" IS '{"Description":"DIM_Товары_history"}';

@@ -39,7 +39,7 @@ BEGIN
             SET 
                 session_state_id = par_session_state_id,    
                 error_message = par_error_message,
-                dt_update = now()
+                updated_at = now()
         WHERE session_id = par_session_id;
     END IF;
 

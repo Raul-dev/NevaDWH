@@ -48,7 +48,7 @@ BEGIN
   SELECT buffer_id AS buffer_id,
     CAST((xpath('/nva:Data/nva:Реквизиты/nva:CatalogObject.Клиенты/nva:Ref/text()', msg::xml, var_xmlns ))[1]::text as uuid) ref
   FROM "odins"."DIM_Клиенты_buffer" b
-  WHERE b.dt_update = var_mindate;
+  WHERE b.updated_at = var_mindate;
 
   GET DIAGNOSTICS var_rowcount = ROW_COUNT;
   par_rowcount := var_rowcount;
@@ -75,7 +75,7 @@ BEGIN
       "Code" varchar(128),
       "Description" varchar(128),
       "Контакт" varchar(500),
-      "dt_update" timestamp without time zone 
+      "updated_at" timestamp without time zone 
     );
 
     INSERT INTO "DIM_Клиенты_tmp2"
@@ -100,7 +100,7 @@ BEGIN
       "Code" = src."Code",
       "Description" = src."Description",
       "Контакт" = src."Контакт",
-      dt_update = var_updatedate
+      updated_at = var_updatedate
     FROM "DIM_Клиенты_tmp2" AS src 
     WHERE org."nkey" = src."nkey" ;
 
@@ -111,7 +111,7 @@ BEGIN
       "Code",
       "Description",
       "Контакт",
-      dt_update
+      updated_at
     )
     SELECT 
       src."nkey" ,
@@ -120,11 +120,12 @@ BEGIN
       src."Code",
       src."Description",
       src."Контакт",
-      src."dt_update"
+      src."updated_at"
     FROM "DIM_Клиенты_tmp2" AS src 
       LEFT JOIN "odins"."DIM_Клиенты" AS org ON org."nkey" = src."nkey" 
     WHERE org."RefID" IS NULL ;
 
+    /* Sub tables (tabular sections) */
     -- Clear buffer table
     IF var_buffer_history_mode = 1 AND NOT EXISTS (SELECT 1 FROM "odins"."DIM_Клиенты_buffer" WHERE is_error = true) THEN
 
@@ -135,14 +136,14 @@ BEGIN
     ELSE
 
       UPDATE "odins"."DIM_Клиенты_buffer" AS org SET
-        dt_update = var_updatedate
+        updated_at = var_updatedate
       FROM "DIM_Клиенты_lock" AS src
       WHERE org."buffer_id" = src."buffer_id";
 
       IF var_buffer_history_mode >= 2 AND NOT EXISTS (SELECT 1 FROM "odins"."DIM_Клиенты_buffer" WHERE is_error = true) THEN
         DELETE
         FROM "odins"."DIM_Клиенты_buffer" AS b
-        WHERE EXTRACT(DAY FROM var_updatedate::timestamp - dt_update::timestamp) > var_bufferhistorydays;
+        WHERE EXTRACT(DAY FROM var_updatedate::timestamp - updated_at::timestamp) > var_bufferhistorydays;
       END IF;
     END IF;
 
@@ -159,7 +160,7 @@ BEGIN
 
     UPDATE "odins"."DIM_Клиенты_buffer" AS org SET
       is_error  = true,
-      dt_update = var_updatedate
+      updated_at = var_updatedate
     FROM "DIM_Клиенты_lock" AS src
     WHERE org."buffer_id" = src."buffer_id";
 

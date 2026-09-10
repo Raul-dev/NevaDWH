@@ -1,5 +1,5 @@
 IF NOT EXISTS(SELECT 1 FROM [mq].[DataSource] WHERE [DataSourceId] = 1)
-  INSERT [mq].[DataSource] ([DataSourceId], [Name]) VALUES (1, N'dwh1')
+  INSERT [mq].[DataSource] ([DataSourceId], [Name]) VALUES (1, N'dwh')
 
 DECLARE @session_state AS TABLE
 (
@@ -30,20 +30,6 @@ WHEN NOT MATCHED BY SOURCE THEN DELETE;
 IF NOT EXISTS(SELECT 1 FROM [config].[Setting] WHERE SettingId = 'AuditProcAll')
   INSERT INTO [config].[Setting] (SettingId, StrValue) VALUES ('AuditProcAll', N'AuditProcAll')
 
-IF EXISTS (SELECT 1 FROM sys.servers WHERE name = N'LinkSRVLanding')
-  EXEC sp_dropserver N'LinkSRVLanding', 'droplogins';
-
-IF NOT EXISTS (SELECT 1 FROM sys.servers WHERE name = N'LinkSRVLanding')
-  EXEC sp_addlinkedserver
-    @server = N'LinkSRVLanding',
-    @srvproduct = N'',
-    @provider = N'SQLNCLI',
-    @datasrc = @@SERVERNAME,
-    @catalog = N'$(landing)';
-
-EXEC sp_serveroption N'LinkSRVLanding', N'RPC OUT', N'true';
-EXEC sp_serveroption N'LinkSRVLanding', N'remote proc transaction promotion', N'false';
-
 IF EXISTS (SELECT 1 FROM sys.servers WHERE name = N'LinkSRVOds')
   EXEC sp_dropserver N'LinkSRVOds', 'droplogins';
 
@@ -57,6 +43,20 @@ IF NOT EXISTS (SELECT 1 FROM sys.servers WHERE name = N'LinkSRVOds')
 
 EXEC sp_serveroption N'LinkSRVOds', N'RPC OUT', N'true';
 EXEC sp_serveroption N'LinkSRVOds', N'remote proc transaction promotion', N'false';
+
+IF EXISTS (SELECT 1 FROM sys.servers WHERE name = N'LinkSRVLanding')
+  EXEC sp_dropserver N'LinkSRVLanding', 'droplogins';
+
+IF NOT EXISTS (SELECT 1 FROM sys.servers WHERE name = N'LinkSRVLanding')
+  EXEC sp_addlinkedserver
+    @server = N'LinkSRVLanding',
+    @srvproduct = N'',
+    @provider = N'SQLNCLI',
+    @datasrc = @@SERVERNAME,
+    @catalog = N'$(landing)';
+
+EXEC sp_serveroption N'LinkSRVLanding', N'RPC OUT', N'true';
+EXEC sp_serveroption N'LinkSRVLanding', N'remote proc transaction promotion', N'false';
 
 IF EXISTS (SELECT 1 FROM sys.servers WHERE name = N'LinkSRVLogLanding')
   EXEC sp_dropserver N'LinkSRVLogLanding', 'droplogins';

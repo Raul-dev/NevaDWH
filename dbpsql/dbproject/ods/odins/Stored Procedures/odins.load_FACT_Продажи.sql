@@ -48,7 +48,7 @@ BEGIN
   SELECT buffer_id AS buffer_id,
     CAST((xpath('/nva:Data/nva:Реквизиты/nva:DocumentObject.Продажи/nva:Ref/text()', msg::xml, var_xmlns ))[1]::text as uuid) ref
   FROM "odins"."FACT_Продажи_buffer" b
-  WHERE b.dt_update = var_mindate;
+  WHERE b.updated_at = var_mindate;
 
   GET DIAGNOSTICS var_rowcount = ROW_COUNT;
   par_rowcount := var_rowcount;
@@ -83,7 +83,7 @@ BEGIN
       "ТипДоставки" varchar(500),
       "ПримерСоставногоТипа" varchar(36),
       "ПримерСоставногоТипа_ТипЗначения" varchar(128),
-      "dt_update" timestamp without time zone 
+      "updated_at" timestamp without time zone 
     );
 
     INSERT INTO "FACT_Продажи_tmp2"
@@ -91,7 +91,7 @@ BEGIN
     SELECT
       CAST((xpath('/nva:Data/nva:Реквизиты/nva:DocumentObject.Продажи/nva:Ref/text()', msg::xml, var_xmlns ))[1]::text as uuid) AS "nkey",
 
-      (xpath('/nva:Data/nva:Реквизиты/nva:DocumentObject.Продажи/nva:FACT_Продажи.Товары/text()', msg::xml, var_xmlns ))[1]::xml  AS "FACT_Продажи_Товары",
+      (SELECT xmlelement(name "rows", xmlagg(x)) FROM unnest(xpath('/nva:Data/nva:Реквизиты/nva:DocumentObject.Продажи/nva:Товары', msg::xml, var_xmlns)) AS t(x)) AS "FACT_Продажи_Товары",
       CAST((xpath('/nva:Data/nva:Реквизиты/nva:DocumentObject.Продажи/nva:Ref/text()', msg::xml, var_xmlns ))[1]::text as uuid)  AS "RefID",
       CAST((xpath('/nva:Data/nva:Реквизиты/nva:DocumentObject.Продажи/nva:DeletionMark/text()', msg::xml, var_xmlns ))[1]::text as boolean)  AS "DeletionMark",
       CAST((xpath('/nva:Data/nva:Реквизиты/nva:DocumentObject.Продажи/nva:Number/text()', msg::xml, var_xmlns ))[1]::text as integer)  AS "Number",
@@ -123,7 +123,7 @@ BEGIN
       "ТипДоставки" = src."ТипДоставки",
       "ПримерСоставногоТипа" = src."ПримерСоставногоТипа",
       "ПримерСоставногоТипа_ТипЗначения" = src."ПримерСоставногоТипа_ТипЗначения",
-      dt_update = var_updatedate
+      updated_at = var_updatedate
     FROM "FACT_Продажи_tmp2" AS src 
     WHERE org."nkey" = src."nkey" ;
 
@@ -141,7 +141,7 @@ BEGIN
       "ТипДоставки",
       "ПримерСоставногоТипа",
       "ПримерСоставногоТипа_ТипЗначения",
-      dt_update
+      updated_at
     )
     SELECT 
       src."nkey" ,
@@ -157,10 +157,39 @@ BEGIN
       src."ТипДоставки",
       src."ПримерСоставногоТипа",
       src."ПримерСоставногоТипа_ТипЗначения",
-      src."dt_update"
+      src."updated_at"
     FROM "FACT_Продажи_tmp2" AS src 
       LEFT JOIN "odins"."FACT_Продажи" AS org ON org."nkey" = src."nkey" 
     WHERE org."RefID" IS NULL ;
+
+    /* Sub tables (tabular sections) */
+    DELETE FROM "odins"."FACT_Продажи_Товары" AS trg
+    USING "FACT_Продажи_tmp2" AS tmp
+    WHERE
+      trg."FACT_ПродажиRefID" = tmp."RefID";
+
+    INSERT INTO "odins"."FACT_Продажи_Товары" (
+      "nkey",
+      "FACT_ПродажиRefID",
+      "Доставка",
+      "Товар",
+      "Колличество",
+      "Цена",
+      updated_at
+    )
+    SELECT
+      CAST(md5(CONVERT(
+        (CAST(tmp."RefID" AS varchar(36)) || '|' || COALESCE(CAST(line_ord AS varchar), '0'))
+        ::bytea, 'UTF8', 'UHC')) AS uuid) AS "nkey",
+      tmp."RefID" AS "FACT_ПродажиRefID",
+      CAST((xpath('//*[local-name()="Доставка"]/text()', line_xml))[1]::text AS boolean) AS "Доставка",
+      CAST((xpath('//*[local-name()="Товар"]/text()', line_xml))[1]::text AS varchar(36)) AS "Товар",
+      CAST((xpath('//*[local-name()="Колличество"]/text()', line_xml))[1]::text AS decimal(12, 0)) AS "Колличество",
+      CAST((xpath('//*[local-name()="Цена"]/text()', line_xml))[1]::text AS decimal(16, 4)) AS "Цена",
+      var_updatedate AS updated_at
+    FROM "FACT_Продажи_tmp2" AS tmp
+    CROSS JOIN LATERAL unnest(xpath('/*[local-name()="rows"]/*', tmp."FACT_Продажи_Товары")) WITH ORDINALITY AS line(line_xml, line_ord)
+    WHERE tmp."FACT_Продажи_Товары" IS NOT NULL;
 
     -- Clear buffer table
     IF var_buffer_history_mode = 1 AND NOT EXISTS (SELECT 1 FROM "odins"."FACT_Продажи_buffer" WHERE is_error = true) THEN
@@ -172,14 +201,14 @@ BEGIN
     ELSE
 
       UPDATE "odins"."FACT_Продажи_buffer" AS org SET
-        dt_update = var_updatedate
+        updated_at = var_updatedate
       FROM "FACT_Продажи_lock" AS src
       WHERE org."buffer_id" = src."buffer_id";
 
       IF var_buffer_history_mode >= 2 AND NOT EXISTS (SELECT 1 FROM "odins"."FACT_Продажи_buffer" WHERE is_error = true) THEN
         DELETE
         FROM "odins"."FACT_Продажи_buffer" AS b
-        WHERE EXTRACT(DAY FROM var_updatedate::timestamp - dt_update::timestamp) > var_bufferhistorydays;
+        WHERE EXTRACT(DAY FROM var_updatedate::timestamp - updated_at::timestamp) > var_bufferhistorydays;
       END IF;
     END IF;
 
@@ -196,7 +225,7 @@ BEGIN
 
     UPDATE "odins"."FACT_Продажи_buffer" AS org SET
       is_error  = true,
-      dt_update = var_updatedate
+      updated_at = var_updatedate
     FROM "FACT_Продажи_lock" AS src
     WHERE org."buffer_id" = src."buffer_id";
 

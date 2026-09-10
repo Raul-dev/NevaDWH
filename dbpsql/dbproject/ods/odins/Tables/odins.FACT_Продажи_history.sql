@@ -19,4 +19,4 @@ CREATE TABLE IF NOT EXISTS "odins"."FACT_Продажи_history" (
   "ТипДоставки"            varchar(500)  NULL,
   "ПримерСоставногоТипа"            varchar(36)  NULL,
   "ПримерСоставногоТипа_ТипЗначения"            varchar(128)  NULL,
-  "dt_create"              timestamp without time zone         NULL default now());
+  "created_at"              timestamp without time zone         NULL default now());

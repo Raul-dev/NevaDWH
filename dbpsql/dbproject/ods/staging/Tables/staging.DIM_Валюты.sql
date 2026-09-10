@@ -18,4 +18,4 @@ CREATE TABLE IF NOT EXISTS "staging"."DIM_Валюты" (
   "ПараметрыПрописи"            varchar(200)  NULL,
   "ФормулаРасчетаКурса"            varchar(100)  NULL,
   "СпособУстановкиКурса"            varchar(500)  NULL,
-  "dt_update"              timestamp without time zone);
+  "updated_at"              timestamp without time zone);

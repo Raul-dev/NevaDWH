@@ -54,7 +54,7 @@ BEGIN
             namespace_ver character varying(256) ,
             msg text ,
             type character varying(128) ,
-            dt_create timestamp with time zone NOT NULL,
+            created_at timestamp with time zone NOT NULL,
             CONSTRAINT "PK_metadata" PRIMARY KEY (nkey)
         );
 
@@ -102,14 +102,14 @@ BEGIN
         ELSE
 
             UPDATE mq.metadata_buffer AS org SET
-                dt_update = var_updatedate
+                updated_at = var_updatedate
             FROM "metadata_tmp1" AS src
             WHERE org."buffer_id" = src."buffer_id" ;
 
             IF var_buffer_history_mode >= 2 AND NOT EXISTS (SELECT 1 FROM mq.metadata_buffer WHERE is_error = true) THEN
                 DELETE
                 FROM mq.metadata_buffer AS b
-                WHERE EXTRACT(DAY FROM  var_updatedate::timestamp - dt_update::timestamp) > var_bufferhistorydays;
+                WHERE EXTRACT(DAY FROM  var_updatedate::timestamp - updated_at::timestamp) > var_bufferhistorydays;
             END IF;
         END    IF;
 
@@ -126,7 +126,7 @@ BEGIN
 
         UPDATE mq.metadata_buffer AS org SET
             is_error  = true,
-            dt_update = var_updatedate
+            updated_at = var_updatedate
         FROM "metadata_tmp1" AS src
         WHERE org."buffer_id" = src."buffer_id" ;
 

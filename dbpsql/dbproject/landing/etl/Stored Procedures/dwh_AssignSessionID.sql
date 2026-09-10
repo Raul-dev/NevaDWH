@@ -7,7 +7,7 @@ $$;
 
 -- SELECT * FROM etl.dwh_processing_details
 -- call etl.dwh_AssignSessionID (null, null)
-CREATE OR REPLACE PROCEDURE etl.dwh_AssignSessionID (
+CREATE OR REPLACE PROCEDURE etl."dwh_AssignSessionID" (
     INOUT par_dwh_session_id bigint DEFAULT NULL::bigint,
     INOUT par_rowcount bigint DEFAULT NULL::bigint,
     INOUT par_create_session timestamp DEFAULT NULL::timestamp

@@ -5,7 +5,7 @@ RAISE NOTICE 'CREATE PROCEDURE etl.dwh_ArchiveTables';
 END;
 $$;
 
-CREATE OR REPLACE PROCEDURE etl.dwh_ArchiveTables (
+CREATE OR REPLACE PROCEDURE etl."dwh_ArchiveTables" (
     par_dwh_session_id inout int DEFAULT NULL
 )
 AS $BODY$

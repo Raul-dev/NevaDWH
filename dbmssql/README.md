@@ -20,12 +20,11 @@ HTTP UI с хоста идёт через **Traefik** на порт **80** (`htt
 | **landing.webservice** | `raulamailru/nevadwh-landing` | — | API landing-слоя |
 | **generator.api** | `raulamailru/nevadwh-generator` | — | Генератор DWH (xdto API) |
 | **nevadwh** | `raulamailru/nevadwh-admin` | — | Веб-приложение / оркестрация |
+| **metabase** | `metabase/metabase:v0.55.2` | 0.55.2 | BI-отчёты по DWH (`target.v_rpt_*`) |
 
-Теги `raulamailru/nevadwh-{mq,landing,generator,admin}:X.Y.Z` задаются в `docker-compose.yml` (образы с Docker Hub).
+Теги `raulamailru/nevadwh-{mq,landing,generator,admin}:X.Y.Z` в этом compose обновляет `src/publishimage.ps1` (см. корневой README).
 
 Проект БД: `dbproject/` — landing, ods, dwh, log. Демо-сообщения 1С в ODS: PostDeploy `Dictionaries/messagequeue.sql` → `[mq].[MessageQueue]` (исходный dump — `070_msgqueue.sql`).
-
-Автотесты пайплайна — из корня репозитория: `..\db-tests.ps1 dbmssql` (см. [README.md](../README.md)).
 
 ---
 
@@ -253,7 +252,7 @@ docker compose logs -f traefik api-server mq.webservice nevadwh
 Get-NetTCPConnection -LocalPort 80 -State Listen
 docker ps --filter publish=80
 
-# Пересборка одного сервиса (локальный Dockerfile / image tag в compose)
+# Пересборка одного сервиса после правок в src/services
 docker compose build mq.webservice
 docker compose up -d mq.webservice
 
@@ -306,6 +305,11 @@ dbmssql/
 | `RABBITMQ_VIRTUAL_HOST` | `/` | Virtual host |
 | `RABBITMQ_USER` / `RABBITMQ_PASSWORD` | `admin` / `admin` | Доступ к RabbitMQ |
 | `SIMPLE_AUTH_MANAGER_*` + passwords.json | `admin` / `admin` | UI Airflow 3 (SimpleAuth, как RabbitMQ) |
+| `EXTERNAL_METABASE_URL` | `http://bi.localhost` | Metabase BI (Traefik Host `bi.localhost`) |
+
+### Metabase
+
+UI: http://bi.localhost — data source: `{MQ_CLIENTNAME}_dwh`, views `target.v_rpt_*`.
 
 ---
 

@@ -6,7 +6,7 @@
   <Name>dwh</Name>
   <SchemaVersion>2.0</SchemaVersion>
   <ProjectVersion>4.1</ProjectVersion>
-  <ProjectGuid>{21bfa11e-9b3c-4cb8-bca8-ebb7558d4cc5}</ProjectGuid>
+  <ProjectGuid>{21BFA11E-9B3C-4CB8-BCA8-EBB7558D4CC5}</ProjectGuid>
   <DSP>Microsoft.Data.Tools.Schema.Sql.Sql150DatabaseSchemaProvider</DSP>
   <OutputType>Database</OutputType>
   <RootPath>
@@ -67,6 +67,7 @@
   <Folder Include="target\" />
   <Folder Include="target\Stored Procedures\" />
   <Folder Include="target\Tables\" />
+  <Folder Include="target\Views\" />
   <Folder Include="Dictionaries" />
   <Folder Include="audit" />
   <Folder Include="audit\Stored Procedures" />
@@ -94,6 +95,9 @@
   <Build Include="Security\uts.sql" />
   <Build Include="target\Tables\DIM_Date.sql" />
   <Build Include="target\Stored Procedures\sp_FillDimDate.sql" />
+  <Build Include="target\Views\target.v_rpt_sales.sql" />
+  <Build Include="target\Views\target.v_rpt_sales_products.sql" />
+  <Build Include="target\Views\target.v_rpt_products.sql" />
   <Build Include="mq\Stored Procedures\sp_SaveSessionState.sql" />
   <Build Include="mq\Functions\fn_GetMaxDate.sql" />
   <Build Include="mq\Functions\fn_GetMinDate.sql" />
@@ -151,21 +155,21 @@
   </PostDeploy>
   </ItemGroup>
   <ItemGroup>
-  <ProjectReference Include="..\landing\landing.sqlproj">
-   <Name>landing</Name>
-   <Project>{c2ebe3c4-9129-4aff-b058-f9a5f7cd5273}</Project>
-   <Private>True</Private>
-   <SuppressMissingDependenciesErrors>False</SuppressMissingDependenciesErrors>
-   <DatabaseSqlCmdVariable>landing</DatabaseSqlCmdVariable>
-   <ServerSqlCmdVariable>LinkSRVLogLanding</ServerSqlCmdVariable>
-  </ProjectReference>
   <ProjectReference Include="..\ods\ods.sqlproj">
    <Name>ods</Name>
-   <Project>{622e77ef-2e99-4fb8-aa03-f84361b27f07}</Project>
+   <Project>{622E77EF-2E99-4FB8-AA03-F84361B27F07}</Project>
    <Private>True</Private>
    <SuppressMissingDependenciesErrors>False</SuppressMissingDependenciesErrors>
    <DatabaseSqlCmdVariable>ods</DatabaseSqlCmdVariable>
    <ServerSqlCmdVariable>LinkSRVOds</ServerSqlCmdVariable>
+  </ProjectReference>
+  <ProjectReference Include="..\landing\landing.sqlproj">
+   <Name>landing</Name>
+   <Project>{C2EBE3C4-9129-4AFF-B058-F9A5F7CD5273}</Project>
+   <Private>True</Private>
+   <SuppressMissingDependenciesErrors>False</SuppressMissingDependenciesErrors>
+   <DatabaseSqlCmdVariable>landing</DatabaseSqlCmdVariable>
+   <ServerSqlCmdVariable>LinkSRVLanding</ServerSqlCmdVariable>
   </ProjectReference>
   <ProjectReference Include="..\log\log.sqlproj">
    <Name>log</Name>
@@ -177,25 +181,25 @@
   </ProjectReference>
   </ItemGroup>
   <ItemGroup>
+  <SqlCmdVariable Include="ods">
+   <DefaultValue>ods</DefaultValue>
+   <Value>$(SqlCmdVar__OdsDb0)</Value>
+  </SqlCmdVariable>
+  <SqlCmdVariable Include="LinkSRVOds">
+   <DefaultValue>LinkSRVOds</DefaultValue>
+   <Value>$(SqlCmdVar__OdsLink0)</Value>
+  </SqlCmdVariable>
   <SqlCmdVariable Include="landing">
    <DefaultValue>landing</DefaultValue>
-   <Value>$(SqlCmdVar__3)</Value>
+   <Value>$(SqlCmdVar__OdsDb1)</Value>
+  </SqlCmdVariable>
+  <SqlCmdVariable Include="LinkSRVLanding">
+   <DefaultValue>LinkSRVLanding</DefaultValue>
+   <Value>$(SqlCmdVar__OdsLink1)</Value>
   </SqlCmdVariable>
   <SqlCmdVariable Include="LinkSRVLogLanding">
    <DefaultValue>OtherServer</DefaultValue>
    <Value>$(SqlCmdVar__4)</Value>
-  </SqlCmdVariable>
-  <SqlCmdVariable Include="LinkSRVOds">
-   <DefaultValue>OtherServer</DefaultValue>
-   <Value>$(SqlCmdVar__6)</Value>
-  </SqlCmdVariable>
-  <SqlCmdVariable Include="ods">
-   <DefaultValue>ods</DefaultValue>
-   <Value>$(SqlCmdVar__5)</Value>
-  </SqlCmdVariable>
-  <SqlCmdVariable Include="LinkSRVLanding">
-   <DefaultValue>LinkSRVLanding</DefaultValue>
-   <Value>$(SqlCmdVar__7)</Value>
   </SqlCmdVariable>
   <SqlCmdVariable Include="dwh">
    <DefaultValue>dwh</DefaultValue>

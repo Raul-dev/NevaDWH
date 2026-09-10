@@ -26,7 +26,7 @@ CREATE TABLE IF NOT EXISTS target."FACT_Продажи" (
   "ПримерСоставногоТипа"         varchar(36)  NULL ,
   "ПримерСоставногоТипа_ТипЗначения"         varchar(128)  NULL ,
   session_id_update bigint NOT NULL,
-  dt_update         timestamp without time zone NOT NULL default now(),
-  dt_create         timestamp without time zone NOT NULL default now(),
+  updated_at         timestamp without time zone NOT NULL default now(),
+  created_at         timestamp without time zone NOT NULL default now(),
   CONSTRAINT "PK_target_FACT_Продажи" PRIMARY KEY (id));
 CREATE UNIQUE INDEX IF NOT EXISTS "IDX_target_FACT_Продажи" ON target."FACT_Продажи" (nkey);

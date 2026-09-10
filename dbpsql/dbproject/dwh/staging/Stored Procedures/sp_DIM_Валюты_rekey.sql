@@ -53,7 +53,7 @@ BEGIN
     "ФормулаРасчетаКурса",
     "СпособУстановкиКурса",
     session_id_update,
-    dt_update
+    updated_at
   )
   SELECT
     id,
@@ -75,7 +75,7 @@ BEGIN
     "ФормулаРасчетаКурса",
     "СпособУстановкиКурса",
     par_session_id AS session_id_update,
-    val_start_date AS dt_update
+    val_start_date AS updated_at
   FROM (
     SELECT source.*
       FROM target."DIM_Валюты" source
@@ -84,7 +84,7 @@ BEGIN
     ) a;
   GET DIAGNOSTICS var_rowcount = ROW_COUNT;
   par_rowcount := par_rowcount + var_rowcount;
-  -- Child 
+  -- Child DIM_Валюты.Представления
   DELETE FROM target."DIM_Валюты_Представления" AS b
   USING "tmp_DIM_Валюты" ll
   WHERE b."DIM_ВалютыRefID" = ll.identificator;

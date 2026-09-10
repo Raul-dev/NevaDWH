@@ -22,7 +22,7 @@ DECLARE @metamap TABLE
 INSERT @metamap ([MetaMapId], [MessageKey], [TableName], [MetaAdapterId], [Namespace], [NamespaceVersion], [EtlProcedure], [ImportQuery], [IsEnabled])
 VALUES
 (9001, N'Unknown', N'[mq].[MessageQueue]', 5, CAST(N'https://nevadwh.ru/CatalogObject.Unknown' AS varchar(255)), CAST('https://nevadwh.ru/CatalogObject.Unknown/version1' AS varchar(255)), NULL, NULL, 1),
-(1, N'CatalogObject.Валюты', N'odins.[DIM_Валюты_Buffer]', 1, N'https://nevadwh.ru/CatalogObject.Валюты', N'https://nevadwh.ru/CatalogObject.Валюты/version1', N'odins.[load_DIM_Валюты]', N'odins.[load_DIM_Валюты_file]', 1),
+(1, N'CatalogObject.Валюты', N'odins.[DIM_ВалютыBuffer]', 1, N'https://nevadwh.ru/CatalogObject.Валюты', N'https://nevadwh.ru/CatalogObject.Валюты/version1', N'odins.[load_DIM_Валюты]', N'odins.[load_DIM_Валюты_file]', 1),
 (2, N'CatalogObject.Клиенты', N'odins.[DIM_КлиентыBuffer]', 1, N'https://nevadwh.ru/CatalogObject.Клиенты', N'https://nevadwh.ru/CatalogObject.Клиенты/version1', N'odins.[load_DIM_Клиенты]', N'odins.[load_DIM_Клиенты_file]', 1),
 (3, N'CatalogObject.Товары', N'odins.[DIM_ТоварыBuffer]', 1, N'https://nevadwh.ru/CatalogObject.Товары', N'https://nevadwh.ru/CatalogObject.Товары/version1', N'odins.[load_DIM_Товары]', N'odins.[load_DIM_Товары_file]', 1),
 (4, N'DocumentObject.Продажи', N'odins.[FACT_ПродажиBuffer]', 1, N'https://nevadwh.ru/DocumentObject.Продажи', N'https://nevadwh.ru/DocumentObject.Продажи/version1', N'odins.[load_FACT_Продажи]', N'odins.[load_FACT_Продажи_file]', 1),
